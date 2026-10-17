@@ -1,6 +1,11 @@
 name: Refresh official water observations
 
 on:
+  push:
+    paths:
+      - 'data_pipeline/**'
+      - 'data/water-observations.json'
+      - '.github/workflows/refresh-water-observations.yml'
   workflow_dispatch:
   schedule:
     - cron: "17 */6 * * *"
