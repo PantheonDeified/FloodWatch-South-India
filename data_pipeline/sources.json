@@ -64,6 +64,43 @@
       "agency": "Telangana Surface Water Department / NWIC",
       "kind": "reservoir_discharge",
       "url": "https://nwdp.nwic.gov.in/en/dataset/reservoir_discharge_kaddam_narayan_reddy_head_regulator_telangana_telemetry_hourly"
+    },
+    {
+      "name": "Central Water Commission river discharge",
+      "agency": "CWC/NWIC",
+      "kind": "river_discharge",
+      "url": "https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-central-water-commission-cwc",
+      "basins": [
+        "Andhra Pradesh",
+        "Karnataka",
+        "Kerala",
+        "Tamil Nadu",
+        "Telangana"
+      ]
+    },
+    {
+      "name": "Andhra Pradesh river discharge",
+      "agency": "Andhra Pradesh Surface Water Department / NWIC",
+      "kind": "river_discharge",
+      "url": "https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-andhra-pradesh-surface-water-department"
+    },
+    {
+      "name": "Telangana river discharge",
+      "agency": "Telangana Surface Water Department / NWIC",
+      "kind": "river_discharge",
+      "url": "https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-telangana-surface-water-department"
+    },
+    {
+      "name": "Kerala river discharge",
+      "agency": "Kerala Surface Water Department / NWIC",
+      "kind": "river_discharge",
+      "url": "https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-kerala-surface-water-department"
+    },
+    {
+      "name": "Tamil Nadu river discharge",
+      "agency": "Tamil Nadu Surface Water Groundwater Department / NWIC",
+      "kind": "river_discharge",
+      "url": "https://nwdp.nwic.gov.in/en/dataset/river-discharge-manual-dailly-tamil-nadu-surface-watergroundwater-department"
     }
   ],
   "historical_reference_pages": [
