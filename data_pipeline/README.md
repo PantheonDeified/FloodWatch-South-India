@@ -19,6 +19,21 @@ This folder is the first reproducible data-ingestion and basin-mapping step for 
 3. A GIS assignment from station coordinates to HydroBASINS polygons and candidate upstream basin relationships for selected sites via assign_gauges_to_basins.py. All proposed matches require channel/river and station metadata review.
 4. A source manifest and a data-quality report so missing intervals, duplicate timestamps, coordinates and provenance are visible.
 
+## Downloading historical river records
+
+The official CWC telemetry portal currently lists historical archive resources for some South Indian river groups, including 1961–1990, 1991–2020, 2021–2025 and new 2026–2030 resources. The public portal's dataset metadata may be updated even when individual rows are missing or incomplete. Use the archive downloader to make a checksum-tracked local copy of the raw CSVs before analysis:
+
+    python -m pip install -r data_pipeline/requirements.txt
+    python data_pipeline/scripts/download_nwdp_history.py --out-dir data_pipeline/raw/nwdp_history
+
+By default it selects South India-relevant CWC river-group resources across all available periods. It records the dataset page, each resource page, exact download URL, byte count and SHA-256 in a local `manifest.json`. Add other official NWDP dataset pages with repeated `--source-url` arguments. Raw archives are intentionally not committed to Git; they may be large and have their own metadata/usage conditions.
+
+After downloading, inspect a specific file before deciding which columns and units to normalize:
+
+    python data_pipeline/scripts/inspect_cwc_csv.py --input data_pipeline/raw/nwdp_history/<file>.csv --date-column "Date"
+
+Do not use the source's advertised date-range title as a substitute for checking the actual first and last valid timestamps in its records. The downloader saves raw source files and provenance; it does not claim that all stations have 60 years of valid data.
+
 ## Run locally
 
 Python 3.10+ is recommended.
