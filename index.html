@@ -83,7 +83,7 @@ const tiles={
  terrain:L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxNativeZoom:17,maxZoom:21,attribution:'© OpenTopoMap contributors'}),
  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:18,maxZoom:21,attribution:'Tiles © Esri'})
 };tiles.street.addTo(map);
-let marker=null,overlay=null,cycloneLayer=null,selected=null,activeOverlay='rain',currentBaseLayer='street',historyRequest=0;
+let marker=null,overlay=null,cycloneLayer=null,selected=null,activeOverlay='rain',currentBaseLayer='street',historyRequest=0,waterSnapshot=null,waterDisplayedRecords=[];
 const $=id=>document.getElementById(id),fmt=(v,u='',d=0)=>v==null?'—':Number(v).toFixed(d)+u;
 const nativeZoomLimits={street:19,terrain:17,satellite:18};
 const baseLayerNames={street:'Street map (OpenStreetMap)',terrain:'Terrain (OpenTopoMap)',satellite:'Satellite (Esri)'};
@@ -99,7 +99,7 @@ function updateZoomStatus(){
 map.on('zoomend',updateZoomStatus);
 $('layer').addEventListener('change',e=>{currentBaseLayer=e.target.value;Object.values(tiles).forEach(t=>map.removeLayer(t));tiles[currentBaseLayer].addTo(map);updateZoomStatus()});
 function status(s){$('weatherStatus').textContent=s}
-function selectLocation(lat,lon,name='Selected map point'){selected={lat,lon,name};if(marker)map.removeLayer(marker);marker=L.marker([lat,lon],{draggable:true}).addTo(map).bindPopup('<b>'+name+'</b><br>'+lat.toFixed(5)+', '+lon.toFixed(5)+'<br>Drag this pin to fine-tune the point.').openPopup();marker.on('dragend',e=>{const p=e.target.getLatLng();selectLocation(p.lat,p.lng,'Manually adjusted point')});$('placeName').textContent=name;$('coords').textContent='Latitude '+lat.toFixed(5)+' · Longitude '+lon.toFixed(5);$('latInput').value=lat.toFixed(5);$('lonInput').value=lon.toFixed(5);loadWeather();loadHistorical(lat,lon);if(activeOverlay==='rain'||activeOverlay==='cloud'||activeOverlay==='wind')setOverlay(activeOverlay)}
+function selectLocation(lat,lon,name='Selected map point'){selected={lat,lon,name};if(marker)map.removeLayer(marker);marker=L.marker([lat,lon],{draggable:true}).addTo(map).bindPopup('<b>'+name+'</b><br>'+lat.toFixed(5)+', '+lon.toFixed(5)+'<br>Drag this pin to fine-tune the point.').openPopup();marker.on('dragend',e=>{const p=e.target.getLatLng();selectLocation(p.lat,p.lng,'Manually adjusted point')});$('placeName').textContent=name;$('coords').textContent='Latitude '+lat.toFixed(5)+' · Longitude '+lon.toFixed(5);$('latInput').value=lat.toFixed(5);$('lonInput').value=lon.toFixed(5);loadWeather();loadHistorical(lat,lon);if(activeOverlay==='rain'||activeOverlay==='cloud'||activeOverlay==='wind')setOverlay(activeOverlay);updateSignalChain()}
 map.on('click',e=>selectLocation(e.latlng.lat,e.latlng.lng,'Manually selected map point'));map.getContainer().style.cursor='crosshair';
 async function loadWeather(){if(!selected||!Number.isFinite(selected.lat)||!Number.isFinite(selected.lon))return;const {lat,lon}=selected;status('Fetching weather model data…');try{const u='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,cloud_cover,wind_speed_10m,wind_gusts_10m,weather_code&hourly=temperature_2m,precipitation_probability,precipitation,rain&forecast_days=2&timezone=auto';const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw Error('Weather service returned HTTP '+r.status);const d=await r.json(),c=d.current||{};if(c.temperature_2m==null)throw Error('Weather provider returned no current values');$('temp').textContent=fmt(c.temperature_2m,'°C');$('feels').textContent='Feels like '+fmt(c.apparent_temperature,'°C');$('rain').textContent=fmt(c.precipitation,' mm',1);$('wind').textContent=fmt(c.wind_speed_10m,' km/h');$('gust').textContent='Gust '+fmt(c.wind_gusts_10m,' km/h');$('humidity').textContent=fmt(c.relative_humidity_2m,'%');$('cloud').textContent='Cloud '+fmt(c.cloud_cover,'%');$('updated').textContent='Browser fetched: '+new Date().toLocaleString()+' · model timestamp: '+(c.time||'not supplied')+' ('+(d.timezone||'provider timezone')+')';status('Open-Meteo model response received. These are gridded model estimates, not direct station observations. The browser requests a refresh every 10 minutes; the provider model update cycle may differ.');const h=d.hourly;if(!h||!h.time)throw Error('Hourly forecast was missing');let out='<div style="padding:4px 0 8px;font-size:11px;color:#a8b6c9">Times shown in '+(d.timezone_abbreviation||d.timezone||'provider timezone')+' · forecast, not observations</div>';for(let i=0;i<Math.min(24,h.time.length);i++){out+='<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid #26364c"><span>'+String(h.time[i]).slice(11,16)+'</span><span>'+fmt(h.temperature_2m[i],'°C')+'</span><span>Rain '+fmt(h.precipitation_probability?.[i],'%')+'</span></div>'}$('hourly').innerHTML=out}catch(e){for(const id of ['temp','feels','rain','wind','gust','humidity','cloud'])$(id).textContent='—';$('updated').textContent='Data unavailable · '+new Date().toLocaleString();$('hourly').textContent='Forecast unavailable. Retry when the provider is reachable.';status('No current data could be verified: '+e.message+'. Values cleared rather than showing stale readings.');}}
 
@@ -127,6 +127,153 @@ catch(e){if(token!==historyRequest)return;$('histRain7').textContent='Unavailabl
 async function loadDischargeHistory(lat,lon,token){try{const q=new URLSearchParams({latitude:String(lat),longitude:String(lon),daily:'river_discharge',past_days:'90',forecast_days:'7',timezone:'auto'});const r=await fetch('https://flood-api.open-meteo.com/v1/flood?'+q.toString(),{cache:'no-store'});if(!r.ok)throw Error('Flood API returned HTTP '+r.status);const d=await r.json();const t=d.daily?.time,v=d.daily?.river_discharge;if(!Array.isArray(t)||!Array.isArray(v)||!t.length)throw Error('No river-discharge series returned for this coordinate');if(token!==historyRequest)return;const points=t.map((date,i)=>({date,v:v[i]==null?NaN:Number(v[i])}));const valid=points.filter(p=>Number.isFinite(p.v));if(valid.length<2)throw Error('Insufficient valid discharge points');let forecastStart=points.findIndex(p=>p.date>dateShiftISO(-1));if(forecastStart<0)forecastStart=points.length;drawDischargeChart(points,forecastStart);const last=valid[valid.length-1];$('dischargeNow').textContent=last.v.toLocaleString(undefined,{maximumFractionDigits:1})+' m³/s';$('dischargeDate').textContent='Model value for '+fmtDate(last.date)+' · grid estimate';const past=valid.filter(p=>p.date<=last.date).slice(-90).map(p=>p.v).sort((a,b)=>a-b);const p90=past[Math.floor((past.length-1)*.9)]??NaN;const future=points.filter(p=>p.date>last.date&&Number.isFinite(p.v));const peak=future.length?Math.max(...future.map(p=>p.v)):NaN;let summary='The modelled discharge series is available. This is not an observed river height, a CWC station reading, or an official flood warning.';if(Number.isFinite(p90)&&last.v>p90)summary='Latest modelled discharge is above its 90-day historical-model 90th percentile. This is a relative anomaly only, not a validated flood threshold.';else if(Number.isFinite(p90))summary='Latest modelled discharge is not above its 90-day modelled 90th percentile. Flooding can still occur locally; this is not a safety guarantee.';if(future.length&&Number.isFinite(p90)&&peak>p90)summary+=' The short-range model outlook exceeds that recent 90th-percentile reference.';$('dischargeInterpretation').textContent=summary+' Selected coordinates may not align with the intended river because the model represents a nearby river grid cell.';return true}
 catch(e){if(token!==historyRequest)return;$('dischargeNow').textContent='Unavailable';$('dischargeDate').textContent='No valid discharge value returned';drawDischargeChart([],0);$('dischargeInterpretation').textContent='River-discharge model unavailable: '+e.message+'. No live value has been invented.';return false}}
 
+
+
+function escapeHtml(value){return String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+function readableKind(kind){return ({river_level:'River level',river_discharge:'River discharge',reservoir_level:'Reservoir / dam level',reservoir_storage:'Reservoir storage',reservoir_discharge:'Dam / regulator release'})[kind]||kind||'Unknown'}
+function kmBetween(lat1,lon1,lat2,lon2){const r=6371,toRad=x=>x*Math.PI/180,dLat=toRad(lat2-lat1),dLon=toRad(lon2-lon1),a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;return 2*r*Math.asin(Math.min(1,Math.sqrt(a)))}
+function nearestObservation(kinds,maxDistanceKm=100){
+ if(!selected||!waterSnapshot||!Array.isArray(waterSnapshot.observations))return null;
+ let best=null;
+ for(const record of waterSnapshot.observations){
+  if(!kinds.includes(record.kind)||!Number.isFinite(Number(record.latitude))||!Number.isFinite(Number(record.longitude)))continue;
+  const distance=kmBetween(selected.lat,selected.lon,Number(record.latitude),Number(record.longitude));
+  if(distance<=maxDistanceKm&&(!best||distance<best.distanceKm))best={record,distanceKm:distance};
+ }
+ return best;
+}
+function reportedTimeLabel(record){return record?.observed_at_raw||record?.observed_at||'time not supplied'}
+function updateSignalChain(){
+ const rain=$('rain')?.textContent||'—';
+ const currentRain=rain!=='—'&&rain!=='Unavailable'?rain+' at the selected point (weather-model estimate)':'Current point rainfall unavailable';
+ const rain7=$('histRain7')?.textContent||'—';
+ const p7=$('histPercentile')?.textContent||'—';
+ const rainDate=$('histRain7Date')?.textContent||'';
+ const anomaly=$('histAnomaly')?.textContent||'—';
+ $('chainRain').textContent=currentRain;
+ $('chainRainNote').textContent=(rain7!=='—'&&rain7!=='Unavailable'?'Historical rainfall: '+rain7+'; '+rainDate+'. ':'')+'Current point-model precipitation and historical reanalysis are different data products and may have different valid times.';
+ if(p7!=='—'&&p7!=='Unavailable'){
+  $('chainWetness').textContent='7-day seasonal percentile: '+p7;
+  $('chainWetnessNote').textContent='Month-to-date rainfall anomaly: '+anomaly+'. This is a rarity comparison, not a flood probability; reanalysis ends several days behind the present.';
+ }else{
+  $('chainWetness').textContent='Historical baseline unavailable';
+  $('chainWetnessNote').textContent='No seasonal comparison is displayed until enough valid historical rainfall records are returned.';
+ }
+ const river=nearestObservation(['river_level'],100);
+ if(!selected){
+  $('chainRiver').textContent='Choose a map location';
+  $('chainRiverNote').textContent='Select a location to look for a nearby geolocated official gauge.';
+ }else if(!river){
+  $('chainRiver').textContent='No nearby geolocated river gauge';
+  $('chainRiverNote').textContent='The public feed may have no station coordinates near this point. This means unknown, not that the river is safe.';
+ }else{
+  const r=river.record,unit=r.unit&&r.unit!=='source-defined'?' '+r.unit:' source units not stated';
+  const history=(waterSnapshot.series||[]).find(x=>x.id===r.id)?.points||[];
+  const pts=history.filter(x=>Number.isFinite(Number(x.value))).sort((a,b)=>String(a.observed_at).localeCompare(String(b.observed_at)));
+  let trend='No prior time-series point is available to calculate a rise.';
+  if(pts.length>=2){
+   const first=pts[pts.length-2],last=pts[pts.length-1],delta=Number(last.value)-Number(first.value);
+   trend='Change since prior published sample: '+(delta>0?'+':'')+delta.toFixed(2)+(r.unit==='m'?' m':' '+(r.unit||'source units'))+'. Interval depends on this source’s sampling frequency.';
+  }
+  let threshold='No station warning/danger threshold was supplied with this reading.';
+  if(r.unit==='m'&&Number.isFinite(Number(r.danger_level))&&Number(r.value)>=Number(r.danger_level))threshold='Reported gauge value is at/above the source-provided danger-level field.';
+  else if(r.unit==='m'&&Number.isFinite(Number(r.warning_level))&&Number(r.value)>=Number(r.warning_level))threshold='Reported gauge value is at/above the source-provided warning-level field.';
+  $('chainRiver').textContent=Number(r.value).toLocaleString(undefined,{maximumFractionDigits:2})+unit+' · '+Math.round(river.distanceKm)+' km away';
+  $('chainRiverNote').textContent=readableKind(r.kind)+' at '+(r.station_name||r.station_id)+'; source timestamp '+reportedTimeLabel(r)+'. '+trend+' '+threshold+' Straight-line proximity only; upstream/downstream connection is not verified.';
+ }
+ const dam=nearestObservation(['reservoir_level','reservoir_storage','reservoir_discharge'],100);
+ if(!selected){
+  $('chainDam').textContent='Choose a map location';
+  $('chainDamNote').textContent='Select a point to search published dam, reservoir and regulator records.';
+ }else if(!dam){
+  $('chainDam').textContent='No nearby geolocated dam/reservoir record';
+  $('chainDamNote').textContent='Only listed public resources can appear here. An unlisted or non-geolocated asset is unknown, not zero.';
+ }else{
+  const r=dam.record,unit=r.unit&&r.unit!=='source-defined'?' '+r.unit:' (source unit not stated)';
+  $('chainDam').textContent=readableKind(r.kind)+': '+Number(r.value).toLocaleString(undefined,{maximumFractionDigits:2})+unit;
+  let details=(r.station_name||r.station_id)+' · '+Math.round(dam.distanceKm)+' km away · source timestamp '+reportedTimeLabel(r)+'. ';
+  if(r.kind==='reservoir_discharge')details+='This is release/outflow, not reservoir level or storage. ';
+  details+='The connection from this asset to the selected point has not been confirmed.';
+  $('chainDamNote').textContent=details;
+ }
+ const flags=[];
+ if(p7!=='—'&&p7!=='Unavailable'&&parseInt(p7,10)>=90)flags.push('historically unusual 7-day rainfall');
+ if(river&&river.record.unit==='m'&&Number.isFinite(Number(river.record.value))){
+  if(Number.isFinite(Number(river.record.danger_level))&&Number(river.record.value)>=Number(river.record.danger_level))flags.push('nearby gauge at/above source-provided danger threshold');
+  else if(Number.isFinite(Number(river.record.warning_level))&&Number(river.record.value)>=Number(river.record.warning_level))flags.push('nearby gauge at/above source-provided warning threshold');
+  const arr=(waterSnapshot.series||[]).find(x=>x.id===river.record.id)?.points||[];
+  if(arr.length>=2&&Number(arr[arr.length-1].value)>Number(arr[arr.length-2].value))flags.push('nearby gauge level rose since previous published sample');
+ }
+ if(flags.length){
+  $('chainFlood').textContent='Multiple indicators to inspect';
+  $('chainFloodNote').textContent=flags.join('; ')+'. These are contextual signals only; gauge connectivity, official forecast and historical flood labels still require verification.';
+  $('chainSummary').textContent='Evidence signals found, not a prediction: '+flags.join('; ')+'. Follow the relevant official CWC/IMD/state warning before taking action.';
+  $('chainSummary').className='status history-error';
+ }else{
+  $('chainFlood').textContent='No validated flood inference';
+  $('chainFloodNote').textContent='No connected gauge threshold crossing or verified historical flood-event label is available for this selected point. Missing evidence does not mean no flood risk.';
+  $('chainSummary').textContent='No flood probability is calculated. Rainfall, river and dam observations can only be combined into a location-specific warning after hydrological connection and model validation.';
+  $('chainSummary').className='status';
+ }
+}
+function renderWaterObservations(){
+ const body=$('waterRows');if(!body)return;
+ const all=Array.isArray(waterSnapshot?.observations)?waterSnapshot.observations:[];
+ const kind=$('obsKindFilter')?.value||'all';
+ const q=($('obsSearch')?.value||'').trim().toLowerCase();
+ const filtered=all.filter(r=>{
+  if(kind!=='all'&&r.kind!==kind)return false;
+  const hay=[r.station_name,r.station_id,r.state,r.district,r.river,r.source_name,r.source_resource_title].join(' ').toLowerCase();
+  return !q||hay.includes(q);
+ }).sort((a,b)=>String(b.observed_at||'').localeCompare(String(a.observed_at||'')));
+ waterDisplayedRecords=filtered.slice(0,250);
+ if(!filtered.length){
+  body.innerHTML='<tr><td colspan="6">No matching observations in the published snapshot. No values are invented.</td></tr>';
+ }else{
+  body.innerHTML=waterDisplayedRecords.map((r,i)=>{
+   const name=r.station_name||r.station_id||'Unnamed station';
+   const value=Number.isFinite(Number(r.value))?Number(r.value).toLocaleString(undefined,{maximumFractionDigits:3}):'—';
+   const unit=r.unit&&r.unit!=='source-defined'?' '+r.unit:'';
+   const area=[r.river,r.district,r.state].filter(Boolean).join(' · ')||'Area not supplied';
+   const time=reportedTimeLabel(r);
+   const coords=Number.isFinite(Number(r.latitude))&&Number.isFinite(Number(r.longitude));
+   const action=coords?'<button type="button" data-observation-index="'+i+'">Map</button>':'<span title="Source did not supply usable coordinates">No coordinates</span>';
+   let threshold='';
+   if(r.unit==='m'&&Number.isFinite(Number(r.danger_level))&&Number(r.value)>=Number(r.danger_level))threshold='<div class="history-error">At/above provided danger level</div>';
+   else if(r.unit==='m'&&Number.isFinite(Number(r.warning_level))&&Number(r.value)>=Number(r.warning_level))threshold='<div class="history-busy">At/above provided warning level</div>';
+   const sourceUrl=String(r.source_dataset_url||'');
+   const sourceLink=sourceUrl.startsWith('https://')?'<a href="'+escapeHtml(sourceUrl)+'" target="_blank" rel="noopener noreferrer">Open source</a>':'Source page';
+   return '<tr><td><b>'+escapeHtml(name)+'</b><div>'+action+'</div></td><td><span class="water-kind">'+escapeHtml(readableKind(r.kind))+'</span></td><td>'+escapeHtml(area)+'</td><td><b>'+escapeHtml(value+unit)+'</b>'+threshold+'</td><td>'+escapeHtml(time)+'<div class="water-freshness">Timezone may be unspecified by source</div></td><td>'+sourceLink+'<div class="water-freshness">'+escapeHtml(r.source_name||r.agency||'Public water dataset')+'</div></td></tr>';
+  }).join('');
+ }
+ $('waterCount').textContent='Showing '+waterDisplayedRecords.length+' of '+filtered.length+' matching station records'+(filtered.length>250?' (first 250 shown)':'')+'.';
+ updateSignalChain();
+}
+async function loadWaterObservations(){
+ try{
+  const r=await fetch('data/water-observations.json?refresh='+Date.now(),{cache:'no-store'});
+  if(!r.ok)throw Error('Published snapshot returned HTTP '+r.status);
+  const snapshot=await r.json();
+  if(!Array.isArray(snapshot.observations))throw Error('Snapshot has no observations list');
+  waterSnapshot=snapshot;
+  const count=snapshot.observation_count??snapshot.observations.length;
+  if(count){
+   $('waterSnapshotStatus').textContent='Loaded '+count+' latest station records from the published public-data snapshot.';
+  }else{
+   $('waterSnapshotStatus').textContent='The repository snapshot is empty. The scheduled official-data collector must finish successfully before station readings appear.';
+  }
+  if(snapshot.generated_at_utc){
+   const age=(Date.now()-Date.parse(snapshot.generated_at_utc))/3600000;
+   $('waterMeta').textContent='Snapshot generated '+new Date(snapshot.generated_at_utc).toLocaleString()+' · '+(Number.isFinite(age)?'about '+Math.max(0,Math.round(age))+' hours old':'snapshot age unavailable')+' · checked resources: '+(snapshot.resource_count_checked??'unknown')+'. Provider update frequency may be slower.';
+  }else{$('waterMeta').textContent=snapshot.coverage_note||'Snapshot exists but has not yet been generated by the data collector.'}
+  renderWaterObservations();
+ }catch(e){
+  $('waterSnapshotStatus').textContent='Public station snapshot unavailable: '+e.message+'. Use the official source links below to check readings.';
+  $('waterMeta').textContent='No water observations are displayed until a valid snapshot can be loaded.';
+  waterSnapshot={observations:[],series:[]};
+  renderWaterObservations();
+ }
+}
 
 async function setOverlay(kind){activeOverlay=kind;updateZoomStatus();document.querySelectorAll('[data-overlay]').forEach(b=>b.classList.toggle('active',b.dataset.overlay===kind));if(overlay){map.removeLayer(overlay);overlay=null}if(cycloneLayer&&kind!=='cyclone'){map.removeLayer(cycloneLayer);cycloneLayer=null}if(kind==='cyclone'){$('overlayStatus').innerHTML='For verified cyclone tracks, warnings and intensity, open the official <a href="https://dss.imd.gov.in/dwr_img/GIS/marine.php" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">IMD Cyclone Warning Decision Support System</a> or <a href="https://mausam.imd.gov.in/imd_latest/contents/cyclone.php" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">IMD cyclone bulletins</a>. This prototype does not yet ingest and validate an official cyclone feed, so it will not draw unverified alerts on the map.';return}if(kind==='rain'){try{$('overlayStatus').textContent='Loading latest available RainViewer radar frame…';const r=await fetch('https://api.rainviewer.com/public/weather-maps.json');if(!r.ok)throw Error('Radar metadata unavailable');const data=await r.json();const frames=[...(data.radar?.past||[])];if(!frames.length)throw Error('No recent radar frames returned');const frame=frames[frames.length-1];if(!frame.time)throw Error('Radar response did not provide a frame timestamp');const ageMinutes=Math.max(0,Math.round((Date.now()-frame.time*1000)/60000));const sourceTime=new Date(frame.time*1000).toISOString().replace('T',' ').replace('.000Z',' UTC');if(ageMinutes>120){$('overlayStatus').textContent='Radar frame rejected as stale: source timestamp '+sourceTime+'; age '+ageMinutes+' minutes. No radar layer displayed.';return}overlay=L.tileLayer('https://tilecache.rainviewer.com'+frame.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:.62,maxNativeZoom:10,maxZoom:21,attribution:'Radar tiles © RainViewer'}).addTo(map);$('overlayStatus').textContent='RainViewer radar frame timestamp: '+sourceTime+' · age about '+ageMinutes+' min. Coverage varies; this is not a station rainfall measurement.'}catch(e){$('overlayStatus').textContent='Radar unavailable right now: '+e.message+'. Current point rainfall remains available from Open-Meteo.'}return}if(kind==='cloud'){$('overlayStatus').textContent='Cloud cover at the selected point is shown in current conditions; a spatial cloud overlay is not connected yet.'}else{$('overlayStatus').textContent='Wind speed and gusts at the selected point are shown in current conditions; a spatial wind overlay is not connected yet.'}}
 async function loadCyclones(){try{if(cycloneLayer)map.removeLayer(cycloneLayer);const r=await fetch('https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventtype=TC&alertlevel=Green;Orange;Red');if(!r.ok)throw Error('GDACS feed unavailable');const data=await r.json();cycloneLayer=L.geoJSON(data,{pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:7,color:'#ffb347',fillColor:'#ff5b5b',fillOpacity:.8}),onEachFeature:(f,l)=>l.bindPopup((f.properties?.name||'Tropical cyclone')+'<br>Public GDACS event feed')}).addTo(map);$('overlayStatus').textContent='GDACS event layer loaded if events are currently reported.'}catch(e){$('overlayStatus').textContent='Cyclone feed unavailable right now. Check official IMD cyclone bulletins.'}}
