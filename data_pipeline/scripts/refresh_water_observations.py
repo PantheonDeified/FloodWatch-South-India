@@ -129,7 +129,7 @@ def select_col(headers, kind, role):
         return None
     if role == "station_id":
         for h, c in cleaned.items():
-            if ("station" in c or "gauge" in c or "location" in c) and ("id" in c or "code" in c):
+            if (("station" in c or "gauge" in c or "location" in c) and ("id" in c or "code" in c)) or c in {"stationid", "gaugeid"}:
                 return h
         return None
     if role == "station_name":
@@ -160,14 +160,14 @@ def select_col(headers, kind, role):
         elif kind in {"river_discharge", "reservoir_discharge"}:
             preferred = ("discharge", "flowrate", "outflow", "release")
         elif kind == "reservoir_storage":
-            preferred = ("storage", "livecapacity", "volume")
+            preferred = ("reservoirstorage", "storage", "livestorage", "livecapacity", "reservoirvolume", "volume")
         else:
             preferred = ()
         ranked = []
         for h, c in cleaned.items():
             if any(x in c for x in reject):
                 continue
-            if any(x in c for x in preferred):
+            if preferred and any(x in c for x in preferred):
                 score = max((len(x) for x in preferred if x in c), default=0)
                 ranked.append((score, h))
         return max(ranked)[1] if ranked else None
