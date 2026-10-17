@@ -26,6 +26,9 @@
 </select>
 </div>
 <div id="waterTableWrap" class="water-table-wrap"><table class="water-table"><thead><tr><th>Station / asset</th><th>Type</th><th>River / area</th><th>Latest source value</th><th>Time reported by source</th><th>Source</th></tr></thead><tbody id="waterRows"><tr><td colspan="6">Waiting for public observations; no values are simulated.</td></tr></tbody></table></div>
+<div class="history-label"><b>Selected gauge / dam history:</b> recent source-reported readings where a station time series is available</div>
+<canvas id="waterHistoryChart" class="history-chart" role="img" aria-label="Recent source-reported river or reservoir readings for the nearest located source station."></canvas>
+<div id="waterHistoryNote" class="water-freshness">No station time series loaded yet.</div>
 <div id="waterCount" class="status">No observations listed yet.</div>
 <div class="warning">Coverage limitation: this is the set of station/resource records available through the registered public feeds, not every dam or every point in South India. Some providers publish daily readings, some hourly readings; timestamps can lack a documented timezone. Official danger/warning levels are shown only when provided with the record. Nearby stations are not automatically assumed to be upstream or hydrologically connected.</div>
 <div style="display:grid;gap:8px;margin-top:10px">
@@ -143,6 +146,39 @@ function nearestObservation(kinds,maxDistanceKm=100){
  return best;
 }
 function reportedTimeLabel(record){return record?.observed_at_raw||record?.observed_at||'time not supplied'}
+
+function drawWaterGaugeHistory(){
+ const canvas=$('waterHistoryChart');if(!canvas)return;
+ const near=nearestObservation(['river_level','river_discharge','reservoir_level','reservoir_storage','reservoir_discharge'],100);
+ const note=$('waterHistoryNote');
+ if(!near||!waterSnapshot||!Array.isArray(waterSnapshot.series)){
+  const ctx=canvas.getContext('2d');const rect=canvas.getBoundingClientRect();const dpr=window.devicePixelRatio||1;const w=Math.max(300,rect.width||300);canvas.width=Math.round(w*dpr);canvas.height=230*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,230);ctx.fillStyle='#a8b6c9';ctx.font='12px system-ui';ctx.fillText('No geolocated source station found within 100 km.',12,25);
+  note.textContent='A blank chart means missing station coverage or coordinates, not that the river is safe.';
+  return;
+ }
+ const r=near.record;
+ const series=(waterSnapshot.series||[]).find(x=>x.id===r.id)?.points||[];
+ const pts=series.filter(p=>p&&p.observed_at&&Number.isFinite(Number(p.value))).sort((a,b)=>String(a.observed_at).localeCompare(String(b.observed_at)));
+ const rect=canvas.getBoundingClientRect(),w=Math.max(300,rect.width||300),h=230,dpr=window.devicePixelRatio||1;
+ canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+ const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);ctx.fillStyle='#0b1626';ctx.fillRect(0,0,w,h);
+ if(pts.length<2){
+  ctx.fillStyle='#a8b6c9';ctx.font='12px system-ui';ctx.fillText('Not enough source history to draw a trend yet.',12,25);
+  note.textContent=(r.station_name||r.station_id)+' · '+readableKind(r.kind)+'. Current source reading '+r.value+(r.unit&&r.unit!=='source-defined'?' '+r.unit:'')+' at '+reportedTimeLabel(r)+'.';
+  return;
+ }
+ const vals=pts.map(p=>Number(p.value)),vmin=Math.min(...vals),vmax=Math.max(...vals);
+ const low=vmin===vmax?vmin-Math.max(1,Math.abs(vmin)*.05):vmin,high=vmin===vmax?vmax+Math.max(1,Math.abs(vmax)*.05):vmax;
+ const left=44,right=12,top=16,bottom=34,pw=w-left-right,ph=h-top-bottom;
+ ctx.strokeStyle='#26364c';ctx.fillStyle='#a8b6c9';ctx.font='10px system-ui';ctx.lineWidth=1;
+ for(let i=0;i<=4;i++){const y=top+ph*i/4;ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();ctx.fillText((high-(high-low)*i/4).toLocaleString(undefined,{maximumFractionDigits:2}),4,y+3)}
+ ctx.strokeStyle='#56b4ff';ctx.lineWidth=2;ctx.beginPath();
+ pts.forEach((p,i)=>{const x=left+(pts.length===1?0:i/(pts.length-1)*pw),y=top+ph-(Number(p.value)-low)/(high-low)*ph;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});
+ ctx.stroke();
+ ctx.fillStyle='#a8b6c9';ctx.textAlign='left';ctx.fillText(String(pts[0].observed_at).slice(0,16),left,h-12);ctx.textAlign='right';ctx.fillText(String(pts[pts.length-1].observed_at).slice(0,16),w-right,h-12);ctx.textAlign='left';
+ note.textContent=(r.station_name||r.station_id)+' · '+readableKind(r.kind)+' · '+pts.length+' available recent source points · '+(r.unit&&r.unit!=='source-defined'?r.unit:'unit not stated')+'. Latest point: '+r.value+' at '+reportedTimeLabel(r)+'. This is observed/source-reported history, not a future forecast; the raw timezone may be undocumented.';
+}
+
 function updateSignalChain(){
  const rain=$('rain')?.textContent||'—';
  const currentRain=rain!=='—'&&rain!=='Unavailable'?rain+' at the selected point (weather-model estimate)':'Current point rainfall unavailable';
@@ -215,6 +251,7 @@ function updateSignalChain(){
   $('chainSummary').textContent='No flood probability is calculated. Rainfall, river and dam observations can only be combined into a location-specific warning after hydrological connection and model validation.';
   $('chainSummary').className='status';
  }
+ drawWaterGaugeHistory();
 }
 function renderWaterObservations(){
  const body=$('waterRows');if(!body)return;
