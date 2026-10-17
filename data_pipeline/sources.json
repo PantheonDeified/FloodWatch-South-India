@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "selection_note": "The collector discovers only current-period CSV resources listed on these official NWDP/NWIC pages. Coverage is limited to stations/resources actually published by the portal; the list is not every physical river or dam.",
+  "sources": [
+    {
+      "name": "Central Water Commission river telemetry",
+      "agency": "CWC/NWIC",
+      "kind": "river_level",
+      "url": "https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-central-water-commission-cwc",
+      "basins": [
+        "Godavari",
+        "Krishna",
+        "Pennar",
+        "Cauvery",
+        "East flowing rivers between Pennar and Kanyakumari",
+        "West flowing rivers from Tapi to Tadri",
+        "West flowing rivers from Tadri to Kanyakumari"
+      ]
+    },
+    {
+      "name": "Andhra Pradesh river telemetry",
+      "agency": "Andhra Pradesh Surface Water Department / NWIC",
+      "kind": "river_level",
+      "url": "https://nwdp.nwic.gov.in/dataset/river-water-level-telemetry-hourly-andhra-pradesh-surface-water-department"
+    },
+    {
+      "name": "Telangana river telemetry",
+      "agency": "Telangana Surface Water Department / NWIC",
+      "kind": "river_level",
+      "url": "https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-telangana-surface-water-department"
+    },
+    {
+      "name": "Kerala river telemetry",
+      "agency": "Kerala Surface Water Department / NWIC",
+      "kind": "river_level",
+      "url": "https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-kerala-surface-water-department"
+    },
+    {
+      "name": "Tamil Nadu river telemetry",
+      "agency": "Tamil Nadu Surface Water and Ground Water Department / NWIC",
+      "kind": "river_level",
+      "url": "https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-tamil-nadu-sw-and-gw-department"
+    },
+    {
+      "name": "Andhra Pradesh reservoir storage and level",
+      "agency": "Andhra Pradesh Surface Water Department / NWIC",
+      "kind": "reservoir_level",
+      "url": "https://www.nwdp.nwic.gov.in/dataset/reservoir-water-level-manual-daily-andhra-pradesh-surface-water-department"
+    },
+    {
+      "name": "Karnataka reservoir data",
+      "agency": "Karnataka Water Department / NWIC",
+      "kind": "reservoir_level",
+      "url": "https://nwdp.nwic.gov.in/hi/dataset/reservoir-data-karnataka"
+    },
+    {
+      "name": "Sri Ram Sagar Dam release/discharge",
+      "agency": "Telangana Surface Water Department / NWIC",
+      "kind": "reservoir_discharge",
+      "url": "https://www.nwdp.nwic.gov.in/hi/dataset/reservoir_discharge_sri_ram_sagar_dam_telangana_telemetry_hourly"
+    },
+    {
+      "name": "Kaddam head regulator release/discharge",
+      "agency": "Telangana Surface Water Department / NWIC",
+      "kind": "reservoir_discharge",
+      "url": "https://nwdp.nwic.gov.in/en/dataset/reservoir_discharge_kaddam_narayan_reddy_head_regulator_telangana_telemetry_hourly"
+    }
+  ],
+  "historical_reference_pages": [
+    "https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-central-water-commission-cwc",
+    "https://nwdp.nwic.gov.in/en/dataset/reservoir-water-level-manual-daily-centre-water-commission_cwc",
+    "https://www.nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-andhra-pradesh-surface-water-department"
+  ]
+}
