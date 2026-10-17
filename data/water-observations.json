@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "product": "FloodWatch South India public water observations",
+  "generated_at_utc": null,
+  "observation_count": 0,
+  "resource_count_checked": 0,
+  "coverage_note": "No official station snapshot has been published yet. This file stays empty rather than displaying fabricated or unverified levels.",
+  "observations": [],
+  "sources": [],
+  "note": "The scheduled GitHub Actions collector must succeed before this file contains source records."
+}
