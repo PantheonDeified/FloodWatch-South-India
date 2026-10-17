@@ -118,7 +118,7 @@ def find_download_url(session: requests.Session, candidate: dict) -> str:
 def select_col(headers, kind, role):
     cleaned = {h: norm(h) for h in headers}
     if role == "time":
-        exact = ["observationdatetime", "datetime", "dateandtime", "timestamp", "observedat", "date", "observationdate", "time"]
+        exact = ["observationdatetime", "datetime", "dateandtime", "timestamp", "observedat", "dataacquisitiontime", "acquisitiontime", "observationdate", "date", "time"]
         for candidate in exact:
             for h, c in cleaned.items():
                 if c == candidate:
@@ -134,7 +134,7 @@ def select_col(headers, kind, role):
         return None
     if role == "station_name":
         for h, c in cleaned.items():
-            if any(word in c for word in ("stationname", "gaugename", "damname", "reservoirname", "locationname")):
+            if c in {"station", "site", "name", "assetname"} or any(word in c for word in ("stationname", "gaugename", "damname", "reservoirname", "locationname")):
                 return h
         return None
     if role == "state":
@@ -172,6 +172,20 @@ def select_col(headers, kind, role):
                 ranked.append((score, h))
         return max(ranked)[1] if ranked else None
     return None
+
+
+def select_value_columns(headers, kind):
+    """Return source column(s) representing one measurement; do not silently pick one gate."""
+    cleaned = {h: norm(h) for h in headers}
+    if kind == "reservoir_discharge":
+        totals = [h for h, c in cleaned.items() if "total" in c and any(word in c for word in ("discharge", "outflow", "release"))]
+        if totals:
+            return [totals[0]]
+        gates = [h for h, c in cleaned.items() if re.search(r"gate\d+.*discharge|discharge.*gate\d+", c)]
+        if len(gates) >= 2:
+            return gates
+    selected = select_col(headers, kind, "value")
+    return [selected] if selected else []
 
 
 def parse_float(value):
@@ -215,18 +229,26 @@ def scan_resource(session, source, candidate, fetched_at):
                 river_col = select_col(headers, source["kind"], "river")
                 lat_col = select_col(headers, source["kind"], "latitude")
                 lon_col = select_col(headers, source["kind"], "longitude")
-                value_col = select_col(headers, kind, "value")
+                value_cols = select_value_columns(headers, kind)
                 warning_col = select_col(headers, kind, "warning_level")
                 danger_col = select_col(headers, kind, "danger_level")
                 full_reservoir_col = select_col(headers, kind, "full_reservoir_level")
-                if not time_col or not value_col:
+                if not time_col or not value_cols:
                     raise RuntimeError(f"Could not identify time/value columns. Headers={headers}")
                 for row in reader:
                     scanned_rows += 1
                     if scanned_rows > MAX_ROWS_PER_RESOURCE:
                         raise RuntimeError(f"CSV exceeded row safety limit ({MAX_ROWS_PER_RESOURCE}).")
                     when, iso = parse_time(row.get(time_col, ""))
-                    value = parse_float(row.get(value_col, ""))
+                    numeric_values = [parse_float(row.get(col, "")) for col in value_cols]
+                    numeric_values = [number for number in numeric_values if number is not None]
+                    if not numeric_values:
+                        value = None
+                    elif kind == "reservoir_discharge" and len(value_cols) > 1:
+                        # Each gate column is one component of total site release.
+                        value = sum(numeric_values)
+                    else:
+                        value = numeric_values[0]
                     if when is None or value is None:
                         continue
                     station_id = (row.get(id_col) or "").strip() if id_col else ""
@@ -240,12 +262,15 @@ def scan_resource(session, source, candidate, fetched_at):
                         continue
                     lat = parse_float(row.get(lat_col, "")) if lat_col else None
                     lon = parse_float(row.get(lon_col, "")) if lon_col else None
-                    key = (source["kind"], station_id, state, district)
-                    header_norm = norm(value_col)
+                    key = (kind, station_id, state, district)
+                    header_norm = norm(" ".join(value_cols))
                     if kind in {"river_level", "reservoir_level"}:
                         unit = "m" if (header_norm.endswith("m") or "meter" in header_norm or "metre" in header_norm) else "source-defined"
                     elif kind in {"river_discharge", "reservoir_discharge"}:
-                        unit = "m3/s" if any(token in header_norm for token in ["m3s", "cumec", "cubicmetrepersecond"]) else "source-defined"
+                        if "cusec" in header_norm or "cusecs" in header_norm:
+                            unit = "cusec"
+                        else:
+                            unit = "m3/s" if any(token in header_norm for token in ["m3s", "cumec", "cubicmetrepersecond"]) else "source-defined"
                     else:
                         unit = "source-defined"
                     warning_value = parse_float(row.get(warning_col, "")) if warning_col else None
@@ -273,6 +298,7 @@ def scan_resource(session, source, candidate, fetched_at):
                         "agency": source["agency"],
                         "source_dataset_url": source["url"],
                         "source_resource_title": candidate["title"],
+                        "source_resource_page_url": candidate.get("resource_page_url"),
                         "source_download_url": download_url,
                         "fetched_at_utc": fetched_at,
                     }
@@ -333,8 +359,8 @@ def main():
                 if resource_count >= args.max_resources:
                     break
                 try:
+                    resource_count += 1  # Count each attempted resource, including schema/download failures.
                     latest, histories, report = scan_resource(session, source, candidate, now)
-                    resource_count += 1
                     page_report.setdefault("resource_reports", []).append(report)
                     for history in histories:
                         previous_points = series_by_id.get(history["id"], [])
