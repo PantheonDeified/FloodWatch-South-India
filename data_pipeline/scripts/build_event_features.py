@@ -10,13 +10,23 @@ import json
 import pathlib
 import pandas as pd
 
+KIND_PREFIX = {
+    "river_level": ("river_level", "m"),
+    "reservoir_level": ("reservoir_level", "m"),
+    "discharge": ("river_discharge", "m3s"),
+    "river_discharge": ("river_discharge", "m3s"),
+    "reservoir_discharge": ("reservoir_discharge", "m3s"),
+    "storage": ("reservoir_storage", "million_m3"),
+    "reservoir_storage": ("reservoir_storage", "million_m3"),
+}
+
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--weather", required=True, type=pathlib.Path,
                     help="Output of fetch_historical_weather.py.")
     ap.add_argument("--observations", required=True, type=pathlib.Path,
-                    help="Output of normalize_cwc_levels.py, or equivalent normalized observations.")
+                    help="Output of normalize_cwc_levels.py or the normalized observation table.")
     ap.add_argument("--out", required=True, type=pathlib.Path)
     args = ap.parse_args()
 
@@ -25,60 +35,95 @@ def main() -> int:
     if not {"station_id", "date", "precipitation_sum"}.issubset(weather.columns):
         raise SystemExit("Weather file needs station_id, date, precipitation_sum.")
     if not {"station_id", "observed_at", "kind", "value"}.issubset(obs.columns):
-        raise SystemExit("Observations file must use normalized columns station_id, observed_at, kind, value.")
+        raise SystemExit("Observations must include station_id, observed_at, kind, and value.")
 
     weather["date"] = pd.to_datetime(weather["date"], errors="coerce").dt.strftime("%Y-%m-%d")
-    weather["precipitation_sum"] = pd.to_numeric(weather["precipitation_sum"], errors="coerce")
-    weather["temperature_2m_mean"] = pd.to_numeric(weather.get("temperature_2m_mean"), errors="coerce")
+    numeric_weather = [
+        "precipitation_sum", "temperature_2m_mean", "temperature_2m_max",
+        "temperature_2m_min", "wind_speed_10m_max",
+    ]
+    for col in numeric_weather:
+        if col not in weather.columns:
+            weather[col] = float("nan")
+        weather[col] = pd.to_numeric(weather[col], errors="coerce")
     weather = weather.dropna(subset=["station_id", "date"]).sort_values(["station_id", "date"])
     obs["value"] = pd.to_numeric(obs["value"], errors="coerce")
-    # Preserve the source-reported date. The timestamp timezone may be unknown; do not silently shift dates.
+    # Preserve the timestamp's reported calendar date. The source timezone is not silently assumed.
     obs["date"] = obs["observed_at"].astype(str).str.slice(0, 10)
     obs = obs.dropna(subset=["station_id", "date", "value"])
     obs = obs[obs["date"].str.match(r"^\d{4}-\d{2}-\d{2}$", na=False)]
 
-    records = []
-    for station_id, group in weather.groupby("station_id", sort=False):
-        group = group.copy().sort_values("date").drop_duplicates("date", keep="last")
+    weather_rows = []
+    for station_id, original in weather.groupby("station_id", sort=False):
+        original = original.drop_duplicates("date", keep="last").copy()
+        original["date_dt"] = pd.to_datetime(original["date"], errors="coerce")
+        original = original.dropna(subset=["date_dt"]).set_index("date_dt").sort_index()
+        if original.empty:
+            continue
+        # Insert missing calendar days as NaN, so a 7-day sum can never silently span 9 days.
+        full_index = pd.date_range(original.index.min(), original.index.max(), freq="D")
+        group = original.reindex(full_index)
+        group.index.name = "date_dt"
+        group["station_id"] = str(station_id)
+        group["date"] = group.index.strftime("%Y-%m-%d")
+        for col in ["station_name", "river", "basin", "state", "latitude", "longitude",
+                    "dataset", "model", "coordinate_source_url"]:
+            if col in group.columns and col in original.columns:
+                group[col] = group[col].fillna(original[col].dropna().iloc[0] if original[col].notna().any() else "")
         group["precipitation_1d_mm"] = group["precipitation_sum"]
-        # Do not fill missing days; a rolling total is available only for a complete window.
         for window in (3, 7, 14, 30):
-            group[f"rain_sum_{window}d_mm"] = group["precipitation_sum"].rolling(window, min_periods=window).sum()
+            group[f"rain_sum_{window}d_mm"] = group["precipitation_sum"].rolling(
+                window, min_periods=window
+            ).sum()
         group["rain_7d_change_vs_previous_7d_mm"] = (
             group["rain_sum_7d_mm"] - group["rain_sum_7d_mm"].shift(7)
         )
-        records.append(group)
-    features = pd.concat(records, ignore_index=True) if records else pd.DataFrame()
+        weather_rows.append(group.reset_index(drop=True))
+    features = pd.concat(weather_rows, ignore_index=True) if weather_rows else pd.DataFrame()
 
-    observed_daily = []
-    for (station_id, kind), group in obs.groupby(["station_id", "kind"], sort=False):
-        group = group.copy().sort_values("observed_at")
-        group["_date"] = group["date"]
-        # Preserve level values as levels and discharge values as flow. Never convert between them.
-        daily = group.groupby("_date", as_index=False).agg(
-            observed_value_last=("value", "last"),
-            observed_value_max=("value", "max"),
-            observed_value_min=("value", "min"),
+    # Pivot each observation variable into its own columns to avoid duplicate station/date rows.
+    kind_tables = []
+    for (station_id, raw_kind), group in obs.groupby(["station_id", "kind"], sort=False):
+        if raw_kind not in KIND_PREFIX:
+            continue
+        prefix, suffix = KIND_PREFIX[raw_kind]
+        group = group.sort_values("observed_at").copy()
+        group["date"] = group["date"].astype(str)
+        daily = group.groupby("date", as_index=False).agg(
+            value_last=("value", "last"),
+            value_max=("value", "max"),
+            value_min=("value", "min"),
             observation_count=("value", "count"),
-            source_url=("source_url", "last") if "source_url" in group.columns else ("value", "size"),
-            unit=("unit", "last") if "unit" in group.columns else ("kind", "first"),
-        )
-        daily = daily.rename(columns={"_date": "date"})
+        ).sort_values("date")
+        dates = pd.to_datetime(daily["date"], errors="coerce")
+        daily = daily.loc[dates.notna()].copy()
+        daily["date_dt"] = pd.to_datetime(daily["date"])
+        daily = daily.set_index("date_dt").sort_index()
+        complete = pd.date_range(daily.index.min(), daily.index.max(), freq="D")
+        daily = daily.reindex(complete)
+        daily.index.name = "date_dt"
         daily["station_id"] = str(station_id)
-        daily["kind"] = kind
-        daily["observed_daily_change"] = daily["observed_value_last"].diff()
-        daily["observed_daily_pct_change"] = daily["observed_value_last"].pct_change() * 100
-        daily["observed_3d_change"] = daily["observed_value_last"].diff(3)
-        daily["observed_7d_change"] = daily["observed_value_last"].diff(7)
-        # Rolling range is a useful rising-water signal, but does not by itself label flooding.
-        daily["observed_7d_max"] = daily["observed_value_max"].rolling(7, min_periods=7).max()
-        observed_daily.append(daily)
-    river = pd.concat(observed_daily, ignore_index=True) if observed_daily else pd.DataFrame()
-
-    if not features.empty and not river.empty:
-        result = features.merge(river, on=["station_id", "date"], how="left", suffixes=("", "_observed"))
-    else:
-        result = features.copy()
+        daily["date"] = daily.index.strftime("%Y-%m-%d")
+        daily[f"{prefix}_last_{suffix}"] = daily["value_last"]
+        daily[f"{prefix}_max_{suffix}"] = daily["value_max"]
+        daily[f"{prefix}_min_{suffix}"] = daily["value_min"]
+        daily[f"{prefix}_daily_change_{suffix}"] = daily["value_last"].diff()
+        daily[f"{prefix}_change_3d_{suffix}"] = daily["value_last"].diff(3)
+        daily[f"{prefix}_change_7d_{suffix}"] = daily["value_last"].diff(7)
+        daily[f"{prefix}_7d_max_{suffix}"] = daily["value_max"].rolling(7, min_periods=7).max()
+        cols = ["station_id", "date", "observation_count"] + [
+            c for c in daily.columns if c.startswith(prefix + "_")
+        ]
+        kind_tables.append(daily.reset_index(drop=True)[cols])
+    if features.empty:
+        raise SystemExit("No valid weather rows were available to build feature data.")
+    result = features.copy()
+    for table in kind_tables:
+        # A gauge may have several distinct variables in a day; each is a separate column family.
+        duplicates = result.duplicated(["station_id", "date"]).any()
+        if duplicates:
+            raise SystemExit("Weather input has duplicate station/date rows; resolve upstream first.")
+        result = result.merge(table, on=["station_id", "date"], how="left", suffixes=("", "_obs"))
     args.out.parent.mkdir(parents=True, exist_ok=True)
     result.to_csv(args.out, index=False)
     metadata = {
@@ -89,8 +134,8 @@ def main() -> int:
         "stations_weather": int(weather["station_id"].nunique()),
         "stations_observations": int(obs["station_id"].nunique()),
         "observation_kinds": sorted(obs["kind"].dropna().astype(str).unique().tolist()),
-        "missingness_policy": "No missing observations are zero-filled; rolling rainfall totals require complete windows.",
-        "interpretation": "Associations/lagged signals are not proof of causality or flood probability. Verified event labels and independent evaluation are required.",
+        "missingness_policy": "No missing observations are zero-filled; rolling rainfall totals require complete consecutive calendar windows.",
+        "interpretation": "Lagged relationships show temporal association, not proof of causality or flood probability. Verified event labels and independent evaluation are required.",
     }
     args.out.with_suffix(args.out.suffix + ".manifest.json").write_text(
         json.dumps(metadata, indent=2), encoding="utf-8"
