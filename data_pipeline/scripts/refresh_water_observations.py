@@ -147,6 +147,12 @@ def select_col(headers, kind, role):
         return next((h for h, c in cleaned.items() if c in {"latitude", "lat", "stationlatitude"}), None)
     if role == "longitude":
         return next((h for h, c in cleaned.items() if c in {"longitude", "lon", "long", "stationlongitude"}), None)
+    if role == "warning_level":
+        return next((h for h, c in cleaned.items() if "warning" in c and "level" in c), None)
+    if role == "danger_level":
+        return next((h for h, c in cleaned.items() if "danger" in c and "level" in c), None)
+    if role == "full_reservoir_level":
+        return next((h for h, c in cleaned.items() if ("fullreservoirlevel" in c or "frl" == c)), None)
     if role == "value":
         reject = ("warning", "danger", "threshold", "alarm", "normallevel", "fullreservoirlevel", "unit")
         if kind in {"river_level", "reservoir_level"}:
@@ -183,6 +189,7 @@ def scan_resource(session, source, candidate, fetched_at):
     candidate["download_url"] = download_url
     kind = candidate.get("kind", source["kind"])
     latest: dict[str, dict] = {}
+    series_by_station: dict[str, dict[str, float]] = {}
     scanned_rows = 0
     byte_count = 0
     with session.get(download_url, timeout=90, stream=True) as response:
@@ -209,6 +216,9 @@ def scan_resource(session, source, candidate, fetched_at):
                 lat_col = select_col(headers, source["kind"], "latitude")
                 lon_col = select_col(headers, source["kind"], "longitude")
                 value_col = select_col(headers, kind, "value")
+                warning_col = select_col(headers, kind, "warning_level")
+                danger_col = select_col(headers, kind, "danger_level")
+                full_reservoir_col = select_col(headers, kind, "full_reservoir_level")
                 if not time_col or not value_col:
                     raise RuntimeError(f"Could not identify time/value columns. Headers={headers}")
                 for row in reader:
@@ -231,6 +241,16 @@ def scan_resource(session, source, candidate, fetched_at):
                     lat = parse_float(row.get(lat_col, "")) if lat_col else None
                     lon = parse_float(row.get(lon_col, "")) if lon_col else None
                     key = (source["kind"], station_id, state, district)
+                    header_norm = norm(value_col)
+                    if kind in {"river_level", "reservoir_level"}:
+                        unit = "m" if (header_norm.endswith("m") or "meter" in header_norm or "metre" in header_norm) else "source-defined"
+                    elif kind in {"river_discharge", "reservoir_discharge"}:
+                        unit = "m3/s" if any(token in header_norm for token in ["m3s", "cumec", "cubicmetrepersecond"]) else "source-defined"
+                    else:
+                        unit = "source-defined"
+                    warning_value = parse_float(row.get(warning_col, "")) if warning_col else None
+                    danger_value = parse_float(row.get(danger_col, "")) if danger_col else None
+                    full_reservoir_value = parse_float(row.get(full_reservoir_col, "")) if full_reservoir_col else None
                     record = {
                         "id": "|".join(key),
                         "station_id": station_id,
@@ -242,9 +262,10 @@ def scan_resource(session, source, candidate, fetched_at):
                         "longitude": lon,
                         "kind": kind,
                         "value": value,
-                        "unit": "m" if kind in {"river_level", "reservoir_level"} else (
-                            "m3/s" if kind in {"river_discharge", "reservoir_discharge"} else "million_m3" if kind == "reservoir_storage" else "source-defined"
-                        ),
+                        "unit": unit,
+                        "warning_level": warning_value,
+                        "danger_level": danger_value,
+                        "full_reservoir_level": full_reservoir_value,
                         "observed_at": iso,
                         "observed_at_raw": (row.get(time_col) or "").strip(),
                         "source_timezone": "not specified in collector; raw timestamp preserved",
@@ -258,9 +279,18 @@ def scan_resource(session, source, candidate, fetched_at):
                     previous = latest.get(record["id"])
                     if previous is None or iso > previous["observed_at"]:
                         latest[record["id"]] = record
-    return list(latest.values()), {
+                    series = series_by_station.setdefault(record["id"], {})
+                    series[iso] = value
+                    if len(series) > 96:
+                        keep = sorted(series)[-48:]
+                        series_by_station[record["id"]] = {k: series[k] for k in keep}
+    histories = [
+        {"id": key, "points": [{"observed_at": when, "value": val} for when, val in sorted(points.items())[-48:]]}
+        for key, points in series_by_station.items()
+    ]
+    return list(latest.values()), histories, {
         "source_name": source["name"],
-        "kind": source["kind"],
+        "kind": kind,
         "dataset_page_url": source["url"],
         "resource_title": candidate["title"],
         "download_url": download_url,
@@ -285,6 +315,7 @@ def main():
     session = requests.Session()
     session.headers.update({"User-Agent": "FloodWatch-South-India/0.1 (open research prototype)"})
     observations_by_id = {}
+    series_by_id = {}
     source_reports = []
     resource_count = 0
     for source in registry["sources"]:
@@ -302,9 +333,16 @@ def main():
                 if resource_count >= args.max_resources:
                     break
                 try:
-                    latest, report = scan_resource(session, source, candidate, now)
+                    latest, histories, report = scan_resource(session, source, candidate, now)
                     resource_count += 1
                     page_report.setdefault("resource_reports", []).append(report)
+                    for history in histories:
+                        previous_points = series_by_id.get(history["id"], [])
+                        combined = {point["observed_at"]: point for point in previous_points}
+                        combined.update({point["observed_at"]: point for point in history["points"]})
+                        series_by_id[history["id"]] = [
+                            combined[key] for key in sorted(combined)[-48:]
+                        ]
                     for record in latest:
                         key = record["id"]
                         previous = observations_by_id.get(key)
@@ -339,6 +377,7 @@ def main():
         "observation_count": len(observations),
         "resource_count_checked": resource_count,
         "observations": observations,
+        "series": [{"id": key, "points": points} for key, points in series_by_id.items()],
         "sources": source_reports,
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
