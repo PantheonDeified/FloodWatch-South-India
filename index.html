@@ -26,7 +26,7 @@ const tiles={
  terrain:L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'© OpenTopoMap contributors'}),
  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'Tiles © Esri'})
 };tiles.street.addTo(map);
-let marker=null,overlay=null,cycloneLayer=null,selected={lat:13.5,lon:78.5,name:'South India overview'},activeOverlay='rain';
+let marker=null,overlay=null,cycloneLayer=null,selected=null,activeOverlay='rain';
 const $=id=>document.getElementById(id),fmt=(v,u='',d=0)=>v==null?'—':Number(v).toFixed(d)+u;
 $('layer').addEventListener('change',e=>{Object.values(tiles).forEach(t=>map.removeLayer(t));tiles[e.target.value].addTo(map)});
 function status(s){$('weatherStatus').textContent=s}
