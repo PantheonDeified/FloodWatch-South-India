@@ -66,7 +66,7 @@ def is_latest_resource(title: str) -> bool:
         return False
     if re.search(r"2026\s*-\s*2030", text):
         return True
-    return max(years) >= 2026 and not any(y < 2026 for y in years[-2:])
+    return max(years) >= 2026
 
 
 def resource_links(session: requests.Session, source: dict) -> tuple[list[dict], str | None]:
