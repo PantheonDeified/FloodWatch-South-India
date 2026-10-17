@@ -15,55 +15,64 @@
         "East flowing rivers between Pennar and Kanyakumari",
         "West flowing rivers from Tapi to Tadri",
         "West flowing rivers from Tadri to Kanyakumari"
-      ]
+      ],
+      "max_resources": 7
     },
     {
       "name": "Andhra Pradesh river telemetry",
       "agency": "Andhra Pradesh Surface Water Department / NWIC",
       "kind": "river_level",
-      "url": "https://nwdp.nwic.gov.in/dataset/river-water-level-telemetry-hourly-andhra-pradesh-surface-water-department"
+      "url": "https://nwdp.nwic.gov.in/dataset/river-water-level-telemetry-hourly-andhra-pradesh-surface-water-department",
+      "max_resources": 4
     },
     {
       "name": "Telangana river telemetry",
       "agency": "Telangana Surface Water Department / NWIC",
       "kind": "river_level",
-      "url": "https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-telangana-surface-water-department"
+      "url": "https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-telangana-surface-water-department",
+      "max_resources": 2
     },
     {
       "name": "Kerala river telemetry",
       "agency": "Kerala Surface Water Department / NWIC",
       "kind": "river_level",
-      "url": "https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-kerala-surface-water-department"
+      "url": "https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-kerala-surface-water-department",
+      "max_resources": 4
     },
     {
       "name": "Tamil Nadu river telemetry",
       "agency": "Tamil Nadu Surface Water and Ground Water Department / NWIC",
       "kind": "river_level",
-      "url": "https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-tamil-nadu-sw-and-gw-department"
+      "url": "https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-tamil-nadu-sw-and-gw-department",
+      "max_resources": 2
     },
     {
       "name": "Andhra Pradesh reservoir storage and level",
       "agency": "Andhra Pradesh Surface Water Department / NWIC",
       "kind": "reservoir_level",
-      "url": "https://www.nwdp.nwic.gov.in/dataset/reservoir-water-level-manual-daily-andhra-pradesh-surface-water-department"
+      "url": "https://www.nwdp.nwic.gov.in/dataset/reservoir-water-level-manual-daily-andhra-pradesh-surface-water-department",
+      "max_resources": 2
     },
     {
       "name": "Karnataka reservoir data",
       "agency": "Karnataka Water Department / NWIC",
       "kind": "reservoir_level",
-      "url": "https://nwdp.nwic.gov.in/hi/dataset/reservoir-data-karnataka"
+      "url": "https://nwdp.nwic.gov.in/hi/dataset/reservoir-data-karnataka",
+      "max_resources": 1
     },
     {
       "name": "Sri Ram Sagar Dam release/discharge",
       "agency": "Telangana Surface Water Department / NWIC",
       "kind": "reservoir_discharge",
-      "url": "https://www.nwdp.nwic.gov.in/hi/dataset/reservoir_discharge_sri_ram_sagar_dam_telangana_telemetry_hourly"
+      "url": "https://www.nwdp.nwic.gov.in/hi/dataset/reservoir_discharge_sri_ram_sagar_dam_telangana_telemetry_hourly",
+      "max_resources": 1
     },
     {
       "name": "Kaddam head regulator release/discharge",
       "agency": "Telangana Surface Water Department / NWIC",
       "kind": "reservoir_discharge",
-      "url": "https://nwdp.nwic.gov.in/en/dataset/reservoir_discharge_kaddam_narayan_reddy_head_regulator_telangana_telemetry_hourly"
+      "url": "https://nwdp.nwic.gov.in/en/dataset/reservoir_discharge_kaddam_narayan_reddy_head_regulator_telangana_telemetry_hourly",
+      "max_resources": 1
     },
     {
       "name": "Central Water Commission river discharge",
@@ -76,31 +85,36 @@
         "Kerala",
         "Tamil Nadu",
         "Telangana"
-      ]
+      ],
+      "max_resources": 5
     },
     {
       "name": "Andhra Pradesh river discharge",
       "agency": "Andhra Pradesh Surface Water Department / NWIC",
       "kind": "river_discharge",
-      "url": "https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-andhra-pradesh-surface-water-department"
+      "url": "https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-andhra-pradesh-surface-water-department",
+      "max_resources": 2
     },
     {
       "name": "Telangana river discharge",
       "agency": "Telangana Surface Water Department / NWIC",
       "kind": "river_discharge",
-      "url": "https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-telangana-surface-water-department"
+      "url": "https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-telangana-surface-water-department",
+      "max_resources": 1
     },
     {
       "name": "Kerala river discharge",
       "agency": "Kerala Surface Water Department / NWIC",
       "kind": "river_discharge",
-      "url": "https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-kerala-surface-water-department"
+      "url": "https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-kerala-surface-water-department",
+      "max_resources": 1
     },
     {
       "name": "Tamil Nadu river discharge",
       "agency": "Tamil Nadu Surface Water Groundwater Department / NWIC",
       "kind": "river_discharge",
-      "url": "https://nwdp.nwic.gov.in/en/dataset/river-discharge-manual-dailly-tamil-nadu-surface-water-groundwater-department"
+      "url": "https://nwdp.nwic.gov.in/en/dataset/river-discharge-manual-dailly-tamil-nadu-surface-water-groundwater-department",
+      "max_resources": 1
     }
   ],
   "historical_reference_pages": [
