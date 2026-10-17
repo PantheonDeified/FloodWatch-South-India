@@ -55,3 +55,13 @@ This is an independent project, not affiliated with or endorsed by Google Flood 
 3. Choose branch `main` and folder `/(root)`, then save.
 4. Wait for GitHub Pages to finish publishing.
 
+
+## ML and neural-network status — important for demos
+
+- **Model code exists:** a PyTorch LSTM research training script for a verified discharge gauge and a scikit-learn flood-event classifier with chronological evaluation.
+- **Not yet operational:** no published trained South India model weights or validated local forecasts; the public water-observation snapshot has to populate and historical data must be cleaned first.
+- **Current river-flow outlook:** the website can request modelled GloFAS flow estimates via Open-Meteo. This is an external forecast, not a FloodWatch-trained neural network or a live CWC gauge reading.
+- **No validated local flood probabilities or depth maps are currently claimed.**
+
+See [ML / neural-network model card](data_pipeline/SUBMISSION_MODEL_CARD.md) for exact status, training requirements and scientific guardrails.
+
