@@ -382,12 +382,30 @@ def main():
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
+    diagnostics = []
+    for report in source_reports:
+        diagnostics.append({
+            "source_name": report.get("source_name"),
+            "status": report.get("status"),
+            "resources_discovered": report.get("resources_discovered", report.get("resources", 0)),
+            "resources_succeeded": len(report.get("resource_reports", [])),
+            "source_error": report.get("error"),
+            "resource_errors": report.get("resource_errors", []),
+            "resource_summaries": [{
+                "title": item.get("resource_title"),
+                "status": item.get("status"),
+                "stations": item.get("stations_with_numeric_timestamped_record"),
+                "latest_timestamp": item.get("latest_observation_timestamp_reported"),
+                "download_url": item.get("download_url"),
+            } for item in report.get("resource_reports", [])],
+        })
     print(json.dumps({
         "output": str(args.out),
         "observation_count": len(observations),
         "resource_count_checked": resource_count,
         "source_pages": len(source_reports),
         "statuses": {r["source_name"]: r["status"] for r in source_reports},
+        "diagnostics": diagnostics,
     }, indent=2))
     # Partial source failures should not erase a previously published snapshot in automation.
     return 0 if observations else 1
