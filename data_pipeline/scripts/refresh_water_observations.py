@@ -88,7 +88,11 @@ def resource_links(session: requests.Session, source: dict) -> tuple[list[dict],
         if href in seen:
             continue
         seen.add(href)
-        candidates.append({"title": title, "resource_page_url": href, "download_url": None})
+        effective_kind = source["kind"]
+        title_lower = title.lower()
+        if effective_kind == "reservoir_level" and "storage" in title_lower and "water level" not in title_lower:
+            effective_kind = "reservoir_storage"
+        candidates.append({"title": title, "resource_page_url": href, "download_url": None, "kind": effective_kind})
     return candidates, None
 
 
@@ -177,6 +181,7 @@ def parse_float(value):
 def scan_resource(session, source, candidate, fetched_at):
     download_url = find_download_url(session, candidate)
     candidate["download_url"] = download_url
+    kind = candidate.get("kind", source["kind"])
     latest: dict[str, dict] = {}
     scanned_rows = 0
     byte_count = 0
@@ -195,7 +200,7 @@ def scan_resource(session, source, candidate, fetched_at):
             with open(temp.name, "r", newline="", encoding="utf-8-sig", errors="replace") as handle:
                 reader = csv.DictReader(handle)
                 headers = reader.fieldnames or []
-                time_col = select_col(headers, source["kind"], "time")
+                time_col = select_col(headers, kind, "time")
                 id_col = select_col(headers, source["kind"], "station_id")
                 name_col = select_col(headers, source["kind"], "station_name")
                 state_col = select_col(headers, source["kind"], "state")
@@ -203,7 +208,7 @@ def scan_resource(session, source, candidate, fetched_at):
                 river_col = select_col(headers, source["kind"], "river")
                 lat_col = select_col(headers, source["kind"], "latitude")
                 lon_col = select_col(headers, source["kind"], "longitude")
-                value_col = select_col(headers, source["kind"], "value")
+                value_col = select_col(headers, kind, "value")
                 if not time_col or not value_col:
                     raise RuntimeError(f"Could not identify time/value columns. Headers={headers}")
                 for row in reader:
@@ -235,10 +240,10 @@ def scan_resource(session, source, candidate, fetched_at):
                         "river": river,
                         "latitude": lat,
                         "longitude": lon,
-                        "kind": source["kind"],
+                        "kind": kind,
                         "value": value,
-                        "unit": "m" if source["kind"] in {"river_level", "reservoir_level"} else (
-                            "m3/s" if source["kind"] in {"river_discharge", "reservoir_discharge"} else "source-defined"
+                        "unit": "m" if kind in {"river_level", "reservoir_level"} else (
+                            "m3/s" if kind in {"river_discharge", "reservoir_discharge"} else "million_m3" if kind == "reservoir_storage" else "source-defined"
                         ),
                         "observed_at": iso,
                         "observed_at_raw": (row.get(time_col) or "").strip(),
@@ -272,7 +277,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--sources", type=pathlib.Path, default=DEFAULT_SOURCE_FILE)
     ap.add_argument("--out", type=pathlib.Path, default=DEFAULT_OUTPUT)
-    ap.add_argument("--max-resources", type=int, default=35)
+    ap.add_argument("--max-resources", type=int, default=40)
     ap.add_argument("--request-delay-seconds", type=float, default=0.6)
     args = ap.parse_args()
     registry = json.loads(args.sources.read_text(encoding="utf-8"))
@@ -291,7 +296,7 @@ def main():
                 source_reports.append(page_report)
                 continue
             # Choose newest labelled resources. On state pages many basins may exist; cap each page too.
-            candidates = candidates[: max(1, min(args.max_resources, 20))]
+            candidates = candidates[: max(1, min(int(source.get("max_resources", 2)), args.max_resources, 20))]
             page_report["resources_discovered"] = len(candidates)
             for candidate in candidates:
                 if resource_count >= args.max_resources:
