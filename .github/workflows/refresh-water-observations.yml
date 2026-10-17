@@ -55,5 +55,9 @@ jobs:
             echo "No data snapshot changes to publish."
           else
             git commit -m "Refresh public water observations"
-            git push
+            # Rebase the generated snapshot commit on top of any code/docs commits
+            # that arrived while public resources were downloading.
+            git fetch origin main
+            git rebase origin/main
+            git push origin HEAD:main
           fi
