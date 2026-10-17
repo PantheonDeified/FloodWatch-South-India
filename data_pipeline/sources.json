@@ -115,6 +115,48 @@
       "kind": "river_discharge",
       "url": "https://nwdp.nwic.gov.in/en/dataset/river-discharge-manual-dailly-tamil-nadu-surface-water-groundwater-department",
       "max_resources": 1
+    },
+    {
+      "name": "Flood Flow Canal Head Regulator discharge",
+      "agency": "Telangana Surface Water Department / NWIC",
+      "kind": "reservoir_discharge",
+      "url": "https://nwdp.nwic.gov.in/en/dataset/reservoir_discharge_flood_flow_canal_head_regulator_telangana_telemetry_hourly",
+      "max_resources": 1
+    },
+    {
+      "name": "Lower Manair Dam 2 discharge",
+      "agency": "Telangana Surface Water Department / NWIC",
+      "kind": "reservoir_discharge",
+      "url": "https://nwdp.nwic.gov.in/en/dataset/reservoir_discharge_lower_manair_dam_2_telangana_telemetry_hourly",
+      "max_resources": 1
+    },
+    {
+      "name": "Saraswati Canal Head Regulator discharge",
+      "agency": "Telangana Surface Water Department / NWIC",
+      "kind": "reservoir_discharge",
+      "url": "https://nwdp.nwic.gov.in/en/dataset/reservoir_discharge_saraswati_canal_head_regulator_telangana_telemetry_hourly",
+      "max_resources": 1
+    },
+    {
+      "name": "Lower Manair Canal Head Regulator discharge",
+      "agency": "Telangana Surface Water Department / NWIC",
+      "kind": "reservoir_discharge",
+      "url": "https://nwdp.nwic.gov.in/en/dataset/reservoir_discharge_lower_manair_canal_head_regulator_telangana_telemetry_hourly",
+      "max_resources": 1
+    },
+    {
+      "name": "Lakshmi Canal Head Regulator discharge",
+      "agency": "Telangana Surface Water Department / NWIC",
+      "kind": "reservoir_discharge",
+      "url": "https://nwdp.nwic.gov.in/en/dataset/reservoir_discharge_lakshmi_canal_head_regulator_telangana_telemetry_hourly",
+      "max_resources": 1
+    },
+    {
+      "name": "Kakatiya Canal Head Regulator discharge",
+      "agency": "Telangana Surface Water Department / NWIC",
+      "kind": "reservoir_discharge",
+      "url": "https://nwdp.nwic.gov.in/en/dataset/reservoir_discharge_kakatiya_canal_head_regulator_telangana_telemetry_hourly",
+      "max_resources": 1
     }
   ],
   "historical_reference_pages": [
