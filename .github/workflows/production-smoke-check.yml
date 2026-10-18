@@ -59,7 +59,10 @@ jobs:
                          'data-overlay="rain"', 'data-overlay="cloud"',
                          'data-overlay="wind"', 'data-overlay="cyclone"',
                          "ERA5-Land", "waterRows", "dischargeInterpretation",
-                         "hourly", "infraEvidenceForm", "initInfrastructureRegister",
+                         "hourly", "riskLayer", "riskMapLegend", "setRiskMapLayer",
+                         "NRSC_HAZARD_WMS", "agg_karnataka", "agg_kerala",
+                         "agg_tamilnadu", "loadCyclones", "addRiskCycloneThreat",
+                         "infraEvidenceForm", "initInfrastructureRegister",
                          "floodwatch.infrastructureEvidence.v1",
                          "cwc.gov.in/national-register-large-dams",
                          "sachet.ndma.gov.in"):
