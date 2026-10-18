@@ -59,3 +59,34 @@ class AuditWaterSnapshotTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+    def test_report_includes_collection_errors_and_unit_breakdown(self):
+        report = render_report({
+            "generated_at_utc": "2026-10-18T00:00:00+00:00",
+            "resource_count_checked": 2,
+            "observations": [
+                {"kind": "river_level", "unit": "m", "state": "Kerala"},
+                {"kind": "river_discharge", "unit": "source-defined", "state": "Kerala"},
+            ],
+            "sources": [
+                {
+                    "source_name": "Example river source",
+                    "status": "checked",
+                    "resources_discovered": 2,
+                    "resource_reports": [{"resource_title": "Good CSV", "status": "ok"}],
+                    "resource_errors": [{"resource_title": "Broken CSV", "error": "HTTP 503"}],
+                },
+                {
+                    "source_name": "Unavailable page",
+                    "status": "source_page_error",
+                    "error": "Connection timed out",
+                },
+            ],
+        })
+        self.assertIn("## Collection outcomes", report)
+        self.assertIn("HTTP 503", report)
+        self.assertIn("Connection timed out", report)
+        self.assertIn("## Units reported by the collector", report)
+        self.assertIn("source-defined", report)
+        self.assertIn("Verify them against the original resource metadata", report)
