@@ -37,6 +37,7 @@
 <button id="toggleWaterMap" type="button">Show stations on map</button>
 </div>
 <div id="waterMapStatus" class="status">Map station overlay is off. Only coordinate-located public source records can be plotted; markers are not flood alerts.</div>
+<div class="history-note"><b>Nearest reported water stations</b><div id="nearbyWaterStations" role="status" aria-live="polite">Select a location on the map to find nearby station records. Distance uses source-published coordinates and is not proof of river connectivity.</div></div>
 <div class="water-freshness" aria-label="Water station map legend">Station map legend: <span style="color:#56a8ff">● River level</span> · <span style="color:#36c9b2">● River discharge</span> · <span style="color:#f0bc4c">● Reservoir level</span> · <span style="color:#ba8cff">● Reservoir storage</span> · <span style="color:#ff808b">● Dam/regulator release</span>. Colors identify measurement type, not severity.</div>
 <div class="water-freshness">Map marker legend: blue = river level · teal = river discharge · gold = reservoir level · purple = reservoir storage · coral = reservoir/regulator release.</div>
 <div id="waterTableWrap" class="water-table-wrap"><table class="water-table"><thead><tr><th>Station / asset</th><th>Type</th><th>River / area</th><th>Latest source value</th><th>Time reported by source</th><th>Source</th></tr></thead><tbody id="waterRows"><tr><td colspan="6">Waiting for public observations; no values are simulated.</td></tr></tbody></table></div>
@@ -197,7 +198,7 @@ apiCheckButton.addEventListener('click',checkBackendApi);
 apiUrlInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();checkBackendApi()}});
 $('clearApiButton').addEventListener('click',()=>{apiUrlInput.value='';try{localStorage.removeItem('floodwatchApiBaseUrl')}catch(e){}$('apiConnectionStatus').textContent='Saved URL cleared. Paste an HTTPS API URL to test again.';$('apiStatusDetails').hidden=true});
 
-function selectLocation(lat,lon,name='Selected map point'){selected={lat,lon,name};if(marker)map.removeLayer(marker);marker=L.marker([lat,lon],{draggable:true}).addTo(map).bindPopup('<b>'+name+'</b><br>'+lat.toFixed(5)+', '+lon.toFixed(5)+'<br>Drag this pin to fine-tune the point.').openPopup();marker.on('dragend',e=>{const p=e.target.getLatLng();selectLocation(p.lat,p.lng,'Manually adjusted point')});$('placeName').textContent=name;$('coords').textContent='Latitude '+lat.toFixed(5)+' · Longitude '+lon.toFixed(5);$('latInput').value=lat.toFixed(5);$('lonInput').value=lon.toFixed(5);loadWeather();loadHistorical(lat,lon);if(activeOverlay==='rain'||activeOverlay==='cloud'||activeOverlay==='wind')setOverlay(activeOverlay);updateSignalChain()}
+function selectLocation(lat,lon,name='Selected map point'){selected={lat,lon,name};renderNearbyWaterStations();if(marker)map.removeLayer(marker);marker=L.marker([lat,lon],{draggable:true}).addTo(map).bindPopup('<b>'+name+'</b><br>'+lat.toFixed(5)+', '+lon.toFixed(5)+'<br>Drag this pin to fine-tune the point.').openPopup();marker.on('dragend',e=>{const p=e.target.getLatLng();selectLocation(p.lat,p.lng,'Manually adjusted point')});$('placeName').textContent=name;$('coords').textContent='Latitude '+lat.toFixed(5)+' · Longitude '+lon.toFixed(5);$('latInput').value=lat.toFixed(5);$('lonInput').value=lon.toFixed(5);loadWeather();loadHistorical(lat,lon);if(activeOverlay==='rain'||activeOverlay==='cloud'||activeOverlay==='wind')setOverlay(activeOverlay);updateSignalChain()}
 map.on('click',e=>selectLocation(e.latlng.lat,e.latlng.lng,'Manually selected map point'));map.getContainer().style.cursor='crosshair';
 async function loadWeather(){if(!selected||!Number.isFinite(selected.lat)||!Number.isFinite(selected.lon))return;const {lat,lon}=selected;status('Fetching weather model data…');try{const u='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,cloud_cover,wind_speed_10m,wind_gusts_10m,weather_code&hourly=temperature_2m,precipitation_probability,precipitation,rain&forecast_days=2&timezone=auto';let d,weatherSource='Direct Open-Meteo',backendFallbackNote='';let apiBase='';try{apiBase=(localStorage.getItem('floodwatchApiBaseUrl')||'');while(apiBase.endsWith('/'))apiBase=apiBase.slice(0,-1)}catch(e){}const readWeather=async url=>{const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw Error('HTTP '+response.status);return response.json()};if(apiBase){try{const p=new URLSearchParams({latitude:String(lat),longitude:String(lon)});d=await readWeather(apiBase+'/api/v1/weather?'+p.toString());weatherSource='FloodWatch API → Open-Meteo'}catch(apiError){backendFallbackNote=' Backend weather endpoint unavailable ('+apiError.message+'); direct Open-Meteo fallback was used.';d=await readWeather(u)}}else{d=await readWeather(u)}const c=d.current||{};if(c.temperature_2m==null)throw Error('Weather provider returned no current values');$('temp').textContent=fmt(c.temperature_2m,'°C');$('feels').textContent='Feels like '+fmt(c.apparent_temperature,'°C');$('rain').textContent=fmt(c.precipitation,' mm',1);$('wind').textContent=fmt(c.wind_speed_10m,' km/h');$('gust').textContent='Gust '+fmt(c.wind_gusts_10m,' km/h');$('humidity').textContent=fmt(c.relative_humidity_2m,'%');$('cloud').textContent='Cloud '+fmt(c.cloud_cover,'%');$('updated').textContent='Browser fetched: '+new Date().toLocaleString()+' · model timestamp: '+(c.time||'not supplied')+' ('+(d.timezone||'provider timezone')+')';status(weatherSource+' response received. These are gridded model estimates, not direct station observations. The browser refreshes every 10 minutes; the provider model update cycle may differ.'+backendFallbackNote);updateSignalChain();const h=d.hourly;if(!h||!h.time)throw Error('Hourly forecast was missing');let out='<div style="padding:4px 0 8px;font-size:11px;color:#a8b6c9">Times shown in '+(d.timezone_abbreviation||d.timezone||'provider timezone')+' · forecast, not observations</div>';for(let i=0;i<Math.min(24,h.time.length);i++){out+='<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid #26364c"><span>'+String(h.time[i]).slice(11,16)+'</span><span>'+fmt(h.temperature_2m[i],'°C')+'</span><span>Rain '+fmt(h.precipitation_probability?.[i],'%')+'</span></div>'}$('hourly').innerHTML=out}catch(e){for(const id of ['temp','feels','rain','wind','gust','humidity','cloud'])$(id).textContent='—';$('updated').textContent='Data unavailable · '+new Date().toLocaleString();$('hourly').textContent='Forecast unavailable. Retry when the provider is reachable.';status('No current data could be verified: '+e.message+'. Values cleared rather than showing stale readings.');updateSignalChain();}}
 
@@ -465,6 +466,43 @@ function renderWaterObservations(){
  $('waterCount').textContent='Showing '+waterDisplayedRecords.length+' of '+filtered.length+' matching station records'+(filtered.length>250?' (first 250 shown)':'')+'.';
  updateSignalChain();
 }
+function renderNearbyWaterStations(){
+ const target=$('nearbyWaterStations');
+ if(!target)return;
+ target.replaceChildren();
+ if(!selected){target.textContent='Select a location on the map to find nearby station records.';return}
+ if(!waterSnapshot||!Array.isArray(waterSnapshot.observations)){target.textContent='Water snapshot is not loaded yet.';return}
+ const toRad=value=>value*Math.PI/180;
+ const candidates=[];
+ waterSnapshot.observations.forEach(record=>{
+  const lat=Number(record.latitude),lon=Number(record.longitude);
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat < -90||lat > 90||lon < -180||lon > 180)return;
+  const dLat=toRad(lat-selected.lat),dLon=toRad(lon-selected.lon);
+  const a=Math.sin(dLat/2)**2+Math.cos(toRad(selected.lat))*Math.cos(toRad(lat))*Math.sin(dLon/2)**2;
+  const distance=6371*2*Math.asin(Math.sqrt(Math.min(1,a)));
+  if(distance<=100)candidates.push({record,distance});
+ });
+ candidates.sort((a,b)=>a.distance-b.distance);
+ if(!candidates.length){target.textContent='No coordinate-located source records within 100 km of this point. Records without verified coordinates are not assigned a guessed location.';return}
+ const summary=document.createElement('div');
+ summary.textContent='Nearest '+Math.min(5,candidates.length)+' coordinate-located record(s) within 100 km. Distance is straight-line only, not river-network distance.';
+ target.appendChild(summary);
+ const list=document.createElement('ul');
+ list.style.margin='6px 0 0';list.style.paddingLeft='18px';
+ candidates.slice(0,5).forEach(({record,distance})=>{
+  const item=document.createElement('li');
+  item.style.margin='5px 0';
+  const title=document.createElement('span');
+  title.textContent=(record.station_name||record.station_id||'Unnamed station')+' · '+distance.toFixed(1)+' km · '+(record.kind||'measurement type unknown')+' · '+(record.value??'value unavailable')+' '+(record.unit||'unit unspecified')+' · '+(record.observed_at||record.observed_at_raw||'timestamp unavailable');
+  item.appendChild(title);
+  if(/^https?:\/\//i.test(String(record.source_url||''))){
+   item.appendChild(document.createTextNode(' '));
+   const link=document.createElement('a');link.href=record.source_url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='source';item.appendChild(link);
+  }
+  list.appendChild(item);
+ });
+ target.appendChild(list);
+}
 async function loadWaterObservations(){
  try{
   let snapshot,waterSource='published GitHub Pages snapshot';
@@ -492,6 +530,7 @@ async function loadWaterObservations(){
   if(!Array.isArray(snapshot.observations))throw Error('Snapshot has no observations list');
   waterSnapshot=snapshot;
   renderWaterStations();
+  renderNearbyWaterStations();
   const count=snapshot.observation_count??snapshot.observations.length;
   if(count){
    $('waterSnapshotStatus').textContent='Snapshot contains '+count+' station records · source: '+waterSource+'. These are not guaranteed to be live; check each reading’s freshness label and timestamp.';
