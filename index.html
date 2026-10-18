@@ -397,7 +397,7 @@ async function runRegionalMlForecast(){
  const button=$('runRegionalMlInference'),statusBox=$('regionalMlRuntimeStatus'),output=$('regionalMlRuntimeOutput');
  if(!button||!statusBox||!output)return;
  let apiBase='';
- try{apiBase=(localStorage.getItem('floodwatchApiBaseUrl')||'').replace(/\\/+$/,'')}catch(e){}
+ try{apiBase=(localStorage.getItem('floodwatchApiBaseUrl')||'').replace(/\/+$/,'')}catch(e){}
  if(!apiBase){
   statusBox.textContent='No API origin is saved in this browser. Open this page with ?devtools=1, enter the server’s HTTPS API origin in the Backend API panel, click Test API, then retry.';
   output.hidden=true;return;
