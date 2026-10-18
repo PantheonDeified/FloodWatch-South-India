@@ -57,6 +57,14 @@ class RegionalLSTMTests(unittest.TestCase):
         self.assertIn('"history_freshness": history_freshness', source)
         self.assertIn('model.load_state_dict(weights, strict=True)', source)
 
+    def test_training_coordinates_are_scaled_once_and_match_inference(self):
+        trainer = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "train_regional_lstm.py"
+        source = trainer.read_text(encoding="utf-8")
+        self.assertIn('pd.to_numeric(df.latitude, errors="coerce").fillna(0).clip(-90,90)/90', source)
+        self.assertIn('pd.to_numeric(df.longitude, errors="coerce").fillna(0).clip(-180,180)/180', source)
+        self.assertIn('lat,lon=map(float,meta.loc[sid].tolist())', source)
+        self.assertNotIn('lat_raw,lon_raw=map(float,meta.loc[sid].tolist())', source)
+
 
 if __name__ == "__main__":
     unittest.main()
