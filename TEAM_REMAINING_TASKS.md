@@ -10,7 +10,7 @@ The project lead is handling the tasks that were originally split between teamma
 - RainViewer radar and Open-Meteo spatial cloud-cover overlay.
 - Public NWDP/NWIC observation collector, source registry, six-hour GitHub Actions workflow, snapshot validator, tests, and frontend table/map reader.
 - Successful water collector run produced 407 records from 37 resource files across 20 configured source pages. This is not proof every source is fresh or complete.
-- FastAPI backend source, health/status/weather routes, deployment notes, and an automated backend test workflow.
+- FastAPI backend source, health/status/weather routes, deployment notes, an automated backend test workflow, and a systemd service template at backend/floodwatch-api.service. The service template has not yet been installed on the Linux host.
 - The cyclone overlay now calls GDACS when selected, and a spatial wind overlay has been added to the frontend. These new changes still need a browser end-to-end test after GitHub Pages publishes them.
 - Documentation now states that the water snapshot contains records rather than incorrectly describing it as empty.
 
