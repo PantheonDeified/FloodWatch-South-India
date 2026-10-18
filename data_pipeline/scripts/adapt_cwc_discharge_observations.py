@@ -8,7 +8,7 @@ from __future__ import annotations
 import argparse, csv, json, pathlib
 
 INPUT_REQUIRED = {"station_id","station_name","state","district","river","basin","latitude","longitude","observed_at","discharge_m3_s","source_url","source_file","source_timezone"}
-OUTPUT_FIELDS = ["station_id","station_name","state","district","river","basin","latitude","longitude","observed_at","kind","value","unit","source_url","source_file","source_timezone","quality_flag"]
+OUTPUT_FIELDS = ["station_id","station_name","state","district","river","basin","latitude","longitude","observed_at","kind","value","unit","source_url","source_download_url","source_dataset_url","source_resource_title","source_sha256","source_provenance_status","source_file","source_timezone","quality_flag"]
 
 def convert(source: pathlib.Path, output: pathlib.Path) -> dict:
     output.parent.mkdir(parents=True,exist_ok=True)
@@ -32,7 +32,12 @@ def convert(source: pathlib.Path, output: pathlib.Path) -> dict:
                 "district":row["district"],"river":row["river"],"basin":row["basin"],
                 "latitude":row["latitude"],"longitude":row["longitude"],"observed_at":row["observed_at"],
                 "kind":"river_discharge","value":format(value,".12g"),"unit":"m3/s",
-                "source_url":row["source_url"],"source_file":row["source_file"],
+                "source_url":row["source_url"],"source_download_url":row.get("source_download_url",""),
+                "source_dataset_url":row.get("source_dataset_url",""),
+                "source_resource_title":row.get("source_resource_title",""),
+                "source_sha256":row.get("source_sha256",""),
+                "source_provenance_status":row.get("source_provenance_status","unknown"),
+                "source_file":row["source_file"],
                 "source_timezone":row["source_timezone"] or "unspecified",
                 "quality_flag":row.get("quality_flag","unreviewed"),
             }); rows_out+=1
