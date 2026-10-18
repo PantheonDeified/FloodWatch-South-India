@@ -178,6 +178,17 @@ def main() -> int:
     pred_test = np.maximum(pred_test, 0.0)
     actual_test = y_test_scaled
     test_metrics = metrics(actual_test.reshape(-1), pred_test.reshape(-1))
+    # Essential benchmark: persistence repeats the latest observed discharge for every lead day.
+    # A neural network should not be trusted unless it beats this baseline out of time.
+    persistence_test = np.repeat(x_seq[test_mask, -1, FEATURES.index(TARGET)][:, None], lead, axis=1)
+    persistence_test = np.maximum(persistence_test, 0.0)
+    persistence_metrics = metrics(actual_test.reshape(-1), persistence_test.reshape(-1))
+    baseline_rmse = persistence_metrics["rmse_m3s"]
+    model_rmse = test_metrics["rmse_m3s"]
+    skill_vs_persistence = (
+        float(1.0 - model_rmse / baseline_rmse)
+        if baseline_rmse is not None and baseline_rmse > 0 else None
+    )
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     model_path = args.output_dir / f"streamflow_lstm_{args.station_id}.pt"
@@ -200,6 +211,9 @@ def main() -> int:
             "test_starts": str(dates[val_cut].date()),
         },
         "test_metrics": test_metrics,
+        "persistence_baseline_test_metrics": persistence_metrics,
+        "rmse_skill_vs_persistence": skill_vs_persistence,
+        "beats_persistence_baseline_on_rmse": bool(skill_vs_persistence is not None and skill_vs_persistence > 0),
         "training_history": history,
         "model_file": str(model_path),
         "created_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
