@@ -55,7 +55,7 @@ class AuditWaterSnapshotTests(unittest.TestCase):
         }
         report = render_report(data)
         self.assertIn("Source\\|Name", report)
-                self.assertIn("Resource\\|Page", report)
+        self.assertIn("Resource\\|Page", report)
 
 
 if __name__ == "__main__":
