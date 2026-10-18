@@ -37,6 +37,10 @@
 .risk-legend img{max-width:100%;height:auto;max-height:130px;object-fit:contain;background:#fff;border-radius:4px}
 @media(max-width:900px){#riskLayer{flex:1 1 220px;max-width:none}.risk-legend{bottom:10px;left:10px;max-width:calc(100% - 20px)}}
 
+
+.risk-official-legend{border-top:1px solid #34475f;padding-top:5px;margin-top:4px;font-size:10px;color:#c4d0df}
+.risk-official-legend img{display:block;max-width:100%;max-height:95px;height:auto;object-fit:contain;background:#fff;border-radius:4px;margin-top:3px}
+.risk-legend{max-height:70vh;overflow-y:auto}
 </style>
 </head>
 <body>
@@ -834,10 +838,14 @@ function riskLegend(mode,title,rows,note,sourceUrl){
  $('riskLegendSource').textContent=(mode==='cyclone-threat'?'Open official GDACS event map ↗':'Open official NRSC flood-hazard atlas ↗');
 }
 function addNRSCOfficialLegendImage(){
- const imgUrl=NRSC_HAZARD_WMS+'SERVICE=WMS&VERSION=1.1.1&REQUEST=GetLegendGraphic&LAYER=ap_hz&FORMAT=image/png';
- const img=document.createElement('img');img.alt='Official NRSC hazard-map legend for Andhra Pradesh layer';img.loading='lazy';img.src=imgUrl;
- img.onerror=()=>{img.remove()};
- $('riskLegendContent').appendChild(img);
+ NRSC_HAZARD_LAYER_SPECS.forEach(spec=>{
+  const item=document.createElement('div');item.className='risk-official-legend';
+  const label=document.createElement('div');label.textContent=spec.area+' · official NRSC legend';item.appendChild(label);
+  const imgUrl=NRSC_HAZARD_WMS+'SERVICE=WMS&VERSION=1.1.1&REQUEST=GetLegendGraphic&LAYER='+encodeURIComponent(spec.name)+'&FORMAT=image/png';
+  const img=document.createElement('img');img.alt='Official NRSC hazard-map colour legend for '+spec.area;img.loading='lazy';img.src=imgUrl;
+  img.onerror=()=>{item.textContent=spec.area+': source legend unavailable. Use official atlas legend; FloodWatch does not substitute its own classes.'};
+  item.appendChild(img);$('riskLegendContent').appendChild(item);
+ });
 }
 function addHistoricalFloodHazard(){
  const failed=[];
