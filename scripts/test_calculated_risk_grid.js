@@ -53,4 +53,11 @@ for(let i=1;i<=7;i++){const d=new Date();d.setUTCDate(d.getUTCDate()+i);days.pus
 const flowOnly=scorer(cell,{weather:{failed:true},flow:{daily:{time:days,river_discharge:values}}});
 assert.equal(flowOnly.level,'red','A high own-history GloFAS flow percentile should be reflected in the score.');
 assert.equal(flowOnly.flowHistoryCount,92,'Flow comparison should use the available pre-today history.');
-console.log(JSON.stringify({status:'PASS',grid_cells:cells.length,checks:10,examples:{green:green.score,amber:amber.score,red:red.score,flow_only:flowOnly.score,missing:unknown.level}},null,2));
+const flatDays=[],flatValues=[];
+for(let i=92;i>=1;i--){const d=new Date();d.setUTCDate(d.getUTCDate()-i);flatDays.push(d.toISOString().slice(0,10));flatValues.push(10);}
+flatDays.push(today);flatValues.push(null);
+for(let i=1;i<=7;i++){const d=new Date();d.setUTCDate(d.getUTCDate()+i);flatDays.push(d.toISOString().slice(0,10));flatValues.push(10);}
+const flatFlow=scorer(cell,{weather:{failed:true},flow:{daily:{time:flatDays,river_discharge:flatValues}}});
+assert.equal(flatFlow.flowPercentile,50,'Tied constant-flow history must receive a mid-rank percentile.');
+assert.equal(flatFlow.level,'green','Constant low flow must not become red merely because many values tie.');
+console.log(JSON.stringify({status:'PASS',grid_cells:cells.length,checks:12,examples:{green:green.score,amber:amber.score,red:red.score,flow_only:flowOnly.score,flat_flow_percentile:flatFlow.flowPercentile,missing:unknown.level}},null,2));
