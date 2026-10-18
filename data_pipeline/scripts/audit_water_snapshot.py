@@ -116,6 +116,55 @@ def render_report(data: dict[str, Any]) -> str:
         timestamps = [str(r.get("observed_at") or "") for r in source_rows if r.get("observed_at")]
         latest = max(timestamps) if timestamps else "—"
         lines.append(f"| {md_cell(source)} | {len(source_rows)} | {resource_count} | {md_cell(latest)} |")
+    # Report the collector's per-page/resource outcomes, including failures and empty CSVs.
+    source_reports = data.get("sources", [])
+    if not isinstance(source_reports, list):
+        source_reports = []
+    lines += [
+        "",
+        "## Collection outcomes",
+        "",
+        "These statuses describe what the collector could retrieve during this run; they do not prove that a source's latest observation is current.",
+        "",
+        "| Configured source page | Status | Resources discovered | Successful resource scans | Resource errors |",
+        "|---|---|---:|---:|---:|",
+    ]
+    for report in source_reports:
+        if not isinstance(report, dict):
+            continue
+        resources = report.get("resource_reports", [])
+        errors = report.get("resource_errors", [])
+        if not isinstance(resources, list):
+            resources = []
+        if not isinstance(errors, list):
+            errors = []
+        discovered = report.get("resources_discovered", report.get("resources", len(resources) + len(errors)))
+        lines.append(
+            f"| {md_cell(report.get('source_name'))} | {md_cell(report.get('status'))} | "
+            f"{md_cell(discovered)} | {len(resources)} | {len(errors)} |"
+        )
+        if report.get("error"):
+            lines.append(f"\n- **Source-page error — {md_cell(report.get('source_name'))}:** {md_cell(report.get('error'))}")
+        for error in errors:
+            if isinstance(error, dict):
+                lines.append(
+                    f"\n- **Resource error — {md_cell(report.get('source_name'))} / "
+                    f"{md_cell(error.get('resource_title'))}:** {md_cell(error.get('error'))}"
+                )
+    lines += [
+        "",
+        "## Units reported by the collector",
+        "",
+        "| Measurement type | Source unit label | Records |",
+        "|---|---|---:|",
+    ]
+    unit_counts = Counter((str(row.get("kind") or "unknown"), str(row.get("unit") or "unspecified")) for row in rows)
+    for (kind, unit), count in sorted(unit_counts.items()):
+        lines.append(f"| {md_cell(KIND_LABELS.get(kind, kind))} | {md_cell(unit)} | {count} |")
+    lines += [
+        "",
+        "Unit labels such as `source-defined` are intentionally not converted or assumed equivalent. Verify them against the original resource metadata before comparing values across stations.",
+    ]
     lines += [
         "",
         "## Limits and review actions",
