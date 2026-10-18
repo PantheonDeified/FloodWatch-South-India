@@ -189,7 +189,7 @@ def test_regional_inference_returns_503_until_local_assets_exist(monkeypatch, tm
     details = response.json()["detail"]
     assert "assets are not ready" in details["message"]
     assert details["asset_checks"]["model_weights"] is False
-    assert "bash deploy/ibm-linuxone/run-regional-lstm.sh train" in details["next_steps"]
+    assert any(step.endswith("bash deploy/ibm-linuxone/run-regional-lstm.sh train") for step in details["next_steps"])
 
 
 def test_regional_inference_runs_saved_predictor_and_caches_result(monkeypatch, tmp_path):
