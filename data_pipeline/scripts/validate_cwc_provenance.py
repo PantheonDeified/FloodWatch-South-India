@@ -75,7 +75,7 @@ def validate(
         nonlocal mismatch_count
         mismatch_count += 1
         if len(mismatches) < MAX_MISMATCH_SAMPLES:
-            mismatches.append(item)
+            record_mismatch(item)
 
     report = json.loads(quality_report_path.read_text(encoding="utf-8"))
     per_file = report.get("source_provenance_by_file")
@@ -96,10 +96,10 @@ def validate(
         if not expected_resource or not expected_download or not expected_dataset or not expected_title:
             record_mismatch({"file": raw_path.name, "problem": "manifest entry lacks exact resource metadata"})
         if not SHA256_PATTERN.fullmatch(expected_sha):
-            mismatches.append({"file": raw_path.name, "problem": "manifest SHA-256 is missing or malformed"})
+            record_mismatch({"file": raw_path.name, "problem": "manifest SHA-256 is missing or malformed"})
         file_report = per_file.get(raw_path.name)
         if not isinstance(file_report, dict):
-            mismatches.append({"file": raw_path.name, "problem": "quality report has no per-file provenance record"})
+            record_mismatch({"file": raw_path.name, "problem": "quality report has no per-file provenance record"})
         else:
             expected_report = {
                 "source_url_used": expected_resource,
@@ -112,7 +112,7 @@ def validate(
             for key, value in expected_report.items():
                 actual = str(file_report.get(key) or "").strip()
                 if actual.casefold() != value.casefold():
-                    mismatches.append({
+                    record_mismatch({
                         "file": raw_path.name,
                         "problem": "per-file quality report metadata mismatch",
                         "field": key,
@@ -122,7 +122,7 @@ def validate(
         if verify_raw_sha256 and SHA256_PATTERN.fullmatch(expected_sha):
             actual_sha = sha256_file(raw_path).lower()
             if actual_sha != expected_sha:
-                mismatches.append({
+                record_mismatch({
                     "file": raw_path.name,
                     "problem": "raw file does not match manifest SHA-256",
                     "expected": expected_sha,
@@ -140,7 +140,7 @@ def validate(
             row_counts[source_file] += 1
             item = manifest.get(source_file)
             if item is None:
-                mismatches.append({"row": total_rows, "source_file": source_file, "problem": "row source file is not in manifest"})
+                record_mismatch({"row": total_rows, "source_file": source_file, "problem": "row source file is not in manifest"})
                 continue
             expected = {
                 "source_url": str(item.get("resource_page_url") or "").strip(),
@@ -153,7 +153,7 @@ def validate(
             for field, value in expected.items():
                 actual = str(row.get(field) or "").strip()
                 if actual.casefold() != value.casefold():
-                    mismatches.append({
+                    record_mismatch({
                         "row": total_rows,
                         "source_file": source_file,
                         "problem": "normalized row provenance mismatch",
