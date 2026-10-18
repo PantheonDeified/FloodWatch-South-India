@@ -63,6 +63,8 @@ def test_status_lists_weather_proxy():
     assert data["weather_provider"] == "Open-Meteo"
     assert data["version"] == main.APP_VERSION
     assert "/api/v1/weather" in data["weather_endpoint"]
+    assert data["water_observations_endpoint"].startswith("/api/v1/water-observations")
+    assert data["model_readiness_endpoint"] == "/api/v1/models/status"
 
 
 def test_weather_returns_provider_payload_and_metadata(monkeypatch):
