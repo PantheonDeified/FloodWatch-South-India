@@ -14,7 +14,7 @@ Expected GitHub Pages URL: https://pantheondeified.github.io/FloodWatch-South-In
 - RainViewer radar overlay with a displayed source timestamp and a freshness check.
 - Historical rainfall comparisons using ERA5-Land reanalysis, including a 1991–2020 baseline, latest complete monthly totals, a rolling 7-day seasonal percentile and a month-to-date anomaly where records are complete.
 - Modelled river-discharge context and short-range outlook from the Open-Meteo Flood API / GloFAS. This is modelled discharge, not a CWC gauge reading or a measured river height.
-- Official river/reservoir observation table interface, filters, and a rainfall-to-river evidence chain. The interface reads `data/water-observations.json`.
+- Official river/reservoir observation table interface, filters, and a rainfall-to-river evidence chain. An optional water-station map overlay plots only source records with usable coordinates inside the core map area, labels measurement types by color, and shows the source timestamp/link in each popup. The interface reads `data/water-observations.json`; markers are off by default and are not flood alerts.
 - Official IMD/CWC/NDMA source links and clear limitations.
 
 ## Important live-data status
