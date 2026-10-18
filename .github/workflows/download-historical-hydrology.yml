@@ -45,6 +45,8 @@ jobs:
           if not discharge:
               raise SystemExit("No historical discharge CSV was downloaded; inspect manifest.json and source-page errors.")
           PY
+      - name: Test collision-safe CWC resource filenames
+        run: python -m unittest discover -s data_pipeline/tests -p 'test_download_nwdp_history.py' -v
       - name: Test discharge normalization safeguards
         run: python -m unittest discover -s data_pipeline/tests -p 'test_normalize_cwc_discharge.py' -v
       - name: Test CWC station catalogue safeguards
