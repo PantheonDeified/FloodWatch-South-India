@@ -29,6 +29,7 @@
 <div id="waterMeta" class="water-freshness">No source snapshot metadata loaded yet.</div>
 <div class="water-controls">
 <input id="obsSearch" aria-label="Search observed stations" placeholder="Search station, river, district…">
+<select id="obsStateFilter" aria-label="Filter observations by state"><option value="all">All state labels</option><option value="Andhra Pradesh">Andhra Pradesh</option><option value="Karnataka">Karnataka</option><option value="Kerala">Kerala</option><option value="Tamil Nadu">Tamil Nadu</option><option value="Telangana">Telangana</option><option value="outside_core">Outside five core states</option><option value="unspecified">State unspecified</option></select>
 <select id="obsKindFilter" aria-label="Filter observation type">
 <option value="all">All data types</option><option value="river_level">River levels</option><option value="river_discharge">River discharge</option><option value="reservoir_level">Reservoir / dam levels</option><option value="reservoir_storage">Reservoir storage</option><option value="reservoir_discharge">Dam / regulator release</option>
 </select>
@@ -389,10 +390,16 @@ function renderWaterObservations(){
  const body=$('waterRows');if(!body)return;
  const all=Array.isArray(waterSnapshot?.observations)?waterSnapshot.observations:[];
  const kind=$('obsKindFilter')?.value||'all';
+ const stateFilter=$('obsStateFilter')?.value||'all';
  const freshnessFilter=$('obsFreshnessFilter')?.value||'all';
+ const coreStates=['Andhra Pradesh','Karnataka','Kerala','Tamil Nadu','Telangana'];
  const q=($('obsSearch')?.value||'').trim().toLowerCase();
  const filtered=all.filter(r=>{
   if(kind!=='all'&&r.kind!==kind)return false;
+  const state=String(r.state||'').trim();
+  if(stateFilter==='unspecified'&&state)return false;
+  if(stateFilter==='outside_core'&&(!state||coreStates.includes(state)))return false;
+  if(stateFilter!=='all'&&stateFilter!=='unspecified'&&stateFilter!=='outside_core'&&state!==stateFilter)return false;
   if(freshnessFilter!=='all'&&observationFreshness(r).key!==freshnessFilter)return false;
   const hay=[r.station_name,r.station_id,r.state,r.district,r.river,r.source_name,r.source_resource_title].join(' ').toLowerCase();
   return !q||hay.includes(q);
@@ -592,6 +599,7 @@ $('placeName').textContent='Choose a location';$('coords').textContent='Click th
 // Connect the station-table controls and map buttons.
 $('toggleWaterMap').addEventListener('click',()=>{waterStationsEnabled=!waterStationsEnabled;renderWaterStations()});
 $('obsSearch').addEventListener('input',renderWaterObservations);
+$('obsStateFilter').addEventListener('change',renderWaterObservations);
 $('obsKindFilter').addEventListener('change',renderWaterObservations);
 $('obsFreshnessFilter').addEventListener('change',renderWaterObservations);
 $('waterRows').addEventListener('click',e=>{
