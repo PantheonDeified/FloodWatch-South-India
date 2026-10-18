@@ -173,3 +173,37 @@ def test_water_observation_unknown_timezone_is_not_guessed(monkeypatch):
     assert response.status_code == 200
     assert response.json()["observations"][0]["freshness"] == "unknown"
     assert response.json()["observations"][0]["age_hours"] is None
+
+
+def test_water_observations_support_nearby_station_radius(monkeypatch):
+    monkeypatch.setattr(main, "load_water_snapshot", lambda: {
+        "generated_at_utc": "2026-10-18T00:00:00+00:00",
+        "observations": [
+            {
+                "station_id": "NEAR", "station_name": "Nearby Gauge", "state": "Telangana",
+                "kind": "river_level", "value": 2.1, "unit": "m",
+                "latitude": 17.385, "longitude": 78.486,
+                "observed_at": "2026-10-17T00:00:00+00:00", "source_timezone": "UTC",
+            },
+            {
+                "station_id": "FAR", "station_name": "Far Gauge", "state": "Kerala",
+                "kind": "river_level", "value": 3.1, "unit": "m",
+                "latitude": 10.0, "longitude": 76.0,
+                "observed_at": "2026-10-17T00:00:00+00:00", "source_timezone": "UTC",
+            },
+        ],
+    })
+    response = client.get(
+        "/api/v1/water-observations",
+        params={"latitude": 17.385, "longitude": 78.486, "radius_km": 25},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_records"] == 1
+    assert data["observations"][0]["station_id"] == "NEAR"
+    assert data["observations"][0]["distance_km"] == 0.0
+
+
+def test_water_nearby_filter_requires_both_coordinates():
+    response = client.get("/api/v1/water-observations", params={"latitude": 17.385})
+    assert response.status_code == 422
