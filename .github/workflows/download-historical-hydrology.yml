@@ -46,9 +46,10 @@ jobs:
               raise SystemExit("No historical discharge CSV was downloaded; inspect manifest.json and source-page errors.")
           PY
       - name: Upload raw archives and source manifest
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: floodwatch-south-india-historical-hydrology
           path: data_pipeline/raw/nwdp_history/
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 7
