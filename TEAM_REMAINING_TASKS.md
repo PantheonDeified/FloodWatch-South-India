@@ -29,28 +29,28 @@ These features still need end-to-end testing. A feature in the code does not aut
 **Simple AI prompt:**  
 “Review the existing FloodWatch South India repository. Identify the weather, rainfall, radar, historical rainfall, and river-discharge data requests already present. Test or inspect them without inventing results. Create a report with source URLs, units, timestamps/freshness, whether each is observed/forecast/modelled, five-state test coverage, errors, and practical fixes. Do not change index.html.”
 
-## Person 2 — Fix and verify river/water observations
+## Person 2 — Validate and improve water-observation quality
 
-**Goal:** Make the existing water-observation data file contain real, validated records if public sources allow it.
+**Goal:** Make the existing source-linked water data safer and easier to interpret. A successful collector run produced 407 records from 37 resource files; the problem is now coverage, freshness, metadata and repeatable validation rather than a completely empty dataset.
 
-1. Inspect `data_pipeline/scripts/refresh_water_observations.py`, the GitHub Actions workflow, and `data/water-observations.json`.
-2. Find why the committed water-observation JSON is empty and run or repair the collector.
-3. Verify source links and record fields such as station/location, value, units, observation time, retrieval time, and source.
-4. Add validation for missing/invalid values and stale readings.
-5. Run the GitHub Actions workflow and document the result. If a source cannot be accessed, report that honestly; never create fake readings.
+1. Read `docs/water-pipeline-run-report.md` and inspect the latest `data/water-observations.json` snapshot.
+2. Audit missing station coordinates, missing state/district fields, source timestamps, units and rows with suspicious jumps or implausible values. Do not guess coordinates or silently delete source values; record each issue and its rationale.
+3. Confirm source timezone semantics for each dataset, or leave them explicitly unspecified. Distinguish hourly telemetry from manual/daily observations.
+4. Test the collector and GitHub Actions workflow after the new non-empty-snapshot guard. Verify the workflow does not trigger itself solely from its generated output file.
+5. Document source/resource errors, coverage gaps, and safe fixes. Never fabricate readings.
 
-**Deliver:** a valid `data/water-observations.json` if real records can be obtained, tests where feasible, and `docs/water-pipeline-report.md`.
+**Deliver:** `docs/water-pipeline-report.md` with a repeatable quality audit and tests/checks where feasible. Use `docs/water-pipeline-run-report.md` as the first run summary.
 
 **Simple AI prompt:**  
-“Inspect the existing FloodWatch South India water-observation collector, workflow, and JSON schema. Diagnose why data/water-observations.json is empty. Make the smallest safe fix, use only real public-source records, preserve the current schema, validate timestamps/units/values, and add tests. Do not fabricate readings or edit index.html. Report changed files and how to test them.”
+“Review the existing FloodWatch South India water snapshot (407 records generated from 37 resources), collector and report. Audit source timestamps/timezones, units, missing coordinates/state fields, out-of-core-area records, and suspicious values. Do not fabricate or silently alter source readings. Add safe validation/tests for issues that can be reliably checked, preserve source provenance, and document unresolved issues in docs/water-pipeline-report.md. Do not edit index.html.”
 
 ## Project lead — Frontend, map, and backend
 
-1. Deploy `backend/main.py` to the IBM LinuxONE server by following `backend/README.md`; preserve the existing `main.py` backup and run `python -m py_compile` before restarting.
-2. Test `GET /api/v1/weather?latitude=19.15&longitude=77.30` locally and through the HTTPS tunnel; confirm the JSON contains `current`, `hourly`, and `_floodwatch` metadata.
-3. Open the published website and verify the backend panel appears after GitHub Pages redeploys. Paste the current HTTPS tunnel URL, test `/health` and `/api/v1/status`, then select a map point and confirm the status says `FloodWatch API → Open-Meteo` (rather than direct fallback).
+1. On the published website, paste the current HTTPS tunnel URL into the developer-only panel and confirm `/health`, `/api/v1/status`, and `/api/v1/weather` all report success; this checker has already reported `weather_proxy.available: true` once.
+2. Select map points in all five states and confirm the weather status says `FloodWatch API → Open-Meteo`, not the direct-provider fallback. Test browser console errors, the hourly panel, and the location search/geolocation controls.
+3. Review `docs/water-pipeline-run-report.md` and verify the station table loads the 407-record published snapshot. Check map locations and freshness labels; do not describe the snapshot as uniformly real-time.
 4. Keep the Linux API and Quick Tunnel running during the demo; the temporary URL is not a permanent deployment.
-5. Integrate teammates’ verified outputs only after reviewing their pull requests; then check timestamps and locations across all five states.
+5. Integrate teammates’ verified outputs only after reviewing their pull requests; then prepare a demo that distinguishes measured/public source observations, model estimates and forecasts.
 
 **Important:** Do not hardcode a temporary Cloudflare URL as a permanent endpoint. A Quick Tunnel URL only works while the tunnel is running and is not a reliable production deployment.
 
@@ -73,7 +73,7 @@ Do not let both teammates edit `index.html`. Never commit SSH keys, API secrets,
 ## Tonight's definition of done
 
 - Weather/rainfall data has a clear source, units, and freshness report.
-- The water-data pipeline is either producing verified records or has a documented blocker and next step.
+- The water-data pipeline produces source-linked records; timestamp timezone, freshness and station-coverage limitations are documented and tested.
 - The published map and existing layers have been tested.
 - The backend's HTTPS integration status is stated accurately.
 - The demo clearly distinguishes measurements, forecasts, and model estimates.
