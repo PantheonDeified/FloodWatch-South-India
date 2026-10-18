@@ -873,6 +873,7 @@ function addHistoricalFloodHazard(){
 
 // FloodWatch's own gridded triage score. It uses raw forecasts and station history,
 // never upstream websites' red/amber/green labels. It is not a calibrated probability.
+const FLOODWATCH_RISK_GRID_BUILD = 'fw-risk-grid-20261018-stable-v2';
 const FLOODWATCH_RISK_GRID = {
   gridDegrees: 0.5,
   statesFile: 'data/south-india-states.geojson',
@@ -946,11 +947,16 @@ function computeRiskScore(cell,bundle){
  const weather=bundle?.weather&&!bundle.weather.failed?bundle.weather:null;
  const h=weather?.hourly||{},precip=Array.isArray(h.precipitation)?h.precipitation.map(v=>v==null?NaN:Number(v)):[];
  const prob=Array.isArray(h.precipitation_probability)?h.precipitation_probability.map(v=>v==null?NaN:Number(v)):[];
- const rain24=precip.slice(0,24).filter(Number.isFinite),rain72=precip.slice(0,72).filter(Number.isFinite),p24=prob.slice(0,24).filter(Number.isFinite);
- const current=Number(weather?.current?.precipitation),components=[];
- if(rain24.length>=12)components.push({weight:40,value:40*clamp01(rain24.reduce((a,b)=>a+b,0)/100)});
- if(rain72.length>=36)components.push({weight:30,value:30*clamp01(rain72.reduce((a,b)=>a+b,0)/150)});
- if(p24.length>=12)components.push({weight:15,value:15*clamp01(Math.max(...p24)/100)});
+ const hourlyTimes=Array.isArray(h.time)?h.time:[];
+ const futureIndices=hourlyTimes.map((raw,i)=>({i,ms:Date.parse(/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(String(raw))?String(raw):String(raw).replace(' ','T')+'Z')})).filter(x=>Number.isFinite(x.ms)&&x.ms>=Date.now()-30*60*1000).sort((a,b)=>a.ms-b.ms);
+ const first24=futureIndices.slice(0,24).map(x=>x.i),first72=futureIndices.slice(0,72).map(x=>x.i);
+ const rain24=first24.filter(i=>Number.isFinite(precip[i])).map(i=>precip[i]);
+ const rain72=first72.filter(i=>Number.isFinite(precip[i])).map(i=>precip[i]);
+ const p24=first24.filter(i=>Number.isFinite(prob[i])).map(i=>prob[i]);
+ const current=weather?.current?.precipitation==null?NaN:Number(weather.current.precipitation),components=[];
+ if(first24.length>=18&&rain24.length>=18)components.push({weight:40,value:40*clamp01(rain24.reduce((a,b)=>a+b,0)/100)});
+ if(first72.length>=54&&rain72.length>=54)components.push({weight:30,value:30*clamp01(rain72.reduce((a,b)=>a+b,0)/150)});
+ if(first24.length>=18&&p24.length>=18)components.push({weight:15,value:15*clamp01(Math.max(...p24)/100)});
  if(Number.isFinite(current)&&current>=0)components.push({weight:15,value:15*clamp01(current/20)});
  const rainWeight=components.reduce((s,x)=>s+x.weight,0);
  const rainScore=rainWeight?components.reduce((s,x)=>s+x.value,0)/rainWeight*100:null;
@@ -1022,8 +1028,8 @@ function drawComputedRiskCells(cells,weatherRows,requestId){
   {color:'#f59e0b',text:'AMBER · Elevated (35–64)'},
   {color:'#22c55e',text:'GREEN · Lower signal (<35)'},
   {color:'#64748b',text:'GREY · Missing / insufficient data'}
- ],'Own score from raw 24h/72h rain forecasts, rain chance, GloFAS flow vs its recent 92-day history and fresh nearby gauge trends. Experimental, not a calibrated flood probability.','https://open-meteo.com/en/docs/flood-api');
- $('riskLegendNote').textContent+=' Grid cells: '+cells.length+' · red '+counts.red+' · amber '+counts.amber+' · green '+counts.green+' · unknown '+counts.unknown+'.';
+ ],'Own raw-data index, not a flood probability. Grey = insufficient data.','https://open-meteo.com/en/docs/flood-api');
+ $('riskLegendNote').textContent+=' Build '+FLOODWATCH_RISK_GRID_BUILD+'. Grid cells: '+cells.length+' · red '+counts.red+' · amber '+counts.amber+' · green '+counts.green+' · unknown '+counts.unknown+'.';
 }
 async function setComputedRiskGrid(requestId){
  $('riskMapLegend').hidden=false;
@@ -1041,7 +1047,7 @@ async function setComputedRiskGrid(requestId){
   if(!cells.length)throw Error('No South India grid cells matched the regional mask');
   const batches=[];for(let i=0;i<cells.length;i+=35)batches.push(cells.slice(i,i+35));
   const weatherRows=new Array(cells.length).fill(null);
-  let cursor=0,completed=0,failedBatches=0;
+  let cursor=0,completed=0,failedBatches=0,flowFailedBatches=0;
   async function worker(){
    while(cursor<batches.length){
     if(requestId!==riskLayerRequest||$('riskLayer').value!=='computed-risk')return;
@@ -1052,12 +1058,12 @@ async function setComputedRiskGrid(requestId){
      current:'precipitation',
      hourly:'precipitation,precipitation_probability',
      daily:'precipitation_sum,precipitation_probability_max',
-     forecast_days:'3',timezone:'UTC'
+     forecast_days:'4',timezone:'UTC'
     });
     const flowParams=new URLSearchParams({
      latitude:batch.map(x=>x.lat.toFixed(3)).join(','),
      longitude:batch.map(x=>x.lon.toFixed(3)).join(','),
-     daily:'river_discharge',past_days:'92',forecast_days:'7',timezone:'GMT',models:'seamless_v4'
+     daily:'river_discharge',past_days:'92',forecast_days:'7',timezone:'GMT'
     });
     const [weatherResult,flowResult]=await Promise.allSettled([
      fetch('https://api.open-meteo.com/v1/forecast?'+params.toString(),{cache:'no-store'}).then(async response=>{if(!response.ok)throw Error('Weather API HTTP '+response.status);return response.json()}),
@@ -1066,7 +1072,7 @@ async function setComputedRiskGrid(requestId){
     const weatherPoints=weatherResult.status==='fulfilled'?(Array.isArray(weatherResult.value)?weatherResult.value:[weatherResult.value]):[];
     const flowPoints=flowResult.status==='fulfilled'?(Array.isArray(flowResult.value)?flowResult.value:[flowResult.value]):[];
     if(weatherPoints.length!==batch.length){failedBatches++}
-    if(flowPoints.length!==batch.length){/* GloFAS may not return usable river data at every location. */}
+    if(flowResult.status==='rejected'||flowPoints.length!==batch.length)flowFailedBatches++;
     batch.forEach((_,j)=>{
      const weatherPoint=weatherPoints[j]||null,flowPoint=flowPoints[j]||null;
      weatherRows[offset+j]={
@@ -1081,7 +1087,8 @@ async function setComputedRiskGrid(requestId){
   await Promise.all([worker(),worker(),worker()]);
   if(requestId!==riskLayerRequest||$('riskLayer').value!=='computed-risk')return;
   drawComputedRiskCells(cells,weatherRows,requestId);
-  if(failedBatches)$('riskLegendNote').textContent+=' Some forecast batches failed; grey cells indicate unavailable data, not safety.';
+  if(failedBatches)$('riskLegendNote').textContent+=' Some weather batches failed; grey cells indicate unavailable data, not safety.';
+  if(flowFailedBatches)$('riskLegendNote').textContent+=' GloFAS was unavailable or incomplete for '+flowFailedBatches+' batch(es); rainfall-only scores may be shown.';
  }catch(e){
   if(requestId!==riskLayerRequest)return;
   riskLegend('computed-risk','FloodWatch calculated grid',[
