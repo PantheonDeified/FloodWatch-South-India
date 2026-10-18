@@ -33,6 +33,12 @@ Create a normalized daily feature table with `build_event_features.py` using sou
 
 The training report includes chronological train/validation/test periods, MAE/RMSE/NSE, and an out-of-time persistence baseline. If the LSTM does not beat the persistence baseline, do not promote it as a forecast model. A saved weight file alone is not evidence of skill.
 
+Before training, audit all stations in a feature table to see which ones meet minimum structural requirements:
+
+    python data_pipeline/scripts/assess_streamflow_readiness.py --features path/to/features.csv --out data_pipeline/output/streamflow-readiness.json
+
+This is a go/no-go screen for data continuity and chronological sample counts, not evidence that a station's units/provenance are correct or that a model will perform well.
+
 For a model that has already been trained and reviewed, generate a research-only seven-day discharge output (the lead horizon and lookback must match the trained model):
 
     python data_pipeline/scripts/predict_streamflow_lstm.py --features path/to/features.csv --station-id VERIFIED_STATION_ID --model data_pipeline/output/models/streamflow_lstm_VERIFIED_STATION_ID.pt --scalers data_pipeline/output/models/streamflow_lstm_VERIFIED_STATION_ID.scalers.npz --output data_pipeline/output/pilot_discharge_forecast.csv
