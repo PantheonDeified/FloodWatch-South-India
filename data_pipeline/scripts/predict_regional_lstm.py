@@ -119,13 +119,30 @@ def main() -> int:
     model.eval()
     with torch.inference_mode():
         prediction_scaled = model(torch.from_numpy(x[None, :, :])).cpu().numpy().reshape(-1)
-    predicted = np.expm1(np.maximum(prediction_scaled * sd + mu, 0.0))
+    lstm_prediction = np.expm1(np.maximum(prediction_scaled * sd + mu, 0.0))
     last_observed = float(values[mask][-1])
+    # The trainer selects this blend weight on the chronological validation period only.
+    # Missing metadata from an older model artifact defaults to the raw LSTM prediction.
+    blend_alpha = float(scalers.get("validation_blend_alpha", 1.0))
+    if not np.isfinite(blend_alpha) or blend_alpha < 0.0 or blend_alpha > 1.0:
+        raise SystemExit("Model scaler metadata has an invalid validation_blend_alpha; expected [0,1].")
+    persistence = np.full(horizon, last_observed, dtype=float)
+    predicted = np.maximum((1.0 - blend_alpha) * persistence + blend_alpha * lstm_prediction, 0.0)
+    selected_model_type = (
+        "persistence_baseline_selected_by_validation"
+        if blend_alpha <= 1e-12 else
+        "validation_selected_lstm_persistence_blend"
+        if blend_alpha < 1.0 - 1e-12 else
+        "regional_discharge_lstm"
+    )
     valid_dates = [(end + pd.Timedelta(days=i)).date().isoformat() for i in range(1, horizon + 1)]
     history_age_days = max(0, (pd.Timestamp.now(tz="UTC").date() - end.date()).days)
     history_freshness = "recent_source_history" if history_age_days <= 3 else "stale_historical_replay"
     output = {
-        "model_type": report.get("model_type", "regional discharge LSTM"),
+        "model_type": selected_model_type,
+        "raw_neural_network_model_type": report.get("model_type", "regional discharge LSTM"),
+        "validation_blend_alpha": blend_alpha,
+        "validation_blend_selection": scalers.get("validation_blend_selection", "Older artifact: no validation blend metadata; raw LSTM output selected."),
         "status": "experimental_research_only",
         "operational_status": "not_validated_for_public_warnings",
         "forecast_is_live": bool(history_age_days <= 3),
@@ -140,9 +157,10 @@ def main() -> int:
         "history_days_required": lookback,
         "last_observed_discharge_m3_s": last_observed,
         "forecast": [
-            {"date": date, "predicted_discharge_m3_s": float(value),
+            {"date": date, "predicted_discharge_m3_s": float(selected_value),
+             "lstm_discharge_m3_s": float(lstm_value),
              "persistence_baseline_discharge_m3_s": last_observed}
-            for date, value in zip(valid_dates, predicted.tolist())
+            for date, selected_value, lstm_value in zip(valid_dates, predicted.tolist(), lstm_prediction.tolist())
         ],
         "model_artifact": str(args.model_file),
         "scalers_artifact": str(args.scalers_file),
