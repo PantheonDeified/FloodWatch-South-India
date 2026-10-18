@@ -232,11 +232,12 @@
 <div class="history-note"><a href="https://gpm.nasa.gov/data/imerg" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">NASA GPM IMERG precipitation ↗</a> · <a href="https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">NASA GIBS imagery service ↗</a> · <a href="https://worldview.earthdata.nasa.gov/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">NASA Worldview ↗</a> · <a href="https://search.earthdata.nasa.gov/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">NASA Earthdata Search ↗</a>.</div>
 <div class="history-note">The NASA IMERG map overlay is satellite precipitation-rate imagery. It is separate from the current FloodWatch numerical score; imagery is not treated as a verified gauge reading.</div>
 <div class="history-note"><b>Indian official data and alerts</b></div>
-<div class="history-note"><a href="https://api.imd.gov.in/public/index.php" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">IMD API portal ↗</a> · <a href="https://dss.imd.gov.in/dwr_img/GIS/currentwx/currentwx.html" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">IMD weather dashboard ↗</a> · <a href="https://mausam.imd.gov.in/responsive/flashFloodBulletin.php" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">IMD flash-flood bulletin ↗</a> · <a href="https://mausam.imd.gov.in/imd_latest/contents/cyclone.php" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">IMD cyclone bulletins ↗</a> · <a href="https://cwc.gov.in/hydro-meteorological-observation" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">CWC river observations ↗</a> · <a href="https://ffs.india-water.gov.in/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">CWC Flood Forecasting System ↗</a> · <a href="https://nwdp.nwic.gov.in/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">NWDP/NWIC water data ↗</a> · <a href="https://bhuvan-app1.nrsc.gov.in/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">NRSC/ISRO Bhuvan ↗</a> · <a href="https://sachet.ndma.gov.in/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">NDMA SACHET alerts ↗</a> · <a href="https://indiawris.gov.in/wris/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">India-WRIS ↗</a> · <a href="https://damsafety.cwc.gov.in/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">CWC Dam Safety / DRIP ↗</a>.</div>
+<div class="history-note"><a href="https://api.imd.gov.in/public/index.php" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">IMD API portal ↗</a> · <a href="https://api.imd.gov.in/public/api_reference.html" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">IMD machine-readable API reference ↗</a> · <a href="https://dss.imd.gov.in/dwr_img/GIS/currentwx/currentwx.html" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">IMD weather dashboard ↗</a> · <a href="https://mausam.imd.gov.in/responsive/flashFloodBulletin.php" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">IMD flash-flood bulletin ↗</a> · <a href="https://mausam.imd.gov.in/imd_latest/contents/cyclone.php" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">IMD cyclone bulletins ↗</a> · <a href="https://cwc.gov.in/hydro-meteorological-observation" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">CWC river observations ↗</a> · <a href="https://ffs.india-water.gov.in/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">CWC Flood Forecasting System ↗</a> · <a href="https://nwdp.nwic.gov.in/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">NWDP/NWIC water data ↗</a> · <a href="https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-central-water-commission-cwc" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">CWC hourly river-level telemetry dataset ↗</a> · <a href="https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-central-water-commission-cwc" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">CWC daily discharge dataset ↗</a> · <a href="https://bhuvan-app1.nrsc.gov.in/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">NRSC/ISRO Bhuvan ↗</a> · <a href="https://sachet.ndma.gov.in/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">NDMA SACHET alerts ↗</a> · <a href="https://indiawris.gov.in/wris/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">India-WRIS ↗</a> · <a href="https://damsafety.cwc.gov.in/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">CWC Dam Safety / DRIP ↗</a>.</div>
 <div class="history-note"><b>Browser-accessible feed check</b><p>Run an on-demand reachability check for NASA GIBS and the documented IMD machine-readable endpoints. A browser CORS/network/auth restriction is reported as “could not verify,” not as proof the provider is down. The check does not add unvalidated warnings to the map score.</p></div>
 <button type="button" class="primary" id="checkOfficialFeeds">Check NASA GIBS + IMD feeds</button>
 <div class="status" id="officialFeedStatus" aria-live="polite">Official feed reachability has not been checked in this browser.</div>
 <div class="history-note" id="officialFeedResults" aria-live="polite"></div>
+<div class="history-note" id="officialBulletinRecords" aria-live="polite">IMD bulletin rows appear here only if the browser can read and validate the official endpoint response.</div>
 <div class="warning"><b>Source honesty:</b> these are a mixture of data feeds, visualisation services and official reference portals—not all are machine-readable live APIs. Individual values keep their source timestamp; follow current official IMD/CWC/state instructions for emergencies.</div>
 <div class="warning"><b>Scoring inputs:</b> Open-Meteo gridded forecasts, GloFAS modelled discharge and source-labelled water-observation history feed the experimental score. NASA IMERG imagery and historical NRSC map layers are visual context, not silently mixed into the numeric score.</div>
 </section></aside></main>
@@ -1512,20 +1513,20 @@ async function setRiskMapLayer(mode){
  }
 }
 async function checkOfficialFeeds(){
- const button=$('checkOfficialFeeds'),status=$('officialFeedStatus'),results=$('officialFeedResults');
- if(!button||!status||!results)return;
+ const button=$('checkOfficialFeeds'),status=$('officialFeedStatus'),results=$('officialFeedResults'),bulletins=$('officialBulletinRecords');
+ if(!button||!status||!results||!bulletins)return;
  button.disabled=true;
  status.textContent='Checking documented endpoints… CORS, network or access restrictions will be shown as “could not verify.”';
- results.replaceChildren();
+ results.replaceChildren();bulletins.replaceChildren();
  const checks=[
-  {name:'NASA GIBS WMS · IMERG_Precipitation_Rate',url:'https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0',kind:'xml',validate:body=>body.includes('IMERG_Precipitation_Rate')?'reachable; IMERG layer identifier found':'reachable, but expected layer identifier was not found'},
-  {name:'IMD district nowcast API',url:'https://api.imd.gov.in/api/v1/districtnowcast',kind:'json'},
-  {name:'IMD river-basin QPF API',url:'https://api.imd.gov.in/api/v1/basinqpf',kind:'json'}
+  {id:'nasa',name:'NASA GIBS WMS · IMERG_Precipitation_Rate',url:'https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0',kind:'xml',validate:body=>body.includes('IMERG_Precipitation_Rate')?'reachable; IMERG layer identifier found':'reachable, but expected layer identifier was not found'},
+  {id:'imd-nowcast',name:'IMD district nowcast API',url:'https://api.imd.gov.in/api/v1/districtnowcast',kind:'json'},
+  {id:'imd-basin',name:'IMD river-basin QPF API',url:'https://api.imd.gov.in/api/v1/basinqpf',kind:'json'}
  ];
  const observed=Array.isArray(waterSnapshot?.observations)?waterSnapshot.observations:[];
  const series=Array.isArray(waterSnapshot?.series)?waterSnapshot.series:[];
  const localItem=document.createElement('div');
- localItem.textContent='NWDP/CWC snapshot loaded in this page: '+observed.length+' station observations; '+series.length+' station time series. Row-level source timestamps and source links remain the authority.';
+ localItem.textContent='NWDP/CWC snapshot in this page: '+observed.length+' station observations; '+series.length+' time series. Row-level source timestamps and source links remain authoritative.';
  results.appendChild(localItem);
  const outcomes=await Promise.all(checks.map(async check=>{
   try{
@@ -1533,29 +1534,67 @@ async function checkOfficialFeeds(){
    if(!response.ok)throw Error('HTTP '+response.status);
    if(check.kind==='xml'){
     const body=await response.text();
-    return {name:check.name,ok:true,detail:check.validate(body)};
+    return {id:check.id,name:check.name,ok:true,detail:check.validate(body)};
    }
    const payload=await response.json();
    if(payload&&typeof payload==='object'&&payload.error)throw Error('provider returned an API error payload');
-   const records=Array.isArray(payload)?payload:Array.isArray(payload.data)?payload.data:Array.isArray(payload.features)?payload.features:null;
-   return {name:check.name,ok:true,detail:records?('valid JSON; '+records.length+' returned records/features'):'valid JSON payload; schema needs further mapping'};
+   const records=Array.isArray(payload)?payload:Array.isArray(payload.data)?payload.data:Array.isArray(payload.features)?payload.features:Array.isArray(payload.results)?payload.results:null;
+   return {id:check.id,name:check.name,ok:true,detail:records?('valid JSON; '+records.length+' records/features'):'valid JSON payload; record schema not yet mapped',records:records||[],payload};
   }catch(error){
    const message=error instanceof TypeError?'browser could not read response (possible CORS/network restriction)':'not verified: '+error.message;
-   return {name:check.name,ok:false,detail:message};
+   return {id:check.id,name:check.name,ok:false,detail:message};
   }
  }));
  for(const outcome of outcomes){
-  const line=document.createElement('div');
-  line.style.marginTop='6px';
+  const line=document.createElement('div');line.style.marginTop='6px';
   const label=document.createElement('strong');
   label.textContent=(outcome.ok?'● ':'○ ')+outcome.name+': ';
   label.style.color=outcome.ok?'#36c9b2':'#f0bc4c';
-  const detail=document.createElement('span');
-  detail.textContent=outcome.detail;
-  line.append(label,detail);
-  results.appendChild(line);
+  const detail=document.createElement('span');detail.textContent=outcome.detail;
+  line.append(label,detail);results.appendChild(line);
  }
- status.textContent='Checked at '+new Date().toISOString()+'. Reachability only; these responses are not automatically included in risk scoring.';
+ function appendRecord(title,details){
+  const article=document.createElement('article');article.className='history-note';article.style.marginTop='8px';
+  const heading=document.createElement('strong');heading.textContent=title;article.appendChild(heading);
+  const textNode=document.createElement('div');textNode.textContent=details;article.appendChild(textNode);
+  bulletins.appendChild(article);
+ }
+ function rowsFrom(payload){
+  if(Array.isArray(payload))return payload;
+  if(!payload||typeof payload!=='object')return [];
+  for(const key of ['data','records','results','items','features'])if(Array.isArray(payload[key]))return payload[key].map(item=>key==='features'?(item?.properties||item):item);
+  return [];
+ }
+ const nowcast=outcomes.find(item=>item.id==='imd-nowcast');
+ const qpf=outcomes.find(item=>item.id==='imd-basin');
+ if(nowcast?.ok){
+  const rows=rowsFrom(nowcast.payload);
+  if(!rows.length)appendRecord('IMD district nowcast','The endpoint responded, but no array-shaped nowcast records were recognized. Open the official IMD API reference to inspect its current schema.');
+  rows.slice(0,8).forEach(row=>{
+   const place=row.Station||row.District||row.district||row.State||row.state||row.station_name||'Location not supplied';
+   const date=row.Date||row.date||row.issued_at||'issue time not supplied';
+   const message=row.message||row.Message||row.Warning||row.warning||row.forecast||row.Forecast||'No plain-language warning field supplied';
+   const issue=row.toi||row.Time||row.time||row.IssueTime||'';
+   const valid=row.Vupto||row.valid_upto||row.ValidUntil||'';
+   const severity=row.color||row.alertlevel||row.Color||'';
+   appendRecord('IMD nowcast · '+String(place),[String(date),issue?'issued '+String(issue):'',valid?'valid until '+String(valid):'',severity?'source severity '+String(severity):'',String(message)].filter(Boolean).join(' · '));
+  });
+  if(rows.length>8)appendRecord('IMD nowcast note',rows.length+' records returned; showing the first 8 in source order. Feed scope may be broader than the five target states.');
+ }
+ if(qpf?.ok){
+  const rows=rowsFrom(qpf.payload);
+  if(!rows.length)appendRecord('IMD river-basin QPF','The endpoint responded, but no array-shaped basin-QPF records were recognized. No basin rainfall value was inferred.');
+  rows.slice(0,8).forEach(row=>{
+   const basin=row.Basin||row.basin||row.SubBasin||row.subbasin||'Basin name not supplied';
+   const issued=row.Date||row.date||row.issued_at||'issue date not supplied';
+   const days=[1,2,3,4,5].map(day=>row['Day'+day]!=null?'Day '+day+': '+String(row['Day'+day]):'').filter(Boolean).join(' · ');
+   const area=row['Area (Sq. Km.)']??row.Area??row.area;
+   const aap=row.AAP??row.aap;
+   appendRecord('IMD basin QPF · '+String(basin),[String(issued),days,area!=null?'area '+String(area)+' km²':'',aap!=null?'AAP '+String(aap):''].filter(Boolean).join(' · ')||'QPF values not supplied');
+  });
+  if(rows.length>8)appendRecord('IMD QPF note',rows.length+' records returned; showing the first 8 in source order. They are not spatially assigned to map cells.');
+ }
+ status.textContent='Checked at '+new Date().toISOString()+'. Rows shown above are source-reported only; they are not automatically mixed into the numerical score.';
  button.disabled=false;
 }
 $('riskLayer').addEventListener('change',e=>setRiskMapLayer(e.target.value));
