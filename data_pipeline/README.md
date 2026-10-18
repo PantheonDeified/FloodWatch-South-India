@@ -81,12 +81,20 @@ The older archive artifact generated before this addition contains only the
 dataset-page URL; rerun the workflow to regenerate normalized outputs with the
 new provenance columns.
 
+See [the preliminary CWC discharge review summary](../docs/cwc-discharge-review.md) for the earlier run's station coverage and data-quality flags; those counts must be regenerated after the current provenance changes.
+
 The manual historical workflow now runs `validate_cwc_provenance.py` after
 normalization. It checks that each processed row's exact resource-page URL,
 download URL, parent dataset page, title and SHA-256 match the manifest entry
 for the raw file; it also recomputes raw file hashes before marking the check
 passed. The resulting `cwc_discharge_provenance_report.json` is included in the
-workflow artifact. A provenance pass confirms traceability/integrity only; it
+workflow artifact.
+
+The equivalent local command is:
+
+```bash
+python data_pipeline/scripts/validate_cwc_provenance.py --raw-dir data_pipeline/raw/nwdp_history --normalized data_pipeline/processed/cwc_discharge_normalized.csv --quality-report data_pipeline/processed/cwc_discharge_quality_report.json --manifest data_pipeline/raw/nwdp_history/manifest.json --out data_pipeline/processed/cwc_discharge_provenance_report.json --verify-raw-sha256
+``` A provenance pass confirms traceability/integrity only; it
 does not validate station identity, source measurement accuracy, coordinates,
 hydrological suitability or model skill.
 
