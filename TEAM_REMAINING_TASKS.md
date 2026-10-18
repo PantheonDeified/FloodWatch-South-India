@@ -47,7 +47,7 @@ These features still need end-to-end testing. A feature in the code does not aut
 ## Project lead — Frontend, map, and backend
 
 1. Open the [developer tools view](https://pantheondeified.github.io/FloodWatch-South-India/?devtools=1), paste the current HTTPS tunnel URL into the hidden-by-default panel, and confirm `/health`, `/api/v1/status`, and `/api/v1/weather` all report success; the checker has already reported `weather_proxy.available: true`.
-2. Select map points in all five states and confirm the weather status says `FloodWatch API → Open-Meteo`, not the direct-provider fallback. Test browser console errors, the hourly panel, and the location search/geolocation controls.
+2. Select map points in all five states and confirm the weather status says `FloodWatch API → Open-Meteo`, not the direct-provider fallback. Test browser console errors, the hourly panel, and the location search/geolocation controls. Also toggle **Show stations on map** and verify that only geolocated records inside the core map area appear, that different measurement types have distinct colors, and that popups show the source time/link.
 3. Review `docs/water-pipeline-run-report.md` and verify the station table loads the 407-record published snapshot. Check map locations and freshness labels; do not describe the snapshot as uniformly real-time.
 4. Keep the Linux API and Quick Tunnel running during the demo; the temporary URL is not a permanent deployment.
 5. Integrate teammates’ verified outputs only after reviewing their pull requests; then prepare a demo that distinguishes measured/public source observations, model estimates and forecasts.
