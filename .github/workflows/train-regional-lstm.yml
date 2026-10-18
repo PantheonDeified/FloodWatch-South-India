@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/train-regional-lstm.yml'
       - 'data_pipeline/scripts/train_regional_lstm.py'
+      - 'data_pipeline/scripts/predict_regional_lstm.py'
       - 'data_pipeline/scripts/normalize_cwc_discharge.py'
       - 'data_pipeline/scripts/download_nwdp_history.py'
 
@@ -47,7 +48,10 @@ jobs:
       - name: Train regional multi-station LSTM
         run: |
           python data_pipeline/scripts/train_regional_lstm.py --observations data_pipeline/output/cwc_discharge_normalized.csv --output-dir data_pipeline/output/regional_models --lookback-days 90 --lead-days 7 --window-stride 14 --epochs 6 --patience 2 --max-windows-per-station-split 70 --hidden-size 48 --num-layers 1 --batch-size 512
-      - name: Upload data, model, and evaluation report
+      - name: Run inference smoke test with saved weights and scalers
+        run: |
+          python data_pipeline/scripts/predict_regional_lstm.py --observations data_pipeline/output/cwc_discharge_normalized.csv --model-file data_pipeline/output/regional_models/regional_discharge_lstm.pt --scalers-file data_pipeline/output/regional_models/regional_discharge_lstm.scalers.json --report-file data_pipeline/output/regional_models/regional_discharge_lstm.report.json --output-file data_pipeline/output/regional_models/latest_forecast_research.json --lookback-days 90
+      - name: Upload data, model, inference output, and evaluation report
         if: always()
         uses: actions/upload-artifact@v4
         with:
