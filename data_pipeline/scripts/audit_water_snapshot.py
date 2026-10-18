@@ -126,7 +126,7 @@ def render_report(data: dict[str, Any]) -> str:
         "",
         "These statuses describe what the collector could retrieve during this run; they do not prove that a source's latest observation is current.",
         "",
-        "| Configured source page | Status | Resources discovered | Successful resource scans | Resource errors |",
+        "| Configured source page | Status | Resources discovered | Resource scans completed | Resource errors |",
         "|---|---|---:|---:|---:|",
     ]
     for report in source_reports:
