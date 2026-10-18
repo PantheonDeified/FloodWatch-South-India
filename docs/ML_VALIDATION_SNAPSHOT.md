@@ -27,7 +27,7 @@ For the report's high-flow subset (threshold 797.7 m³/s), the LSTM has MAE 1,35
 
 ## Trained-weight inference smoke test
 
-The single-station trainer has already produced model weights and matching scalers, but the earlier training run did **not** record a separate automated live-inference smoke-test step. I added that step to the subsequent training workflow: it loads the just-trained weights, requires a contiguous 90-day history for the configured station, writes a seven-day CSV forecast plus freshness metadata, and includes those files in the artifact. Treat that inference test as **pending until the new workflow run shows the step succeeded**. If the latest observations are stale, the generated output is a functional test only—not a current forecast.
+The single-station training run [#39115932750](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39115932750) successfully completed the separate saved-weight inference smoke test. It loads the just-trained weights, requires a contiguous 90-day history for the configured station, writes a seven-day CSV forecast plus freshness metadata, and includes those files in the artifact. **The smoke test passing proves the inference code and artifact are usable; it does not prove the forecast is current or safe for warnings.** Check freshness metadata before interpreting forecast values.
 
 The compact model artifact is configured for 90-day retention and excludes the multi-gigabyte normalized source CSV so the downloadable result stays manageable.
 
