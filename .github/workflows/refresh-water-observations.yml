@@ -4,7 +4,6 @@ on:
   push:
     paths:
       - 'data_pipeline/**'
-      - 'data/water-observations.json'
       - '.github/workflows/refresh-water-observations.yml'
   workflow_dispatch:
   schedule:
@@ -43,8 +42,16 @@ jobs:
           print("observations:", data.get("observation_count"))
           print("resources checked:", data.get("resource_count_checked"))
           print("generated at:", data.get("generated_at_utc"))
-          if not isinstance(data.get("observations"), list):
+          observations = data.get("observations")
+          if not isinstance(observations, list):
               raise SystemExit("Invalid observation list")
+          if len(observations) == 0:
+              raise SystemExit("Collector returned zero observations; refusing to publish an empty snapshot. Check the source diagnostics and provider availability.")
+          if data.get("observation_count") != len(observations):
+              raise SystemExit("observation_count does not match the observations list length")
+          if not data.get("generated_at_utc"):
+              raise SystemExit("Missing generated_at_utc metadata")
+          print("latest reported observation:", max((row.get("observed_at", "") for row in observations), default=""))
           PY
       - name: Publish changed snapshot to GitHub Pages
         run: |
