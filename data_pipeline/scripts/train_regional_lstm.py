@@ -134,7 +134,10 @@ def main():
         offset=int((station_dates[0]-dates[0]).days)
         raw=s.reindex(station_dates).to_numpy(float)
         log=np.full(len(station_dates),np.nan); ok=np.isfinite(raw); log[ok]=np.log1p(raw[ok])
-        lat,lon=map(float,meta.loc[sid].tolist())
+        # Normalize static coordinates to roughly [-1, 1] so they do not dominate
+        # standardized log-discharge, missingness and seasonal input features.
+        lat_raw,lon_raw=map(float,meta.loc[sid].tolist())
+        lat,lon=lat_raw/90.0,lon_raw/180.0
         # The station-specific high-flow threshold is derived from this station's
         # training-period observations only; never use validation/test targets to select train peaks.
         train_count=max(0,min(len(raw),tr-offset))
@@ -280,8 +283,8 @@ def main():
     scaler_path.write_text(json.dumps({
       "version":1,"target_transform":"log1p","global_log1p_mean":mu,"global_log1p_std":sd,
       "lookback_days":args.lookback_days,"lead_days":args.lead_days,
-      "input_features":["scaled_log1p_discharge","observation_mask","day_of_year_sin","day_of_year_cos","latitude_degrees_raw","longitude_degrees_raw"],
-      "latitude_scaling":"raw degrees clipped to [-90,90]; no division","longitude_scaling":"raw degrees clipped to [-180,180]; no division"
+      "input_features":["scaled_log1p_discharge","observation_mask","day_of_year_sin","day_of_year_cos","latitude_div_90","longitude_div_180"],
+      "latitude_scaling":"latitude_degrees / 90; normalized to [-1,1]","longitude_scaling":"longitude_degrees / 180; normalized to [-1,1]"
     },indent=2),encoding="utf-8")
     report={"model_type":"regional multi-station masked-input LSTM","status":"experimental_research_only",
       "states":STATES,"source_station_count":int(df.station_id.nunique()),"stations_with_windows":len(used),
