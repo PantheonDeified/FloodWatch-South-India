@@ -207,3 +207,36 @@ def test_water_observations_support_nearby_station_radius(monkeypatch):
 def test_water_nearby_filter_requires_both_coordinates():
     response = client.get("/api/v1/water-observations", params={"latitude": 17.385})
     assert response.status_code == 422
+
+
+def test_river_flow_proxy_returns_model_metadata(monkeypatch):
+    payload = {
+        "latitude": 17.38,
+        "longitude": 78.48,
+        "timezone": "Asia/Kolkata",
+        "daily": {
+            "time": ["2026-10-18", "2026-10-19"],
+            "river_discharge": [120.0, 135.0],
+        },
+    }
+    monkeypatch.setattr(main, "urlopen", Mock(return_value=FakeResponse(payload)))
+    response = client.get(
+        "/api/v1/river-flow",
+        params={"latitude": 17.38, "longitude": 78.48},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["daily"]["river_discharge"] == [120.0, 135.0]
+    assert data["_floodwatch"]["provider"] == "Open-Meteo Flood API / GloFAS"
+    assert "not a gauge observation" in data["_floodwatch"]["data_type"]
+    main.urlopen.assert_called_once()
+
+
+def test_river_flow_rejects_malformed_provider_series(monkeypatch):
+    monkeypatch.setattr(main, "urlopen", Mock(return_value=FakeResponse({"daily": {"time": ["2026-10-18"]}})))
+    response = client.get(
+        "/api/v1/river-flow",
+        params={"latitude": 17.38, "longitude": 78.48},
+    )
+    assert response.status_code == 502
+    assert "valid daily discharge series" in response.json()["detail"]
