@@ -941,7 +941,8 @@ function buildRiskGridCells(geo){
 }
 function gaugeSignalForCell(cell){
  const records=Array.isArray(waterSnapshot?.observations)?waterSnapshot.observations:[];
- let best=null;const now=Date.now();
+ let best=null;const now=Date.now(),basinGeo=window.__floodwatchBasinGeoJSON||null;
+ const targetBasin=basinForPoint(cell.lon,cell.lat,basinGeo);
  for(const record of records){
   if(!['river_level','river_discharge'].includes(record.kind))continue;
   if(record.value==null||record.value==='')continue;
@@ -951,7 +952,13 @@ function gaugeSignalForCell(cell){
   // Only genuinely recent source timestamps may drive live rise signals.
   if(freshness.key!=='recent')continue;
   const distanceKm=kmBetween(cell.lat,cell.lon,lat,lon);
-  if(distanceKm>35||(best&&distanceKm>=best.distanceKm))continue;
+  if(distanceKm>35)continue;
+  const stationBasin=basinForPoint(lon,lat,basinGeo);
+  const hydrologyLinked=record.hydrology_link_verified===true||record.hydrologyLinked===true;
+  const basinRelation=basinRoutingRelation(stationBasin?.id,targetBasin?.id,basinGeo);
+  if(basinRelation==='downstream_candidate'&&!hydrologyLinked)continue;
+  const relationRank=hydrologyLinked?3:['same_basin','upstream_candidate'].includes(basinRelation)?2:1;
+  if(best&&(relationRank<best.relationRank||(relationRank===best.relationRank&&distanceKm>=best.distanceKm)))continue;
   const series=(waterSnapshot.series||[]).find(s=>String(s.id)===String(record.id))?.points||[];
   const ordered=series.filter(p=>p&&p.observed_at&&p.value!=null&&p.value!==''&&Number.isFinite(Number(p.value)))
    .map(p=>({...p,_ms:Date.parse(String(p.observed_at)),_value:Number(p.value)}))
@@ -971,9 +978,9 @@ function gaugeSignalForCell(cell){
   const rising=seriesCurrent&&intervalHours>0&&intervalHours<=48&&delta>threshold;
   const rapidRise=rising&&delta>=Math.max(span*.5,Math.abs(latest._value)*.015,threshold*2);
   const riseRatePerHour=rising?delta/intervalHours:null;
-  // Proximity is not proof of river connectivity. Mark only verified links as such.
-  const hydrologyLinked=record.hydrology_link_verified===true||record.hydrologyLinked===true;
-  best={record,distanceKm,percentile,delta,rising,rapidRise,riseRatePerHour,intervalHours,historyCount:values.length,hydrologyLinked};
+  // HydroBASINS NEXT_DOWN provides a watershed-path candidate, not proof of an actual river-channel connection.
+  const linkWeight=hydrologyLinked?1:['same_basin','upstream_candidate'].includes(basinRelation)?.75:.5;
+  best={record,distanceKm,percentile,delta,rising,rapidRise,riseRatePerHour,intervalHours,historyCount:values.length,hydrologyLinked,basinRelation,stationBasinId:stationBasin?.id??null,targetBasinId:targetBasin?.id??null,linkWeight,relationRank};
  }
  return best;
 }
@@ -1064,13 +1071,17 @@ function computeRiskScore(cell,bundle){
   else if(gauge.percentile>=80)riverAdjustment+=10;
   if(gauge.rising)riverAdjustment+=12;
   if(gauge.rapidRise)riverAdjustment+=8;
+  riverAdjustment=Math.round(riverAdjustment*(Number.isFinite(gauge.linkWeight)?gauge.linkWeight:(gauge.hydrologyLinked?1:.5)));
  }
  let standaloneBase=null;
  if(score==null){
   if(gauge&&(gauge.rising||gauge.percentile>=90)){
-   score=Math.max(gauge.rapidRise?42:gauge.rising?35:0,gauge.percentile>=95?45:gauge.percentile>=90?38:0);
+   const rawGaugeSignal=Math.max(gauge.rapidRise?42:gauge.rising?35:0,gauge.percentile>=95?45:gauge.percentile>=90?38:0);
+   const weight=Number.isFinite(gauge.linkWeight)?gauge.linkWeight:(gauge.hydrologyLinked?1:.5);
+   score=weight>=.75?Math.max(35,Math.round(rawGaugeSignal*weight)):Math.round(rawGaugeSignal*weight);
    standaloneBase='gauge';
-   componentsUsed.push('recent observed high/rising river signal; connectivity not verified unless source says so');
+   const relationLabel=gauge.hydrologyLinked?'source-verified link':gauge.basinRelation==='same_basin'?'same-basin candidate':gauge.basinRelation==='upstream_candidate'?'HydroBASINS upstream candidate':'nearby gauge; connectivity unknown';
+   componentsUsed.push('recent observed high/rising river signal ('+relationLabel+')');
   }
   if(score==null&&humanSignal.points>0){
    score=humanSignal.incident?Math.max(35,humanSignal.points):humanSignal.points;
@@ -1136,6 +1147,32 @@ function basinForPoint(lon,lat,geo){
   }
  }
  return null;
+}
+function basinRoutingRelation(sourceBasinId,targetBasinId,geo){
+ if(sourceBasinId==null||targetBasinId==null||!geo||!Array.isArray(geo.features))return 'unknown';
+ const source=String(sourceBasinId),target=String(targetBasinId);
+ if(source===target)return 'same_basin';
+ const byId=new Map();
+ for(const feature of geo.features){
+  const p=feature?.properties||{},id=p.HYBAS_ID??p.hybas_id;
+  if(id!=null)byId.set(String(id),p);
+ }
+ const reaches=(start,destination)=>{
+  let current=String(start);const visited=new Set();
+  for(let step=0;step<100;step++){
+   if(current===destination)return true;
+   if(visited.has(current))return false;
+   visited.add(current);
+   const props=byId.get(current);if(!props)return false;
+   const next=props.NEXT_DOWN??props.next_down;
+   if(next==null||String(next)==='0'||Number(next)===0)return false;
+   current=String(next);
+  }
+  return false;
+ };
+ if(reaches(source,target))return 'upstream_candidate';
+ if(reaches(target,source))return 'downstream_candidate';
+ return 'unlinked';
 }
 async function loadSouthIndiaBasins(){
  if(window.__floodwatchBasinGeoJSON)return window.__floodwatchBasinGeoJSON;
