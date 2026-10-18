@@ -979,7 +979,7 @@ function gaugeSignalForCell(cell){
   const rapidRise=rising&&delta>=Math.max(span*.5,Math.abs(latest._value)*.015,threshold*2);
   const riseRatePerHour=rising?delta/intervalHours:null;
   // HydroBASINS NEXT_DOWN provides a watershed-path candidate, not proof of an actual river-channel connection.
-  const linkWeight=hydrologyLinked?1:['same_basin','upstream_candidate'].includes(basinRelation)?.75:.5;
+  const linkWeight=hydrologyLinked?1:(['same_basin','upstream_candidate'].includes(basinRelation)?0.75:0.5);
   best={record,distanceKm,percentile,delta,rising,rapidRise,riseRatePerHour,intervalHours,historyCount:values.length,hydrologyLinked,basinRelation,stationBasinId:stationBasin?.id??null,targetBasinId:targetBasin?.id??null,linkWeight,relationRank};
  }
  return best;
@@ -1078,7 +1078,9 @@ function computeRiskScore(cell,bundle){
   if(gauge&&(gauge.rising||gauge.percentile>=90)){
    const rawGaugeSignal=Math.max(gauge.rapidRise?42:gauge.rising?35:0,gauge.percentile>=95?45:gauge.percentile>=90?38:0);
    const weight=Number.isFinite(gauge.linkWeight)?gauge.linkWeight:(gauge.hydrologyLinked?1:.5);
-   score=weight>=.75?Math.max(35,Math.round(rawGaugeSignal*weight)):Math.round(rawGaugeSignal*weight);
+   // A fresh nearby high/rising river observation stays at least AMBER when other feeds are missing,
+   // but its source relationship is explicitly labelled rather than presented as verified upstream flow.
+   score=Math.max(35,Math.round(rawGaugeSignal*weight));
    standaloneBase='gauge';
    const relationLabel=gauge.hydrologyLinked?'source-verified link':gauge.basinRelation==='same_basin'?'same-basin candidate':gauge.basinRelation==='upstream_candidate'?'HydroBASINS upstream candidate':'nearby gauge; connectivity unknown';
    componentsUsed.push('recent observed high/rising river signal ('+relationLabel+')');
