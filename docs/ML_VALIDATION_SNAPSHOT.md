@@ -25,6 +25,12 @@ Overall test RMSE skill versus persistence is approximately **18.1%**. This is e
 
 For the report's high-flow subset (threshold 797.7 m³/s), the LSTM has MAE 1,352.76 m³/s, RMSE 2,957.05 m³/s, and NSE -0.013. Negative NSE means it performed worse than predicting the subset mean under that metric. Extreme-flow behaviour is therefore not good enough to claim flood-event reliability.
 
+## Trained-weight inference smoke test
+
+I also loaded the actual saved `.pt` weights and matching `.scalers.npz` from the completed single-station training artifact, selected the same station's latest 90 consecutive observed days, and ran a CPU forward forecast. The model loaded successfully and returned seven finite non-negative discharge estimates. The archive's last observed day was **2025-12-31**, so the generated forecast dates were **2026-01-01 through 2026-01-07**; this is a functional inference test on stale historical input, **not a current forecast**.
+
+The single-station GitHub Actions workflow now runs this inference smoke test after training and includes its CSV and freshness metadata in the model artifact. The compact artifact is configured for 90-day retention and excludes the multi-gigabyte normalized source CSV.
+
 ## Automated code checks
 
 - [Water-pipeline validation run](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39114856351): passed; 35 existing unit tests passed, syntax checks passed, water snapshot validation passed, audit report generation passed.
