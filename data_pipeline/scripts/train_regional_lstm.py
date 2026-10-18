@@ -194,7 +194,8 @@ def main():
     def pack(rows):
         return (np.stack([r[0] for r in rows]),np.stack([r[1] for r in rows]),
                 np.stack([r[2] for r in rows]),np.stack([r[3] for r in rows]))
-    xt,yt,_,_=pack(data["train"]); xv,yv,_,_=pack(data["validation"])
+    xt,yt,_,_=pack(data["train"])
+    xv,yv,validation_actual,validation_base=pack(data["validation"])
     xs,ys,actual,base=pack(data["test"])
     device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model=RegionalLSTM(args.lead_days, hidden_size=args.hidden_size, num_layers=args.num_layers).to(device)
@@ -221,11 +222,32 @@ def main():
         if stale>=args.patience: break
     if state is None: raise SystemExit("No valid model checkpoint.")
     model.load_state_dict(state); model.eval()
+    # Choose the LSTM contribution using validation data only; never tune against test results.
+    with torch.no_grad():
+        validation_scaled=model(torch.from_numpy(xv).to(device)).cpu().numpy()
+    validation_prediction=np.expm1(np.maximum(validation_scaled*sd+mu,0))
+    alpha,validation_blend_rmse=choose_alpha_on_validation(validation_actual,validation_prediction,validation_base)
+    validation_selected=np.maximum((1.0-alpha)*validation_base+alpha*validation_prediction,0.0)
+    validation_selection={
+        "method":"minimize chronological validation RMSE over alpha 0.00..1.00 in 0.05 steps; persistence wins ties",
+        "alpha":alpha,
+        "persistence_metrics":metrics(validation_actual,validation_base),
+        "raw_lstm_metrics":metrics(validation_actual,validation_prediction),
+        "selected_metrics":metrics(validation_actual,validation_selected),
+        "selected_rmse_m3s":validation_blend_rmse,
+        "test_set_used_for_selection":False
+    }
     with torch.no_grad(): pred=model(torch.from_numpy(xs).to(device)).cpu().numpy()
     pred=np.expm1(np.maximum(pred*sd+mu,0))
-    m,b=metrics(actual,pred),metrics(actual,base)
+    selected_pred=np.maximum((1.0-alpha)*base+alpha*pred,0.0)
+    raw_lstm_metrics=metrics(actual,pred)
+    m,b=metrics(actual,selected_pred),metrics(actual,base)
+    raw_skill=1-raw_lstm_metrics["rmse_m3s"]/b["rmse_m3s"] if b["rmse_m3s"]>0 else None
     skill=1-m["rmse_m3s"]/b["rmse_m3s"] if b["rmse_m3s"]>0 else None
-    per_horizon=[{"lead_day":h+1,"model":metrics(actual[:,h],pred[:,h]),
+    selected_model_type=("persistence_selected_by_validation" if alpha<=1e-12 else
+                         "lstm_persistence_blend" if alpha<1.0-1e-12 else "raw_lstm")
+    per_horizon=[{"lead_day":h+1,"selected_model":metrics(actual[:,h],selected_pred[:,h]),
+                  "raw_lstm":metrics(actual[:,h],pred[:,h]),
                   "persistence":metrics(actual[:,h],base[:,h])} for h in range(args.lead_days)]
 
     # A pooled score can hide stations where the LSTM fails. Report every held-out
