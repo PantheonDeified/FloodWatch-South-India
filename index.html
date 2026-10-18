@@ -239,7 +239,7 @@ const tiles={
  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:18,maxZoom:18,attribution:'Tiles © Esri'})
 };tiles.street.addTo(map);
 let marker=null,overlay=null,cycloneLayer=null,selected=null,activeOverlay='rain',currentBaseLayer='street',historyRequest=0,waterSnapshot=null,waterDisplayedRecords=[],waterStationsLayer=null,waterStationsEnabled=false;
-let riskFloodLayers=[],riskCycloneLayer=null,riskGridLayer=null,riskLayerRequest=0,riskCycloneRequest=0,riskCalculatedCells=[],riskCalculatedResults=[],riskBasinLayer=null;
+let riskFloodLayers=[],riskCycloneLayer=null,riskGridLayer=null,riskLayerRequest=0,riskCycloneRequest=0,riskCalculatedCells=[],riskCalculatedResults=[],riskBasinLayer=null;let riskWeatherRows=[],riskCurrentMask=null;
 const $=id=>document.getElementById(id),fmt=(v,u='',d=0)=>v==null?'—':Number(v).toFixed(d)+u;
 function updateZoomStatus(){
  // Leaflet can upscale tiles beyond their native zoom. The old warning incorrectly
@@ -668,7 +668,7 @@ async function loadWaterObservations(){
   renderNearbyWaterStations();
   $('waterSnapshotStatus').textContent='Public station observations loaded where available. See each row for its source-reported value, timestamp and link.';
   $('waterMeta').textContent='Provider update schedules and timestamp conventions vary. Records with unknown or stale timestamps do not count as live river-rise evidence.';
-  renderWaterObservations();updateBasinRiskContext();
+  renderWaterObservations();updateBasinRiskContext();redrawCachedRiskLayer();
  }catch(e){
   $('waterSnapshotStatus').textContent='Public station snapshot unavailable: '+e.message+'. Use the official source links below to check readings.';
   $('waterMeta').textContent='No water observations are displayed until a valid snapshot can be loaded.';
@@ -1207,7 +1207,7 @@ function drawComputedRiskCells(cells,weatherRows,requestId,mask){
  if(riskGridLayer){try{map.removeLayer(riskGridLayer)}catch(e){}riskGridLayer=null}
  const results=cells.map((cell,i)=>computeRiskScore(cell,weatherRows[i]));
  const counts={red:0,amber:0,green:0,unknown:0};results.forEach(r=>counts[r.level]++);
- riskCalculatedCells=cells;riskCalculatedResults=results;
+ riskCalculatedCells=cells;riskCalculatedResults=results;riskWeatherRows=weatherRows;riskCurrentMask=mask;
  const field=buildRiskContourField(cells,results,mask),layer=L.layerGroup();
  L.imageOverlay(field.url,[[field.bounds.south,field.bounds.west],[field.bounds.north,field.bounds.east]],{
   opacity:1,interactive:false,alt:'Continuous interpolated FloodWatch risk field clipped to the South India state mask'
@@ -1228,6 +1228,10 @@ function drawComputedRiskCells(cells,weatherRows,requestId,mask){
  ],'Smooth interpolation of FloodWatch’s own numerical risk score; contours are not probabilities or official warnings. Transparent areas mean unknown, not safe.','https://open-meteo.com/en/docs/flood-api');
  $('riskLegendNote').textContent+=' Sample points: '+cells.length+' · red '+counts.red+' · amber '+counts.amber+' · green '+counts.green+' · unknown '+counts.unknown+'.';
  updateBasinRiskContext();
+}
+function redrawCachedRiskLayer(){
+ if($('riskLayer')?.value!=='computed-risk'||!riskCalculatedCells.length||!riskCurrentMask||riskWeatherRows.length!==riskCalculatedCells.length)return;
+ drawComputedRiskCells(riskCalculatedCells,riskWeatherRows,riskLayerRequest,riskCurrentMask);
 }
 function updateBasinRiskContext(){
  const el=$('basinRiskSummary');if(!el)return;
@@ -1448,12 +1452,12 @@ function initInfrastructureRegister(){
   const lat=Number($('infraLatitude').value),lon=Number($('infraLongitude').value);
   if(!Number.isFinite(lat)||lat < -90||lat > 90||!Number.isFinite(lon)||lon < -180||lon > 180){$('infraFormStatus').textContent='Enter valid affected-location coordinates. The map score needs a documented location.';return}
   records.unshift({category:$('infraType').value,place:$('infraPlace').value.trim(),latitude:lat,longitude:lon,hydrologyLinked:$('infraHydrologyLinked').checked,agency:$('infraAgency').value.trim(),date:$('infraDate').value,status:$('infraStatus').value,sourceUrl:src,notes:$('infraNotes').value.trim(),savedAt:new Date().toISOString()});
-  persist();render();form.reset();
+  persist();render();form.reset();redrawCachedRiskLayer();
  });
  $('infraEvidenceList').addEventListener('click',e=>{
   const btn=e.target.closest('[data-infra-delete]');if(!btn)return;
   const idx=Number(btn.dataset.infraDelete);if(!Number.isInteger(idx)||idx<0||idx>=records.length)return;
-  records.splice(idx,1);persist();render();
+  records.splice(idx,1);persist();render();redrawCachedRiskLayer();
  });
  $('infraExport').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),scope:'browser-local research notes; not an official safety register',records},null,2)],{type:'application/json'});
