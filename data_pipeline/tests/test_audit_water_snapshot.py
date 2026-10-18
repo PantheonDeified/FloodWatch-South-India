@@ -47,7 +47,7 @@ class AuditWaterSnapshotTests(unittest.TestCase):
             "resource_count_checked": 0,
             "observations": [{
                 "kind": "river_level", "station_name": "A|B", "state": "Telangana",
-                "source_name": "Source|Name", "source_resource_title": "Resource",
+                "source_name": "Source|Name", "source_resource_title": "Resource|Page",
                 "observed_at": "2026-10-17T10:00:00",
                 "source_timezone": "unknown", "latitude": 10.0, "longitude": 78.0,
                 "value": 1.0, "unit": "m", "station_id": "x", "district": "D"
@@ -55,7 +55,7 @@ class AuditWaterSnapshotTests(unittest.TestCase):
         }
         report = render_report(data)
         self.assertIn("Source\\|Name", report)
-        self.assertIn("A\\|B", report)
+                self.assertIn("Resource\\|Page", report)
 
 
 if __name__ == "__main__":
