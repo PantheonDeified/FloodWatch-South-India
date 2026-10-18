@@ -66,6 +66,15 @@ jobs:
           python data_pipeline/scripts/audit_cwc_discharge.py \
             --input data_pipeline/processed/cwc_discharge_normalized.csv \
             --output data_pipeline/processed/cwc_discharge_station_audit.json
+      - name: Validate exact resource URLs and raw checksums
+        run: |
+          python data_pipeline/scripts/validate_cwc_provenance.py \
+            --raw-dir data_pipeline/raw/nwdp_history \
+            --normalized data_pipeline/processed/cwc_discharge_normalized.csv \
+            --quality-report data_pipeline/processed/cwc_discharge_quality_report.json \
+            --manifest data_pipeline/raw/nwdp_history/manifest.json \
+            --out data_pipeline/processed/cwc_discharge_provenance_report.json \
+            --verify-raw-sha256
       - name: Build station catalogue for manual review
         run: |
           python data_pipeline/scripts/build_cwc_station_catalog.py \
@@ -94,6 +103,7 @@ jobs:
             data_pipeline/raw/nwdp_history/
             data_pipeline/processed/cwc_discharge_normalized.csv
             data_pipeline/processed/cwc_discharge_quality_report.json
+            data_pipeline/processed/cwc_discharge_provenance_report.json
             data_pipeline/processed/cwc_discharge_station_audit.json
             data_pipeline/processed/cwc_station_catalog_review.csv
             data_pipeline/processed/cwc_station_catalog_review.json
