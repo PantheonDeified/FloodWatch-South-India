@@ -446,7 +446,7 @@ async function loadWaterObservations(){
  }
 }
 
-let cloudRequestId=0;
+let cloudRequestId=0,cycloneRequestId=0;
 async function loadSpatialCloudOverlay(){
  const requestId=++cloudRequestId;
  if(overlay){map.removeLayer(overlay);overlay=null}
@@ -508,6 +508,7 @@ async function loadSpatialWindOverlay(){
 }
 map.on('moveend',()=>{if(activeOverlay==='cloud')loadSpatialCloudOverlay();else if(activeOverlay==='wind')loadSpatialWindOverlay()});
 async function setOverlay(kind){
+ if(kind!=='cyclone')cycloneRequestId++;
  activeOverlay=kind;updateZoomStatus();
  document.querySelectorAll('[data-overlay]').forEach(b=>b.classList.toggle('active',b.dataset.overlay===kind));
  if(overlay){map.removeLayer(overlay);overlay=null}
@@ -534,12 +535,15 @@ async function setOverlay(kind){
  $('overlayStatus').textContent='Choose a supported map overlay.';
 }
 async function loadCyclones(){
+ const requestId=++cycloneRequestId;
+ if(cycloneLayer){map.removeLayer(cycloneLayer);cycloneLayer=null}
  try{
   $('overlayStatus').textContent='Loading tropical-cyclone events from GDACS…';
   const url='https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventtype=TC&alertlevel=Green;Orange;Red';
   const r=await fetch(url,{cache:'no-store',headers:{Accept:'application/json'}});
   if(!r.ok)throw Error('GDACS returned HTTP '+r.status);
   const data=await r.json();
+  if(requestId!==cycloneRequestId||activeOverlay!=='cyclone')return;
   if(!data||!Array.isArray(data.features))throw Error('GDACS response was not a GeoJSON feature collection');
   const features=data.features.filter(f=>f&&f.geometry&&f.properties);
   const layer=L.geoJSON({type:'FeatureCollection',features},{
@@ -562,6 +566,7 @@ async function loadCyclones(){
    ?'GDACS cyclone-event layer loaded: '+features.length+' event features. Colours reflect GDACS alert level where supplied. This global event feed is not a substitute for official IMD alerts.'
    :'GDACS responded successfully; no tropical-cyclone event features were returned for this query. Check official IMD bulletins as well.';
  }catch(e){
+  if(requestId!==cycloneRequestId||activeOverlay!=='cyclone')return;
   if(cycloneLayer){map.removeLayer(cycloneLayer);cycloneLayer=null}
   $('overlayStatus').textContent='GDACS cyclone feed unavailable: '+e.message+'. Use the official IMD <a href="https://dss.imd.gov.in/dwr_img/GIS/marine.php" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">Cyclone Warning Decision Support System</a> and <a href="https://mausam.imd.gov.in/imd_latest/contents/cyclone.php" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">cyclone bulletins</a>.';
  }
