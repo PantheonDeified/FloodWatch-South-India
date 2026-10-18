@@ -46,9 +46,23 @@ The dashboard now includes a **browser-local infrastructure evidence notebook**.
 
 **Important safeguards:** reservoir level alone cannot establish structural strength; this requires qualified engineering assessment and competent-authority records. A release occurring before a flood does not by itself prove causation. Distinguish unverified reports from agency-confirmed facts, avoid unsupported accusations, and do not publish sensitive infrastructure-security information.
 
-**Current boundary:** map/weather/radar/wind/cyclone context, historical rainfall context, external modelled river-flow context, public water-observation exploration, the NRSC/ISRO historical flood-evidence overlay (Andhra Pradesh hazard zonation plus aggregated historical inundation maps for Karnataka, Kerala and Tamil Nadu), the GDACS cyclone-event risk overlay, data-quality pipeline and experimental discharge LSTMs exist in the project. The risk-map selector is not a calibrated, pixel-level live flood prediction engine: current rain radar and water/river readings remain separate layers. NRSC's portal describes the hazard atlas as built by integrating maximum inundation layers from 1998–2019 and its aggregated state maps as satellite-derived historic flood maps from 2003–2020; those products should not be treated as equivalent risk scores. Telangana coverage in the selected NRSC WMS service is not verified and is explicitly treated as unknown. Automated geofenced alert delivery and a shared/server-side infrastructure evidence register are not yet implemented. Open-Meteo/GloFAS forecasts are external model products, not predictions from FloodWatch's LSTM.
+**Current boundary:** map/weather/radar/wind/cyclone context, historical rainfall context, external modelled river-flow context, public water-observation exploration, the NRSC/ISRO historical flood-evidence overlay (Andhra Pradesh hazard zonation plus aggregated historical inundation maps for Karnataka, Kerala and Tamil Nadu), the GDACS cyclone-event risk overlay, data-quality pipeline and experimental discharge LSTMs exist in the project. The new 0.5° FloodWatch-calculated grid independently scores raw 24/72-hour rain forecasts, rain probability, current precipitation, recent GloFAS discharge percentiles and fresh nearby gauge-history signals. It is provisional, not calibrated flood probability; grey means missing data, while original rain radar and other source overlays remain independent. NRSC's portal describes the hazard atlas as built by integrating maximum inundation layers from 1998–2019 and its aggregated state maps as satellite-derived historic flood maps from 2003–2020; those products should not be treated as equivalent risk scores. Telangana coverage in the selected NRSC WMS service is not verified and is explicitly treated as unknown. Automated geofenced alert delivery and a shared/server-side infrastructure evidence register are not yet implemented. Open-Meteo/GloFAS forecasts are external model products, not predictions from FloodWatch's LSTM.
 
 See the [early-warning and accountability design](docs/EARLY_WARNING_AND_ACCOUNTABILITY.md) for the intended workflow and limitations.
+
+## FloodWatch calculated regional risk grid
+
+The map now opens with a **South India-wide, 0.5° grid**. Each cell's own provisional score is calculated from raw inputs—not another website's red/amber/green labels:
+
+- 40% weight: forecast rain over 24 hours (100 mm saturates this component).
+- 30%: forecast rain over 72 hours (150 mm saturates this component).
+- 15%: maximum forecast rain probability over 24 hours.
+- 15%: current modelled precipitation rate (20 mm/h saturates this component).
+- Where available, the seven-day GloFAS discharge peak is compared against up to 92 preceding days at that grid point and blended with the rainfall score (75% rainfall / 25% discharge). A fresh nearby river gauge may raise the score using its own historical percentile and rise trend.
+
+**Colours:** red ≥65, amber ≥35, green <35; grey means data are missing/insufficient. The score is a short situational-awareness indicator, **not a calibrated flood probability or an official warning**. Thresholds are provisional project-defined settings and still require event-based calibration; the 92-day flow comparison is not seasonally normalized. Nearby gauges are not assumed to be upstream-connected. Grid boundaries use simplified regional polygons and border cells are approximate. Popups show the underlying values. Existing rain radar, cloud, wind, station and historic-flood layers remain available independently.
+
+Source numerical fields: [Open-Meteo weather API](https://open-meteo.com/en/docs) and [Open-Meteo Flood API / GloFAS](https://open-meteo.com/en/docs/flood-api); public station context from the repository's NWDP/NWIC/CWC-derived snapshot. Data sources provide the observations/model outputs; **FloodWatch calculates the colour itself**.
 
 ## Current frontend capabilities
 
