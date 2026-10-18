@@ -17,7 +17,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import (
     average_precision_score, balanced_accuracy_score, brier_score_loss,
-    confusion_matrix, precision_score, recall_score, roc_auc_score,
+    confusion_matrix, f1_score, precision_score, recall_score, roc_auc_score,
 )
 from sklearn.pipeline import Pipeline
 
@@ -84,8 +84,18 @@ def main() -> int:
         )),
     ])
     model.fit(train[feature_cols], train["flood_in_next_3d"].astype(int))
+    # Choose a decision threshold on the validation period only; keep the test period untouched.
+    val_probabilities = model.predict_proba(val[feature_cols])[:, 1]
+    y_val = val["flood_in_next_3d"].astype(int).to_numpy()
+    thresholds = np.arange(0.10, 0.91, 0.05)
+    threshold_scores = [
+        (float(f1_score(y_val, (val_probabilities >= threshold).astype(int), zero_division=0)), float(threshold))
+        for threshold in thresholds
+    ]
+    best_f1 = max(score for score, _ in threshold_scores)
+    decision_threshold = max(threshold for score, threshold in threshold_scores if score == best_f1)
     probabilities = model.predict_proba(test[feature_cols])[:, 1]
-    predictions = (probabilities >= 0.5).astype(int)
+    predictions = (probabilities >= decision_threshold).astype(int)
     y = test["flood_in_next_3d"].astype(int).to_numpy()
     report = {
         "model_type": "hist-gradient-boosting event baseline (not the Google Flood Hub model)",
@@ -96,17 +106,21 @@ def main() -> int:
         "train_period_end": train_end, "validation_period_end": val_end,
         "test_period_start": str(test["date"].min()), "test_period_end": str(test["date"].max()),
         "features": feature_cols,
+        "threshold_selection": {"method": "maximize F1 on validation period only", "selected_threshold": decision_threshold, "validation_best_f1": best_f1},
         "test_metrics": {
             "average_precision": float(average_precision_score(y, probabilities)),
             "roc_auc": float(roc_auc_score(y, probabilities)),
             "brier_score": float(brier_score_loss(y, probabilities)),
-            "balanced_accuracy_at_0.5": float(balanced_accuracy_score(y, predictions)),
-            "precision_at_0.5": float(precision_score(y, predictions, zero_division=0)),
-            "recall_at_0.5": float(recall_score(y, predictions, zero_division=0)),
+            "decision_threshold": decision_threshold,
+            "balanced_accuracy": float(balanced_accuracy_score(y, predictions)),
+            "precision": float(precision_score(y, predictions, zero_division=0)),
+            "recall": float(recall_score(y, predictions, zero_division=0)),
+            "f1": float(f1_score(y, predictions, zero_division=0)),
             "confusion_matrix_tn_fp_fn_tp": confusion_matrix(y, predictions, labels=[0, 1]).ravel().tolist(),
         },
         "warnings": [
             "This score is not a public flood probability until independent out-of-time and event-based validation is completed.",
+            "The decision threshold is tuned on the validation period; the untouched test period is used only for final reporting.",
             "Unreported days must not be used as no-flood labels unless the source catalogue is known to be complete.",
             "A rainfall-level correlation is not proof that rainfall caused a given flood.",
         ],
