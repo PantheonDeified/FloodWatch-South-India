@@ -18,22 +18,22 @@ FloodWatch has a completed experimental single-station LSTM pilot and a complete
 
 ## Regional training configuration and metrics
 
-The earlier broader-scope run used a 90-day input history, seven-day forecast horizon, a 48-unit single-layer LSTM, batch size 512, a maximum of six epochs, early-stopping patience two and two CPU threads. Training itself took about 48 seconds after acquisition and normalization; total workflow wall-clock time is longer because official archive retrieval and normalization precede training. The cited metrics below are provisional historical-baseline results from the broader seven-region state filter, not the definitive five-state run.
+The five-state run used a 90-day input history, seven-day forecast horizon, a 48-unit single-layer LSTM, batch size 512, six requested epochs, patience two and two CPU threads. Cached model fitting took 21.53 seconds; first-time archive retrieval and normalization take longer. A simple LSTM/persistence blend weight was selected using the chronological validation split only, then evaluated once on the held-out test split.
 
-| Pooled chronological test metric | Regional LSTM | Persistence baseline |
-|---|---:|---:|
-| MAE (m³/s) | 93.46 | 106.03 |
-| RMSE (m³/s) | 1,121.33 | 2,079.66 |
-| NSE | 0.343 | −1.261 |
-| Test targets | 92,015 | 92,015 |
+| Pooled chronological test metric | Validation-selected blend | Raw LSTM | Persistence |
+|---|---:|---:|---:|
+| MAE (m³/s) | 75.70 | 90.03 | 79.82 |
+| RMSE (m³/s) | 649.63 | 830.45 | 700.88 |
+| NSE | 0.652 | 0.432 | 0.595 |
+| Test targets | 89,824 | 89,824 | 89,824 |
 
-The latest five-state report used 241 source station IDs and produced usable forecast windows for 231. Its source calendar ended on 2026-10-17. Input timestamp age is a freshness heuristic only; it does not independently verify real-time sensor transmission. The holdout spans from 2016-11-07 to the end of the available source period. Test windows are sampled across stations rather than exhaustive. Source station metadata and coordinate identity need additional audit. Pooled RMSE skill is not proof that most stations improve: only 107 of 223 test stations beat persistence on RMSE, and 63 of 119 comparable high-flow station subsets beat their baseline. Review each station and high-flow counts before making performance claims.
+The latest five-state report used 241 source station IDs and produced usable forecast windows for 231. Source records extend through 2026-10-17. The chronological holdout begins 2017-07-11 and contains 89,824 sampled targets; windows are time-sampled per station rather than exhaustive. The raw LSTM alone is weaker than persistence, but the validation-selected blend (alpha=0.25; 25% LSTM plus 75% persistence) achieves 7.3% lower pooled test RMSE. The selected blend beats persistence on RMSE at 135/218 evaluated stations and 78/116 comparable high-flow station subsets. Timestamp age is a freshness heuristic only; station coordinate identity, provider update cadence, extreme-flow skill and river-network links still need independent review. Repeated comparisons to this same held-out window are not a substitute for a future independent test period.
 
 Interpretation: the model is a meaningful training milestone, not an operational flood-prediction model. A physical discharge value, a station-relative high-flow threshold and an official flood-warning level are distinct concepts.
 
 ## Current five-state retraining
 
-The latest feature-branch workflow uses exactly Andhra Pradesh, Karnataka, Kerala, Tamil Nadu and Telangana. It requests archive data through the current UTC calendar year and uses a versioned same-day cache. Workflow: https://github.com/PantheonDeified/FloodWatch-South-India/actions/workflows/train-regional-lstm.yml. Do not use the prior seven-state pooled metrics as final five-state performance. The rerun must complete training, inference, and artifact upload; its report must be re-reviewed for station counts, input dates and per-station/high-flow performance. A successful smoke test on observations older than three days must remain labelled historical, not live.
+Latest completed run: https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39126986154 (artifact ID 12136079681). Training scope is exactly Andhra Pradesh, Karnataka, Kerala, Tamil Nadu and Telangana; downloaded/normalized data are cached by day and pipeline version, with the workflow requesting data through the current UTC year. Training, validation-selected blending, saved-weight inference and artifact upload passed. The inference example used records through 2026-10-17, one day before the workflow; this is a timestamp-freshness check, not independent proof of live sensor transmission.
 
 ## What the network uses
 
