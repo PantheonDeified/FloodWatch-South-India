@@ -920,6 +920,7 @@ function gaugeSignalForCell(cell){
  let best=null;
  for(const record of records){
   if(!['river_level','river_discharge'].includes(record.kind))continue;
+  if(record.value==null||record.value==='')continue;
   const lat=Number(record.latitude),lon=Number(record.longitude),value=Number(record.value);
   if(!Number.isFinite(lat)||!Number.isFinite(lon)||!Number.isFinite(value))continue;
   const fresh=observationFreshness(record);
@@ -928,12 +929,12 @@ function gaugeSignalForCell(cell){
   const distanceKm=kmBetween(cell.lat,cell.lon,lat,lon);
   if(distanceKm>35||best&&distanceKm>=best.distanceKm)continue;
   const series=(waterSnapshot.series||[]).find(s=>String(s.id)===String(record.id))?.points||[];
-  const values=series.map(p=>Number(p?.value)).filter(Number.isFinite);
+  const values=series.filter(p=>p?.value!=null&&p.value!=='').map(p=>Number(p.value)).filter(Number.isFinite);
   if(values.length<10)continue;
   const sorted=[...values].sort((a,b)=>a-b);
   const percentile=100*values.filter(v=>v<=value).length/values.length;
   const q10=sorted[Math.floor(.10*(sorted.length-1))],q90=sorted[Math.floor(.90*(sorted.length-1))];
-  const ordered=series.filter(p=>p&&p.observed_at&&Number.isFinite(Number(p.value))).sort((a,b)=>String(a.observed_at).localeCompare(String(b.observed_at)));
+  const ordered=series.filter(p=>p&&p.observed_at&&p.value!=null&&p.value!==''&&Number.isFinite(Number(p.value))).sort((a,b)=>String(a.observed_at).localeCompare(String(b.observed_at)));
   const delta=ordered.length>=2?Number(ordered[ordered.length-1].value)-Number(ordered[ordered.length-2].value):null;
   const span=Math.max(0,q90-q10);
   const rising=delta!=null&&delta>Math.max(span*.25,Math.abs(value)*.005,1e-6);
@@ -943,8 +944,8 @@ function gaugeSignalForCell(cell){
 }
 function computeRiskScore(cell,bundle){
  const weather=bundle?.weather&&!bundle.weather.failed?bundle.weather:null;
- const h=weather?.hourly||{},precip=Array.isArray(h.precipitation)?h.precipitation.map(Number):[];
- const prob=Array.isArray(h.precipitation_probability)?h.precipitation_probability.map(Number):[];
+ const h=weather?.hourly||{},precip=Array.isArray(h.precipitation)?h.precipitation.map(v=>v==null?NaN:Number(v)):[];
+ const prob=Array.isArray(h.precipitation_probability)?h.precipitation_probability.map(v=>v==null?NaN:Number(v)):[];
  const rain24=precip.slice(0,24).filter(Number.isFinite),rain72=precip.slice(0,72).filter(Number.isFinite),p24=prob.slice(0,24).filter(Number.isFinite);
  const current=Number(weather?.current?.precipitation),components=[];
  if(rain24.length>=12)components.push({weight:40,value:40*clamp01(rain24.reduce((a,b)=>a+b,0)/100)});
@@ -956,7 +957,7 @@ function computeRiskScore(cell,bundle){
 
  // Compare the raw 7-day GloFAS flow outlook with the last ~90 available days
  // at this coordinate. This percentile is calculated here, not copied from any risk map.
- const daily=bundle?.flow?.daily||{},times=Array.isArray(daily.time)?daily.time:[],flows=Array.isArray(daily.river_discharge)?daily.river_discharge.map(Number):[];
+ const daily=bundle?.flow?.daily||{},times=Array.isArray(daily.time)?daily.time:[],flows=Array.isArray(daily.river_discharge)?daily.river_discharge.map(v=>v==null?NaN:Number(v)):[];
  const today=new Date().toISOString().slice(0,10),history=[],future=[];
  times.forEach((date,i)=>{const val=flows[i];if(!Number.isFinite(val)||val<0)return;if(String(date)<today)history.push(val);else if(String(date)>today)future.push(val)});
  let flowPercentile=null,flowForecastMax=null,flowHistoryCount=history.length,flowScore=null;
