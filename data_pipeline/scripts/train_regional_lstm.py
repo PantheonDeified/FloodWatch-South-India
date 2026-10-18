@@ -134,10 +134,9 @@ def main():
         offset=int((station_dates[0]-dates[0]).days)
         raw=s.reindex(station_dates).to_numpy(float)
         log=np.full(len(station_dates),np.nan); ok=np.isfinite(raw); log[ok]=np.log1p(raw[ok])
-        # Normalize static coordinates to roughly [-1, 1] so they do not dominate
-        # standardized log-discharge, missingness and seasonal input features.
-        lat_raw,lon_raw=map(float,meta.loc[sid].tolist())
-        lat,lon=lat_raw/90.0,lon_raw/180.0
+        # latitude/longitude are already normalized to [-1, 1] in the input-preparation
+        # block above. Do not divide them a second time here; inference uses the same scale.
+        lat,lon=map(float,meta.loc[sid].tolist())
         # The station-specific high-flow threshold is derived from this station's
         # training-period observations only; never use validation/test targets to select train peaks.
         train_count=max(0,min(len(raw),tr-offset))
