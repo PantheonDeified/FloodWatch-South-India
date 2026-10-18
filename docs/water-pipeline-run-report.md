@@ -2,7 +2,7 @@
 
 ## What the repository logs prove
 
-A successful GitHub Actions run, [Refresh official water observations #39078125961](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39078125961), completed on 2026-10-17. The collector produced a snapshot generated at `2026-10-17T23:12:45.397895+00:00`.
+A successful GitHub Actions run, [Refresh official water observations #39090443542](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39090443542), completed on 2026-10-18. The collector produced a snapshot generated at `2026-10-18T02:32:25.327209+00:00`. The same collection also confirms the new workflow guard accepted the non-empty snapshot and published it.
 
 | Check | Result |
 |---|---:|
@@ -15,7 +15,7 @@ A successful GitHub Actions run, [Refresh official water observations #390781259
 | Reservoir storage records | 9 |
 | Reservoir / regulator discharge records | 8 |
 
-The newest timestamp string reported in that snapshot was `2026-10-17T12:10:00`. The collector currently preserves a raw timestamp and explicitly says source timezone semantics are not specified. Therefore, do not label every station as real-time or classify freshness as exact until the timestamp timezone and provider update schedule are confirmed.
+The newest timestamp string reported in the latest snapshot was `2026-10-18T12:10:00` for Hemavathy Dam (raw source string `18-10-2026 12:10:00`). The snapshot's generation time was `2026-10-18T02:32:25Z`. Interpreted in the browser's India-local time, this appears to be a future timestamp; the site should label it **Future timestamp / unknown freshness**, not recent. Because the collector explicitly says the source timezone is unspecified, verify the source's timezone/meaning before correcting or using this timestamp. Do not label every station as real-time or classify freshness as exact until source timezone and provider update schedules are confirmed.
 
 ## Data-quality caveats to resolve
 
@@ -29,7 +29,7 @@ The newest timestamp string reported in that snapshot was `2026-10-17T12:10:00`.
 
 The workflow's push trigger used to include `data/water-observations.json`, which the workflow itself commits. That can trigger another collection run after publishing a snapshot. The trigger now runs on changes to the source registry/scripts/workflow, a manual request, or the six-hour schedule—but not on the output file's own commit.
 
-The workflow now refuses to publish a snapshot if the collector returns an empty observation list, the record count does not match the list, or the generation timestamp is missing. This prevents a temporary source outage from replacing a working snapshot with an empty file.
+The workflow now refuses to publish a snapshot if the collector returns an empty observation list, the record count does not match the list, or the generation timestamp is missing. This prevents a temporary source outage from replacing a working snapshot with an empty file. Run #39090443542 passed the guard with 407 records. The site already classifies timestamps more than one hour in the future as unknown rather than recent.
 
 ## How to check the next run
 
@@ -45,4 +45,4 @@ The workflow now refuses to publish a snapshot if the collector returns an empty
 - [Source registry](../data_pipeline/sources.json)
 - [Collector](../data_pipeline/scripts/refresh_water_observations.py)
 - [Refresh workflow](../.github/workflows/refresh-water-observations.yml)
-- [Successful Action run used for this report](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39078125961)
+- [Latest successful Action run used for this report](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39090443542)
