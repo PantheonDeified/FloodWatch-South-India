@@ -74,10 +74,10 @@ jobs:
             --report data_pipeline/processed/cwc_station_catalog_review.json
       - name: Build station research-readiness review queue
         run: |
-          python data_pipeline/scripts/build_cwc_research_readiness.py \\
-            --catalog data_pipeline/processed/cwc_station_catalog_review.csv \\
-            --audit data_pipeline/processed/cwc_discharge_station_audit.json \\
-            --out-csv data_pipeline/processed/cwc_station_research_readiness.csv \\
+          python data_pipeline/scripts/build_cwc_research_readiness.py \
+            --catalog data_pipeline/processed/cwc_station_catalog_review.csv \
+            --audit data_pipeline/processed/cwc_discharge_station_audit.json \
+            --out-csv data_pipeline/processed/cwc_station_research_readiness.csv \
             --out-json data_pipeline/processed/cwc_station_research_readiness.json
       - name: Adapt discharge to common observations schema
         run: |
