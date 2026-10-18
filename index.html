@@ -45,7 +45,7 @@
 </head>
 <body>
 <header><div class="brand"><div class="logo">🌧</div><div><h1>FloodWatch South India</h1><small>Regional weather & flood situational awareness</small></div></div><span class="tag">SOURCE-LABELLED DATA · PROTOTYPE</span></header>
-<main><section class="map-area"><div class="toolbar"><form id="searchForm" style="display:flex;gap:8px;flex:1;min-width:260px"><input id="search" placeholder="Search a town, village or district in South India…" autocomplete="off"><button class="primary">Find</button></form><button id="locate">◎ My location</button><input id="latInput" aria-label="Latitude" placeholder="Latitude" inputmode="decimal" style="flex:0 1 112px;min-width:90px"><input id="lonInput" aria-label="Longitude" placeholder="Longitude" inputmode="decimal" style="flex:0 1 112px;min-width:90px"><button id="goCoords">Go to coordinates</button><select id="layer" aria-label="Base map"><option value="street">Street map</option><option value="terrain">Terrain</option><option value="satellite">Satellite</option></select><select id="riskLayer" aria-label="Flood and cyclone risk overlay"><option value="off">Risk map: Off</option><option value="historical-flood">Historical flood hazard (NRSC/ISRO)</option><option value="cyclone-threat">Live cyclone threat (GDACS)</option><option value="combined">Flood hazard + cyclone threat</option></select></div><div style="padding:8px 12px;background:#13253a;color:#cfe7ff;border-bottom:1px solid #26364c">📍 <b>Select any point:</b> click directly on the map, search for a place, or enter latitude and longitude. The selected point updates the weather panel.</div><div id="mapWrap" style="position:relative"><div id="map" aria-label="Interactive map. Click any point to select its location."></div><div id="zoomStatus" role="status" aria-live="polite" hidden></div><div id="riskMapLegend" class="risk-legend" role="status" aria-live="polite" hidden><strong id="riskLegendTitle">Risk overlay</strong><div id="riskLegendContent" class="risk-legend-content"></div><div id="riskLegendNote" class="muted">Only source-supported regions are classified. Missing coverage is unknown, not safe.</div><a id="riskLegendSource" href="https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty" target="_blank" rel="noopener noreferrer">Open official NRSC hazard atlas ↗</a></div></div></section>
+<main><section class="map-area"><div class="toolbar"><form id="searchForm" style="display:flex;gap:8px;flex:1;min-width:260px"><input id="search" placeholder="Search a town, village or district in South India…" autocomplete="off"><button class="primary">Find</button></form><button id="locate">◎ My location</button><input id="latInput" aria-label="Latitude" placeholder="Latitude" inputmode="decimal" style="flex:0 1 112px;min-width:90px"><input id="lonInput" aria-label="Longitude" placeholder="Longitude" inputmode="decimal" style="flex:0 1 112px;min-width:90px"><button id="goCoords">Go to coordinates</button><select id="layer" aria-label="Base map"><option value="street">Street map</option><option value="terrain">Terrain</option><option value="satellite">Satellite</option></select><select id="riskLayer" aria-label="Flood and cyclone risk overlay"><option value="off">Risk map: Off</option><option value="historical-flood">Historical flood evidence (NRSC/ISRO)</option><option value="cyclone-threat">Cyclone alerts / events (GDACS)</option><option value="combined">Historic flood evidence + cyclone alerts</option></select></div><div style="padding:8px 12px;background:#13253a;color:#cfe7ff;border-bottom:1px solid #26364c">📍 <b>Select any point:</b> click directly on the map, search for a place, or enter latitude and longitude. The selected point updates the weather panel.</div><div id="mapWrap" style="position:relative"><div id="map" aria-label="Interactive map. Click any point to select its location."></div><div id="zoomStatus" role="status" aria-live="polite" hidden></div><div id="riskMapLegend" class="risk-legend" role="status" aria-live="polite" hidden><strong id="riskLegendTitle">Risk overlay</strong><div id="riskLegendContent" class="risk-legend-content"></div><div id="riskLegendNote" class="muted">Only source-supported regions are classified. Missing coverage is unknown, not safe.</div><a id="riskLegendSource" href="https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty" target="_blank" rel="noopener noreferrer">Open official NRSC hazard atlas ↗</a></div></div></section>
 <aside class="side"><section class="section"><h2>Selected location</h2><div id="placeName">South India overview</div><div class="status" id="coords">Click anywhere on the map to inspect conditions.</div><div class="status" id="updated">No location selected — choose a point to load location-specific data.</div></section>
 <section class="section" id="backendApiSection"><h2>Developer test only · backend connection</h2>
 <div class="history-note">Temporary developer-only tool; remove this section before the final public release. It checks API health/status, weather and river-flow proxies, water-observation endpoint, and model readiness. The map's public weather layers work independently. Paste your current HTTPS tunnel URL below; temporary Quick Tunnel links work only while the tunnel is running.</div>
@@ -847,19 +847,19 @@ function addHistoricalFloodHazard(){
  NRSC_HAZARD_LAYER_SPECS.forEach(spec=>{
   const layer=L.tileLayer.wms(NRSC_HAZARD_WMS,{
    layers:spec.name,styles:'',format:'image/png',transparent:true,version:'1.1.1',
-   opacity:.66,tileSize:256,attribution:'Historical flood hazard © NRSC/ISRO Bhuvan'
+   opacity:.66,tileSize:256,attribution:'Historical flood evidence © NRSC/ISRO Bhuvan'
   });
   layer.on('tileerror',()=>{if(!failed.includes(spec.area))failed.push(spec.area);$('riskLegendNote').textContent='NRSC map tile error for '+failed.join(', ')+'. This layer may be unavailable at this extent; blank/unloaded tiles mean unknown, not safe.';});
   layer.addTo(map);
   riskFloodLayers.push(layer);
  });
  const legendRows=[
-  {text:'Official NRSC hazard classes and their native map colours are retained; no colours are assigned by FloodWatch.'},
-  {text:'Mapped source coverage: Andhra Pradesh, Karnataka, Kerala and Tamil Nadu (layers verified in the service catalogue).'},
-  {text:'Telangana and any unmapped area: UNKNOWN / insufficient verified layer coverage — not marked green or safe.'}
+  {text:'Andhra Pradesh: NRSC flood-hazard zonation layer (ap_hz), described by the source as inundation layers integrated for frequency analysis, 1998–2019.'},
+  {text:'Karnataka, Kerala and Tamil Nadu: NRSC aggregated historical flood maps (2003–2020), based on available satellite-derived flood footprints. These are not comparable calibrated risk probabilities.'},
+  {text:'Telangana and any area outside verified source coverage: UNKNOWN / insufficient evidence. FloodWatch does not paint missing data green or call it safe.'}
  ];
- riskLegend('historical-flood','Historical flood hazard · NRSC/ISRO',legendRows,
-  'Historical inundation-derived hazard zonation (NRSC portal describes layers integrated from 1998–2019). This is background hazard, not a live flood forecast. Green/lower source classes do not guarantee safety. Current rain radar, river observations and cyclone alerts remain separately selectable.',
+ riskLegend('historical-flood','Historical flood evidence · NRSC/ISRO',legendRows,
+  'Historical satellite-derived flood evidence only—not a live flood probability or forecast. NRSC warns that satellite passes can miss peak flooding, flash/minor floods and some inundated areas. Current rain radar, river observations and cyclone alerts remain separately selectable. The WMS legend endpoint is not implemented; use the linked official atlas to interpret exact source colour classes.',
   'https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty');
  // Use the official service legend rather than hand-assigning hazard colours.
  addNRSCOfficialLegendImage();
@@ -895,7 +895,7 @@ async function addRiskCycloneThreat(){
   const note=features.length
     ?'GDACS event features: '+features.length+' for '+fromDay+' through '+toDay+'. Recent events can remain in this window after impact; this is not a forecast track or an official local evacuation boundary.'
     :'No GDACS tropical-cyclone event features were returned for '+fromDay+' through '+toDay+'. No event shown does not prove no threat; check current IMD bulletins.';
-  $('riskLegendNote').textContent=note+' Flood colours, where present, come from NRSC historical hazard classes, not current flood probability.';
+  $('riskLegendNote').textContent=note+' Flood layer colours show source-provided historic evidence, not current flood probability.';
  }catch(e){
   if(requestId!==riskCycloneRequest)return;
   $('riskLegendNote').textContent='GDACS cyclone overlay unavailable: '+e.message+'. No cyclone-threat polygons are being fabricated. Check IMD cyclone bulletins.';
@@ -919,12 +919,12 @@ async function setRiskMapLayer(mode){
   await addRiskCycloneThreat();return;
  }
  if(mode==='combined'){
-  riskLegend('combined','Historical flood hazard + cyclone alerts',[
-   {text:'Flood overlay retains the official NRSC/ISRO hazard palette; these are historical hazard classes, not current flood probabilities.'},
+  riskLegend('combined','Historic flood evidence + cyclone alerts',[
+   {text:'Andhra Pradesh: flood-hazard zonation. Karnataka, Kerala and Tamil Nadu: aggregated historical satellite flood maps (2003–2020), not calibrated live flood risk.'},
    {color:'#dc2626',text:'GDACS Red alert'},
    {color:'#f97316',text:'GDACS Orange alert'},
-   {color:'#facc15',text:'GDACS Green alert class (not a safety label)'},
-   {text:'Historical WMS coverage verified for Andhra Pradesh, Karnataka, Kerala and Tamil Nadu. Uncovered areas, including Telangana in this service catalogue, remain unknown.'}
+   {color:'#facc15',text:'GDACS Green alert class (lowest GDACS class, not a “safe area”)'},
+   {text:'Telangana and uncovered map areas stay unknown. Source flood colours are not re-labelled; the NRSC MapCache legend endpoint returns HTTP 501, so use the official atlas link for class definitions.'}
   ],'Loading source layers…','https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty');
   addNRSCOfficialLegendImage();
   await addRiskCycloneThreat();
