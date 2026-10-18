@@ -130,10 +130,15 @@ def water_observations(
     kind: str | None = Query(None, max_length=80),
     freshness: str | None = Query(None, pattern="^(recent|delayed|stale|unknown)$"),
     search: str | None = Query(None, max_length=120),
+    latitude: float | None = Query(None, ge=7.0, le=21.8),
+    longitude: float | None = Query(None, ge=73.0, le=87.0),
+    radius_km: float = Query(100.0, gt=0, le=500),
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0, le=100000),
 ):
-    """Return paginated official-source records. Freshness is unknown if timezone is ambiguous."""
+    """Return paginated source records; optional radius filtering uses only published coordinates."""
+    if (latitude is None) != (longitude is None):
+        raise HTTPException(status_code=422, detail="Provide both latitude and longitude for nearby-station filtering.")
     snapshot = load_water_snapshot()
     records = snapshot["observations"]
     now = datetime.now(timezone.utc)
@@ -151,6 +156,21 @@ def water_observations(
             ))
             if search.casefold() not in haystack.casefold():
                 continue
+        distance_km = None
+        if latitude is not None and longitude is not None:
+            try:
+                station_lat, station_lon = float(row.get("latitude")), float(row.get("longitude"))
+            except (TypeError, ValueError):
+                continue
+            if not (-90 <= station_lat <= 90 and -180 <= station_lon <= 180):
+                continue
+            from math import asin, cos, radians, sin, sqrt
+            lat1, lat2 = radians(latitude), radians(station_lat)
+            dlat, dlon = lat2 - lat1, radians(station_lon - longitude)
+            haversine = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+            distance_km = 6371.0 * 2 * asin(sqrt(min(1.0, haversine)))
+            if distance_km > radius_km:
+                continue
         age = observation_age_hours(row, now)
         if age is None or age < -1:
             bucket = "unknown"
@@ -165,6 +185,8 @@ def water_observations(
         item = dict(row)
         item["freshness"] = bucket
         item["age_hours"] = round(max(0.0, age), 2) if age is not None and age >= 0 else None
+        if distance_km is not None:
+            item["distance_km"] = round(distance_km, 2)
         filtered.append(item)
     return {
         "generated_at_utc": snapshot.get("generated_at_utc"),
