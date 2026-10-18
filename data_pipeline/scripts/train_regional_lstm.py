@@ -35,14 +35,15 @@ def main():
     ap.add_argument("--output-dir", type=pathlib.Path, required=True)
     ap.add_argument("--lookback-days", type=int, default=90)
     ap.add_argument("--lead-days", type=int, default=7)
-    ap.add_argument("--epochs", type=int, default=80)
+    ap.add_argument("--window-stride", type=int, default=7, help="Sample forecast origins every N days to control memory and reduce overlapping-window redundancy.")
+    ap.add_argument("--epochs", type=int, default=40)
     ap.add_argument("--patience", type=int, default=10)
     ap.add_argument("--min-stations", type=int, default=5)
     ap.add_argument("--max-missing-fraction", type=float, default=0.2)
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
-    if args.lookback_days < 14 or args.lead_days < 1 or args.epochs < 1:
-        raise SystemExit("Require lookback >=14, lead >=1 and epochs >=1.")
+    if args.lookback_days < 14 or args.lead_days < 1 or args.epochs < 1 or args.window_stride < 1:
+        raise SystemExit("Require lookback >=14, lead >=1, epochs >=1 and window-stride >=1.")
     random.seed(args.seed); np.random.seed(args.seed); torch.manual_seed(args.seed)
     cols = ["station_id","state","latitude","longitude","observed_at","discharge_m3_s"]
     try:
@@ -81,7 +82,7 @@ def main():
         raw=s.reindex(station_dates).to_numpy(float)
         log=np.full(len(station_dates),np.nan); ok=np.isfinite(raw); log[ok]=np.log1p(raw[ok])
         lat,lon=map(float,meta.loc[sid].tolist())
-        for local_end in range(args.lookback_days-1,len(station_dates)-args.lead_days):
+        for local_end in range(args.lookback_days-1,len(station_dates)-args.lead_days,args.window_stride):
             global_end=offset+local_end
             a=local_end-args.lookback_days+1; hist=log[a:local_end+1]; mask=np.isfinite(hist)
             if mask.mean() < 1-args.max_missing_fraction: continue
@@ -147,7 +148,7 @@ def main():
     report={"model_type":"regional multi-station masked-input LSTM","status":"experimental_research_only",
       "states":STATES,"source_station_count":int(df.station_id.nunique()),"stations_with_windows":len(used),
       "calendar_start":str(dates.min().date()),"calendar_end":str(dates.max().date()),
-      "lookback_days":args.lookback_days,"lead_days":args.lead_days,
+      "lookback_days":args.lookback_days,"lead_days":args.lead_days,"window_stride_days":args.window_stride,
       "input_features":["scaled log1p discharge","observation mask","day-of-year sin/cos","latitude","longitude"],
       "windows":{k:len(v) for k,v in data.items()},
       "split":{"train_before":str(dates[tr].date()),"validation_before":str(dates[va].date()),"test_from":str(dates[va].date())},
