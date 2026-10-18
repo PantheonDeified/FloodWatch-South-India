@@ -17,16 +17,16 @@ Percentages below are **engineering estimates against the full acceptance criter
 
 **Approximate aggregate across these six workstreams: 61%** (simple unweighted average of the estimates above). It is a planning indicator, not a certification or performance score.
 
-## Six workstreams
+## Acceptance criteria for 100%
 
-| Workstream | What counts as 100% | Evidence currently available | Remaining blocker |
-|---|---|---|---|
-| Frontend map and interaction | Map loads; location search, map clicks, supported layers and empty/error states work across desktop/mobile browsers; automated browser checks pass | GitHub Pages deployment; frontend JavaScript syntax workflow; location-driven map and data panels | Full browser/device interaction testing and accessibility review |
-| Backend APIs | All documented routes validated, request limits and errors tested, service deployment stable under HTTPS with monitoring | FastAPI health/status/weather/river-flow/water-observation/model-status routes; backend CI tests and container build | Stable managed HTTPS hosting, uptime checks, rate/timeout/load tests |
-| Live data integration | Each provider has source attribution, units, timestamps, freshness handling, failure behavior and tested refresh cadence | Open-Meteo weather/flood-model integration; RainViewer/GDACS overlays; scheduled NWDP/NWIC snapshot collector and schema validation | Verify every live feed in deployed browser; improve station coordinate/timezone coverage; distinguish source updates from observation freshness |
-| Historical data pipeline | Source-reviewed observed discharge + weather are normalized, provenance/unit checks pass, basin mapping is reviewed and repeatable artifacts are produced | NWDP/CWC downloader and archive inspector; discharge normalization, per-station audit, coordinate-unverified station catalogue, schema adapter, station review queue, and test coverage | Re-run the archive workflow after the new queue step, review the per-station reports, validate station IDs/units/continuity/timezone semantics, independently verify station coordinates and build a verified daily feature CSV |
-| ML / neural networks | A model trains reproducibly on verified South Indian gauge data, beats persistence on a chronological holdout, passes review gate, and is monitored in a shadow deployment | PyTorch LSTM trainer, scikit-learn event-classifier code, chronological metrics, persistence baseline and readiness gate | No verified feature table or trained/validated artifact yet; event labels need documented sources; model must pass independent review |
-| Production readiness | Stable HTTPS backend, repeatable CI, deployment smoke checks, logging/alerts, documented limitations, security/privacy and load tests, rollback plan | GitHub Pages deployment, backend/container CI, scheduled site/snapshot smoke-check workflow, API docs and source limitations | Smoke-check run evidence; stable backend hosting; operational monitoring, rate limiting and security/load review |
+| Workstream | 100% completion gate |
+|---|---|
+| Frontend map and interaction | Automated desktop/mobile browser tests cover navigation, location selection, map layers, loading/error states, accessibility and failure recovery |
+| Backend APIs | All routes, validation, timeouts and provider failures tested; latest code deployed on stable HTTPS with monitoring and load/security checks |
+| Live data integration | Every source has verified attribution, units, timestamps, freshness, coverage, error handling and tested refresh behavior |
+| Historical data pipeline | Station identity, coordinates, units, continuity and provenance are reviewed; discharge and weather are aligned; basin mapping and repeatable data-quality reports are independently checked |
+| ML / neural networks | Reproducible model beats baseline on independent chronological/event holdouts across representative stations and high flows; uncertainty/missing data are handled; report passes review before shadow deployment |
+| Production readiness | Stable deployment, logging/monitoring, security/privacy, rollback, uptime checks and an end-to-end human-reviewed alert drill are demonstrated |
 
 ## Runbooks
 
