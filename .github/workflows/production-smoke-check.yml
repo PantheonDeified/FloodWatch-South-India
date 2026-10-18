@@ -192,6 +192,32 @@ jobs:
                                       print(f"WARN WMS GetMap {layer_name}: non-image response {content_type}, {image_body[:100]!r}")
                               except Exception as map_exc:
                                   print(f"WARN WMS GetMap {layer_name}: {map_exc}")
+                              # Probe the same Web Mercator projection Leaflet uses by default.
+                              import math
+                              def mercator(lon, lat):
+                                  radius = 6378137.0
+                                  x = radius * math.radians(lon)
+                                  clipped = max(-85.05112878, min(85.05112878, lat))
+                                  y = radius * math.log(math.tan(math.pi/4 + math.radians(clipped)/2))
+                                  return x, y
+                              x0,y0=mercator(73,7); x1,y1=mercator(87,22)
+                              web_params = urllib.parse.urlencode({
+                                  "SERVICE":"WMS","VERSION":"1.1.1","REQUEST":"GetMap",
+                                  "LAYERS":layer_name,"STYLES":"","SRS":"EPSG:3857",
+                                  "BBOX":f"{x0},{y0},{x1},{y1}","WIDTH":"128","HEIGHT":"128",
+                                  "FORMAT":"image/png","TRANSPARENT":"TRUE"
+                              })
+                              try:
+                                  web_req = urllib.request.Request(base+"?"+web_params, headers={"User-Agent":"FloodWatch-source-discovery/1.0"})
+                                  with urllib.request.urlopen(web_req, timeout=18) as web_response:
+                                      web_body = web_response.read()
+                                      web_type = web_response.headers.get("Content-Type","")
+                                  if "image/png" in web_type.lower():
+                                      print(f"PASS Leaflet EPSG:3857 WMS {layer_name}: {len(web_body)} bytes")
+                                  else:
+                                      print(f"WARN Leaflet EPSG:3857 WMS {layer_name}: {web_type}, {web_body[:100]!r}")
+                              except Exception as web_exc:
+                                  print(f"WARN Leaflet EPSG:3857 WMS {layer_name}: {web_exc}")
                               legend_params = urllib.parse.urlencode({
                                   "SERVICE":"WMS","VERSION":"1.1.1","REQUEST":"GetLegendGraphic",
                                   "LAYER":layer_name,"FORMAT":"image/png"
