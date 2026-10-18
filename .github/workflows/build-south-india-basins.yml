@@ -30,9 +30,9 @@ jobs:
         run: python -m pip install --upgrade pip geopandas
       - name: Download official HydroBASINS Asia level-6 geometry
         run: |
-          curl --fail --location --retry 3 --retry-delay 2 --max-time 240 \
-            'https://data.hydrosheds.org/file/hydrobasins/standard/hybas_as_lev06_v1c.zip' \
-            --output /tmp/hybas_as_lev06_v1c.zip
+          curl --fail --location --retry 3 --retry-delay 2 --max-time 480 \
+            'https://data.hydrosheds.org/file/hydrobasins/standard/hybas_as_lev01-12_v1c.zip' \
+            --output /tmp/hybas_as_lev01-12_v1c.zip
           test -s /tmp/hybas_as_lev06_v1c.zip
       - name: Clip and validate basin polygons for the five-state mask
         run: |
