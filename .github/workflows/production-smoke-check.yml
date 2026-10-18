@@ -115,7 +115,6 @@ jobs:
               ("NRSC historic flood hazard (1998–2007)", "https://bhuvan-ras2.nrsc.gov.in/cgi-bin/hazard.exe"),
               ("NRSC historic flood annual layers (1999–2010)", "https://bhuvan-ras2.nrsc.gov.in/cgi-bin/flood.exe"),
           ]
-          ns = {"wms": "http://www.opengis.net/wms"}
           for label, base in sources:
               url = base + "?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetCapabilities"
               try:
@@ -124,18 +123,21 @@ jobs:
                       raw = response.read()
                       print(f"SERVICE {label}: HTTP {response.status}, {len(raw)} bytes")
                   root = ET.fromstring(raw)
+                  local_name = lambda tag: tag.rsplit("}", 1)[-1].split(":")[-1]
+                  layer_nodes = [node for node in root.iter() if local_name(node.tag) == "Layer"]
                   layers = []
-                  for layer in root.findall(".//wms:Layer", ns):
-                      name = layer.findtext("wms:Name", default="", namespaces=ns).strip()
-                      title = layer.findtext("wms:Title", default="", namespaces=ns).strip()
+                  for layer in layer_nodes:
+                      name = next((child.text or "" for child in layer if local_name(child.tag) == "Name"), "").strip()
+                      title = next((child.text or "" for child in layer if local_name(child.tag) == "Title"), "").strip()
                       if name:
                           layers.append((name, title))
+                  print(f"ROOT {label}: {root.tag}; named Layer elements={len(layers)}")
                   if layers:
                       print("DISCOVERED LAYERS:")
                       for name, title in layers:
                           print(f"  {name} | {title}")
                   else:
-                      print("WARN service answered, but no named WMS layers were parsed; inspect the response schema.")
+                      print("WARN no named layer records parsed. XML preview: " + raw[:700].decode("utf-8", errors="replace").replace("\\n", " ") )
               except Exception as exc:
                   print(f"WARN {label}: capability request could not be verified ({exc})")
           PY
