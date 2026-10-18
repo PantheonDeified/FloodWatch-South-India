@@ -1,6 +1,6 @@
 # Water-observation snapshot — automated quality audit
 
-- Snapshot generation timestamp: **2026-10-18T07:00:04.812375+00:00**
+- Snapshot generation timestamp: **2026-10-18T07:09:02.282063+00:00**
 - Records in snapshot: **407**
 - Resource files checked: **37**
 - Report generated from this snapshot by the GitHub Actions pipeline; source records are not modified.
@@ -65,12 +65,22 @@
 
 These statuses describe what the collector could retrieve during this run; they do not prove that a source's latest observation is current.
 
-| Configured source page | Status | Resources discovered | Successful resource scans | Resource errors |
+| Configured source page | Status | Resources discovered | Resource scans completed | Resource errors |
 |---|---|---:|---:|---:|
 | Central Water Commission river telemetry | checked | 6 | 6 | 0 |
+
+- **No usable records — Central Water Commission river telemetry / River Water Level CWC Pennar (2026 - 2030) Telemetry Hourly CSV:** scanned 0 rows without a usable timestamped numeric record
 | Andhra Pradesh river telemetry | checked | 4 | 4 | 0 |
 | Telangana river telemetry | checked | 2 | 2 | 0 |
 | Kerala river telemetry | checked | 4 | 4 | 0 |
+
+- **No usable records — Kerala river telemetry / River Water Level Kerala_SW - (2026 - 2030) Telemetry Hourly CSV:** scanned 0 rows without a usable timestamped numeric record
+
+- **No usable records — Kerala river telemetry / River Water Level Kerala_SW Tapi (2026 - 2030) Telemetry Hourly CSV:** scanned 0 rows without a usable timestamped numeric record
+
+- **No usable records — Kerala river telemetry / River Water Level Kerala_SW Narmada (2026 - 2030) Telemetry Hourly CSV:** scanned 0 rows without a usable timestamped numeric record
+
+- **No usable records — Kerala river telemetry / River Water Level Kerala_SW West flowing rivers from Tapi to Tadri (2026 - 2030) Telemetry Hourly CSV:** scanned 0 rows without a usable timestamped numeric record
 | Tamil Nadu river telemetry | checked | 1 | 1 | 0 |
 | Andhra Pradesh reservoir storage and level | checked | 2 | 2 | 0 |
 | Karnataka reservoir data | checked | 1 | 1 | 0 |
@@ -79,8 +89,14 @@ These statuses describe what the collector could retrieve during this run; they 
 | Central Water Commission river discharge | checked | 5 | 5 | 0 |
 | Andhra Pradesh river discharge | checked | 1 | 1 | 0 |
 | Telangana river discharge | checked | 1 | 1 | 0 |
+
+- **No usable records — Telangana river discharge / River Discharge Telangana_SW Telangana (2026 - 2030) Manual Daily CSV:** scanned 0 rows without a usable timestamped numeric record
 | Kerala river discharge | checked | 1 | 1 | 0 |
+
+- **No usable records — Kerala river discharge / River Discharge Kerala_SW Kerala (2026 - 2030) Manual Daily CSV:** scanned 0 rows without a usable timestamped numeric record
 | Tamil Nadu river discharge | checked | 1 | 1 | 0 |
+
+- **No usable records — Tamil Nadu river discharge / River Discharge Tamil_Nadu_SW_GW Tamil Nadu (2026 - 2030) Manual Daily CSV:** scanned 0 rows without a usable timestamped numeric record
 | Flood Flow Canal Head Regulator discharge | checked | 1 | 1 | 0 |
 | Lower Manair Dam 2 discharge | checked | 1 | 1 | 0 |
 | Saraswati Canal Head Regulator discharge | checked | 1 | 1 | 0 |
