@@ -202,6 +202,18 @@
 </div>
 <div class="history-note">Design, future alert workflow and accountability safeguards: <a href="https://github.com/PantheonDeified/FloodWatch-South-India/blob/main/docs/EARLY_WARNING_AND_ACCOUNTABILITY.md" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">Read the implementation plan ↗</a> · <a href="https://github.com/PantheonDeified/FloodWatch-South-India/blob/main/docs/FEATURES_AND_CAPABILITIES.md" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">Full capability matrix ↗</a></div>
 </section>
+<section class="section" id="regionalMlStatus">
+<h2>Experimental neural-network model</h2>
+<div class="metric-grid">
+ <div class="metric"><span>Training runtime</span><strong>47 s</strong><span>Model fit only; data download/normalization take longer</span></div>
+ <div class="metric"><span>Usable training stations</span><strong>236</strong><span>Historical CWC/NWDP discharge records</span></div>
+ <div class="metric"><span>Pooled test RMSE</span><strong>1,121</strong><span>m³/s; regional LSTM</span></div>
+ <div class="metric"><span>Persistence RMSE</span><strong>2,080</strong><span>m³/s; reference baseline</span></div>
+</div>
+<div class="history-note">The pooled holdout RMSE was 46.1% lower than persistence, but results vary across stations: only 107/223 stations beat persistence on RMSE, and high-flow performance remains mixed. This LSTM predicts historical-discharge-based river flow only; it does not use future rainfall forecasts and is <b>not used to colour this map or issue alerts</b>.</div>
+<div class="history-note"><a href="https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39122959850" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">Open completed regional training run ↗</a> · <a href="https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39122959850/artifacts/12134329045" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">Download model, scaler and evaluation artifacts ↗</a> · <a href="https://github.com/PantheonDeified/FloodWatch-South-India/blob/feature/continuous-risk-contours-data-basin-20261018/data_pipeline/SUBMISSION_MODEL_CARD.md" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">Read model card ↗</a></div>
+<div class="warning">Research status only. Do not interpret the regional output as flood probability, water level, inundation depth or an official warning. Model weights are not automatically deployed to the frontend or backend.</div>
+</section>
 <section class="section" id="basinRiskSection">
 <h2>Basin & upstream risk management</h2>
 <div class="history-note" id="basinRiskSummary">Select a map location to inspect its local score. Basin-wide risk is UNKNOWN until verified basin polygons and station-to-river-network links are available.</div>
