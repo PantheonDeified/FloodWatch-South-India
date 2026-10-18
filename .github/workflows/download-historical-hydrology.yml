@@ -28,6 +28,18 @@ jobs:
             --start-year 1950 --end-year 2025 \
             --max-resources 20 \
             --out-dir data_pipeline/raw/nwdp_history
+      - name: Confirm discharge targets were retrieved
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(Path("data_pipeline/raw/nwdp_history/manifest.json").read_text(encoding="utf-8"))
+          files = manifest.get("files", [])
+          discharge = [item for item in files if "discharge" in str(item.get("title", "")).lower() and item.get("status") in {"downloaded", "already_downloaded"}]
+          print(f"Retrieved {len(files)} raw resources; {len(discharge)} discharge resources.")
+          if not discharge:
+              raise SystemExit("No historical discharge CSV was downloaded; inspect manifest.json and source-page errors.")
+          PY
       - name: Upload raw archives and source manifest
         uses: actions/upload-artifact@v4
         with:
