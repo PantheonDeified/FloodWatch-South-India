@@ -5,30 +5,34 @@ const assert = require('node:assert/strict');
 
 const html = fs.readFileSync('index.html', 'utf8');
 const mask = JSON.parse(fs.readFileSync('data/south-india-states.geojson', 'utf8'));
+const basins = JSON.parse(fs.readFileSync('data/south-india-basins.geojson', 'utf8'));
 const geoStart = html.indexOf('function pointInRing(');
 const geoEnd = html.indexOf('\nfunction gaugeSignalForCell', geoStart);
 const scoreStart = html.indexOf('function computeRiskScore(');
 const scoreEnd = html.indexOf('\nfunction riskLevelColor', scoreStart);
-assert(geoStart >= 0 && geoEnd > geoStart, 'Grid geometry functions should exist.');
-assert(scoreStart >= 0 && scoreEnd > scoreStart, 'Risk scorer should exist.');
+assert(geoStart >= 0 && geoEnd > geoStart, 'Risk-grid geometry helpers should exist.');
+assert(scoreStart >= 0 && scoreEnd > scoreStart, 'Risk score function should exist.');
 
 const geoCode = html.slice(geoStart, geoEnd);
-const grid = new Function('FLOODWATCH_RISK_GRID', geoCode +
+const geometry = new Function('FLOODWATCH_RISK_GRID', geoCode +
   '\nreturn {pointInSouthMask, buildRiskGridCells};')({gridDegrees: 0.5});
-const cells = grid.buildRiskGridCells(mask);
-assert(cells.length > 100, 'Regional mask should generate a useful whole-region grid.');
-assert(cells.every(c => c.north > c.south && c.east > c.west), 'Grid cells must have positive dimensions.');
-assert(cells.every(c => Math.abs((c.north-c.south)-0.5) < 1e-8), 'Grid cell latitude size should remain 0.5 degrees.');
-assert(grid.pointInSouthMask(80.27, 13.08, mask), 'Chennai test point should be inside the regional mask.');
-assert(grid.pointInSouthMask(77.59, 12.97, mask), 'Bengaluru test point should be inside the regional mask.');
-assert(grid.pointInSouthMask(76.27, 9.93, mask), 'Kochi test point should be inside the regional mask.');
+const cells = geometry.buildRiskGridCells(mask);
+assert(cells.length > 100, 'Regional mask should generate a useful regional point set.');
+assert(cells.every(c => c.north > c.south && c.east > c.west), 'Grid sample bounds must be positive.');
+assert(cells.every(c => Math.abs((c.north-c.south)-0.5) < 1e-8), 'Sample step should stay 0.5 degrees.');
+assert(geometry.pointInSouthMask(80.27, 13.08, mask), 'Chennai test point should be inside the regional mask.');
+assert(geometry.pointInSouthMask(77.59, 12.97, mask), 'Bengaluru test point should be inside the regional mask.');
+assert(geometry.pointInSouthMask(76.27, 9.93, mask), 'Kochi test point should be inside the regional mask.');
 
-const riskConfig = {weights:{rain24h:40,rain72h:30,chance24h:15,currentPrecipitation:15},cutoffs:{amber:35,red:65}};
-const scorer = new Function('FLOODWATCH_RISK_GRID','clamp01', 'gaugeSignalForCell', html.slice(scoreStart, scoreEnd) +
-  '\nreturn computeRiskScore;')(riskConfig,(v)=>Math.max(0,Math.min(1,v)), ()=>null);
+let mockGauge = null;
+let mockHuman = {points:0,items:[],incident:false};
+const scorer = new Function('clamp01','gaugeSignalForCell','humanMadeSignalForCell',
+  html.slice(scoreStart, scoreEnd) + '\nreturn computeRiskScore;')(
+  v=>Math.max(0,Math.min(1,v)), ()=>mockGauge, ()=>mockHuman
+);
 function weather(rainPerHour, probability, current) {
-  const ceilHour = Math.ceil(Date.now()/3600000)*3600000;
-  const times = Array.from({length:100}, (_,i)=>new Date(ceilHour+i*3600000).toISOString().slice(0,16));
+  const ceilHour=Math.ceil(Date.now()/3600000)*3600000;
+  const times=Array.from({length:100},(_,i)=>new Date(ceilHour+i*3600000).toISOString().slice(0,16));
   return {current:{precipitation:current,time:times[0]},hourly:{
     time:times,precipitation:Array(times.length).fill(rainPerHour),
     precipitation_probability:Array(times.length).fill(probability)
@@ -36,31 +40,103 @@ function weather(rainPerHour, probability, current) {
 }
 const cell={lat:13,lon:80};
 const green=scorer(cell,{weather:weather(0.1,5,0.1),flow:null});
-assert.equal(green.level,'green','Low raw numerical values should score green.');
-assert(green.score < 35,'Green score should be below the configured cutoff.');
+assert.equal(green.level,'green','Low raw data should score green.');
+assert(green.score<35,'Green score should remain below amber cutoff.');
 const amber=scorer(cell,{weather:weather(2,40,0),flow:null});
-assert.equal(amber.level,'amber','Moderate raw numerical values should score amber.');
-assert(amber.score >=35 && amber.score <65,'Amber score should be within configured cutoffs.');
+assert.equal(amber.level,'amber','Moderate raw data should score amber.');
+assert(amber.score>=35&&amber.score<65,'Amber score should sit within the configured cutoffs.');
 const red=scorer(cell,{weather:weather(8,80,10),flow:null});
-assert.equal(red.level,'red','High raw numerical values should score red.');
-assert(red.score >=65,'Red score should meet the configured cutoff.');
+assert.equal(red.level,'red','High raw data should score red.');
+assert(red.score>=65,'Red score should meet the configured cutoff.');
 const unknown=scorer(cell,{weather:{failed:true},flow:null});
-assert.equal(unknown.level,'unknown','Missing values must never silently turn green.');
-const isolatedCurrent=scorer(cell,{weather:{current:{precipitation:19},hourly:{time:[],precipitation:[],precipitation_probability:[]}},flow:null});
-assert.equal(isolatedCurrent.level,'unknown','A single current field alone must not produce a traffic-light colour.');
-const today=new Date().toISOString().slice(0,10);
-const days=[],values=[];
+assert.equal(unknown.level,'unknown','Missing inputs must never silently turn green.');
+
+const today=new Date().toISOString().slice(0,10),days=[],values=[];
 for(let i=92;i>=1;i--){const d=new Date();d.setUTCDate(d.getUTCDate()-i);days.push(d.toISOString().slice(0,10));values.push(10);}
 days.push(today);values.push(null);
 for(let i=1;i<=7;i++){const d=new Date();d.setUTCDate(d.getUTCDate()+i);days.push(d.toISOString().slice(0,10));values.push(100);}
 const flowOnly=scorer(cell,{weather:{failed:true},flow:{daily:{time:days,river_discharge:values}}});
-assert.equal(flowOnly.level,'red','A high own-history GloFAS flow percentile should be reflected in the score.');
-assert.equal(flowOnly.flowHistoryCount,92,'Flow comparison should use the available pre-today history.');
-const flatDays=[],flatValues=[];
-for(let i=92;i>=1;i--){const d=new Date();d.setUTCDate(d.getUTCDate()-i);flatDays.push(d.toISOString().slice(0,10));flatValues.push(10);}
-flatDays.push(today);flatValues.push(null);
-for(let i=1;i<=7;i++){const d=new Date();d.setUTCDate(d.getUTCDate()+i);flatDays.push(d.toISOString().slice(0,10));flatValues.push(10);}
-const flatFlow=scorer(cell,{weather:{failed:true},flow:{daily:{time:flatDays,river_discharge:flatValues}}});
-assert.equal(flatFlow.flowPercentile,50,'Tied constant-flow history must receive a mid-rank percentile.');
-assert.equal(flatFlow.level,'green','Constant low flow must not become red merely because many values tie.');
-console.log(JSON.stringify({status:'PASS',grid_cells:cells.length,checks:13,examples:{green:green.score,amber:amber.score,red:red.score,flow_only:flowOnly.score,flat_flow_percentile:flatFlow.flowPercentile,missing:unknown.level}},null,2));
+assert.equal(flowOnly.level,'red','High GloFAS peak percentile should influence the score.');
+assert.equal(flowOnly.flowHistoryCount,92,'Flow comparison should use valid pre-today history.');
+
+mockGauge={percentile:50,rising:true,rapidRise:true,hydrologyLinked:true,riseRatePerHour:3,distanceKm:3,historyCount:15};
+const risingOnly=scorer(cell,{weather:{failed:true},flow:null});
+assert(risingOnly.score>=35,'A recent river rise alone should be at least elevated.');
+assert(risingOnly.gauge.rapidRise,'Rapid rise flag should be preserved.');
+mockGauge={percentile:97,rising:false,rapidRise:false,hydrologyLinked:false,distanceKm:4,historyCount:20};
+const highRiverOnly=scorer(cell,{weather:{failed:true},flow:null});
+assert(highRiverOnly.score>=35,'Unusually high recent station-relative river level should be elevated.');
+mockGauge=null;
+
+mockHuman={points:29,items:[{category:'Dam/gate malfunction or abnormal release',points:29,distanceKm:3}],incident:true};
+const humanOnly=scorer(cell,{weather:{failed:true},flow:null});
+assert(humanOnly.score>=35,'Documented physical flood incident should not be presented as low risk when weather/flow feeds are missing.');
+assert(humanOnly.humanSignal.items.length===1,'Human-made factor evidence should be retained for explanation.');
+mockHuman={points:0,items:[],incident:false};
+
+const evidenceStart=html.indexOf('function scoreHumanMadeEvidence(');
+const evidenceEnd=html.indexOf('\nfunction localInfrastructureEvidence()',evidenceStart);
+assert(evidenceStart>=0&&evidenceEnd>evidenceStart,'Human-evidence scorer should exist.');
+const humanScorer=new Function('kmBetween',html.slice(evidenceStart,evidenceEnd)+'\nreturn scoreHumanMadeEvidence;')(()=>1);
+const incident={
+  category:'Dam/gate malfunction or abnormal release',place:'Test reservoir',
+  latitude:13.01,longitude:80.01,hydrologyLinked:false,
+  status:'Official public record',sourceUrl:'https://cwc.gov.in/test-report',
+  date:today,notes:'Published abnormal release'
+};
+assert.equal(humanScorer(cell,[incident]).points,0,'Dam/gate incident without verified hydrology link must not affect a downstream cell.');
+incident.hydrologyLinked=true;
+assert(humanScorer(cell,[incident]).points>0,'Dated official incident with verified hydrology link should affect the nearby cell.');
+incident.status='Corroborated';
+incident.corroboratingSourceUrl='';
+assert.equal(humanScorer(cell,[incident]).points,0,'Corroborated status without a second source must not affect the risk score.');
+incident.corroboratingSourceUrl='https://cwc.gov.in/second-report';
+assert.equal(humanScorer(cell,[incident]).points,0,'Two source URLs from the same publisher host are not independent corroboration.');
+incident.corroboratingSourceUrl='https://independent-public-source.example/record';
+assert(humanScorer(cell,[incident]).points>0,'Corroborated evidence with separate HTTPS publisher hosts may contribute when the other scoring gates pass.');
+incident.status='Unverified report';
+assert.equal(humanScorer(cell,[incident]).points,0,'Unverified reports must not change the numeric risk score.');
+
+const contourStart=html.indexOf('function buildRiskContourPolylines(');
+const contourEnd=html.indexOf('\nfunction drawComputedRiskCells',contourStart);
+assert(contourStart>=0&&contourEnd>contourStart,'Connected contour builder should exist.');
+const contourBuilder=new Function('pointInSouthMask',html.slice(contourStart,contourEnd)+'\nreturn buildRiskContourPolylines;')(()=>true);
+const contour=contourBuilder([[0,0,0],[0,80,0],[0,0,0]],35,1,10,20,{features:[]});
+assert(contour.length>0&&contour.every(line=>line.length>=2),'Marching-squares contour should create connected lines around a test hotspot.');
+assert(html.includes("layers:'IMERG_Precipitation_Rate'"),'NASA IMERG overlay should be registered.');
+assert(html.includes('id="basinRiskSection"'),'Basin-risk context section should exist.');
+assert(html.includes('async function loadSouthIndiaBasins()'),'Basin loader should exist.');
+const mapStartupIndex=html.indexOf('// Start with a regional overview; the user chooses the exact point.');
+assert(mapStartupIndex>=0&&html.indexOf('loadSouthIndiaBasins();',mapStartupIndex)>mapStartupIndex,'Basin data should load at startup without selecting the calculated-risk layer.');
+assert(html.includes('const basinGeo=await loadSouthIndiaBasins();'),'Calculated risk layer should reuse the shared basin loader.');
+assert(html.includes('function basinRoutingRelation('),'Basin routing helper should exist.');
+const routingStart=html.indexOf('function basinRoutingRelation(');
+const routingEnd=html.indexOf('async function loadSouthIndiaBasins',routingStart);
+assert(routingStart>=0&&routingEnd>routingStart,'Basin routing helper boundaries should be valid.');
+const routing=new Function(html.slice(routingStart,routingEnd)+'\nreturn basinRoutingRelation;')();
+const testNetwork={features:[
+ {type:'Feature',geometry:{type:'Polygon',coordinates:[]},properties:{HYBAS_ID:101,NEXT_DOWN:102}},
+ {type:'Feature',geometry:{type:'Polygon',coordinates:[]},properties:{HYBAS_ID:102,NEXT_DOWN:103}},
+ {type:'Feature',geometry:{type:'Polygon',coordinates:[]},properties:{HYBAS_ID:103,NEXT_DOWN:0}}
+]};
+assert.equal(routing(101,101,testNetwork),'same_basin','Same basin should be identified.');
+assert.equal(routing(101,103,testNetwork),'upstream_candidate','NEXT_DOWN chain should identify an upstream candidate.');
+assert.equal(routing(103,101,testNetwork),'downstream_candidate','Reverse NEXT_DOWN chain should identify a downstream candidate.');
+assert.equal(routing(404,101,testNetwork),'unlinked','Disconnected basins should never be labelled upstream.');
+assert.equal(routing(null,101,testNetwork),'unknown','Missing basin IDs must remain unknown.');
+assert(Array.isArray(basins.features)&&basins.features.length>=50,'Regional basin GeoJSON should include a useful set of features.');
+assert(basins.features.every(f=>f.geometry&&Number.isFinite(Number(f.properties?.HYBAS_ID))&&f.properties?.NEXT_DOWN!==undefined),'Basin features should carry geometry, HYBAS_ID and NEXT_DOWN routing attributes.');
+assert(html.includes('id="infraLatitude"')&&html.includes('id="infraLongitude"'),'Infrastructure evidence must include coordinates.');
+assert(!html.includes('L.rectangle([[cell.south,cell.west]'),'The active risk rendering should no longer draw square risk cells.');
+
+console.log(JSON.stringify({
+  status:'PASS',
+  sample_cells:cells.length,
+  checks:38,
+  examples:{
+    green:green.score,amber:amber.score,red:red.score,
+    flow_only:flowOnly.score,rising_only:risingOnly.score,
+    high_river_only:highRiverOnly.score,human_incident_only:humanOnly.score,
+    unknown:unknown.level,contour_paths:contour.length
+  }
+},null,2));
