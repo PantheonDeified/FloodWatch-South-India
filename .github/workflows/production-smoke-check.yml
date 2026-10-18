@@ -60,7 +60,7 @@ jobs:
           print("PASS deployed page contains expected app/map/data/infrastructure-evidence markers")
 
           # Parse every inline JavaScript block with the runner's Node.js parser.
-          scripts = re.findall(r"<script\\b(?![^>]*\\bsrc=)[^>]*>(.*?)</script\\s*>", html, flags=re.I | re.S)
+          scripts = re.findall(r"<script\b(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S)
           if not scripts:
               raise SystemExit("No inline JavaScript blocks found to validate.")
           for index, script in enumerate(scripts, start=1):
