@@ -35,6 +35,24 @@ def metrics(a, p):
             "nse": float(1 - (err ** 2).sum() / denom) if denom else None,
             "samples": int(a.size)}
 
+def choose_alpha_on_validation(actual, model_prediction, baseline_prediction):
+    """Choose neural-network blend weight on chronological validation data only."""
+    actual = np.asarray(actual, dtype=float)
+    model_prediction = np.asarray(model_prediction, dtype=float)
+    baseline_prediction = np.asarray(baseline_prediction, dtype=float)
+    if actual.shape != model_prediction.shape or actual.shape != baseline_prediction.shape:
+        raise ValueError("Validation arrays must have matching shapes.")
+    if actual.size == 0 or not (np.isfinite(actual).all() and np.isfinite(model_prediction).all() and np.isfinite(baseline_prediction).all()):
+        raise ValueError("Validation arrays must be non-empty and finite.")
+    best_alpha = 0.0
+    best_rmse = metrics(actual, baseline_prediction)["rmse_m3s"]
+    for alpha in np.linspace(0.0, 1.0, 21):
+        blended = np.maximum((1.0-alpha)*baseline_prediction + alpha*model_prediction, 0.0)
+        candidate_rmse = metrics(actual, blended)["rmse_m3s"]
+        if candidate_rmse < best_rmse - 1e-9:
+            best_alpha, best_rmse = float(alpha), float(candidate_rmse)
+    return best_alpha, float(best_rmse)
+
 def sample_station_windows(rows, max_windows, peak_threshold=None):
     """Bound per-station window memory while preserving timeline coverage and some training peaks.
 
