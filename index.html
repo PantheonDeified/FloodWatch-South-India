@@ -136,7 +136,13 @@ $('layer').addEventListener('change',e=>{
 });
 function status(s){$('weatherStatus').textContent=s}
 const apiUrlInput=$('apiBaseUrl'),apiCheckButton=$('checkApiButton');
-try{if(new URLSearchParams(window.location.search).get('devtools')==='1')$('backendApiSection').style.display='block'}catch(e){}
+// Optional one-click setup: ?api=https%3A%2F%2Fyour-tunnel.trycloudflare.com
+// Accept only a bare HTTPS origin, then persist it for this browser profile.
+try{
+ const pageParams=new URLSearchParams(window.location.search),apiParam=pageParams.get('api');
+ if(pageParams.get('devtools')==='1')$('backendApiSection').style.display='block';
+ if(apiParam){const parsedApi=new URL(apiParam);if(parsedApi.protocol==='https:'&&!parsedApi.username&&!parsedApi.password&&parsedApi.pathname==='/'&&!parsedApi.search&&!parsedApi.hash){localStorage.setItem('floodwatchApiBaseUrl',parsedApi.origin)}}
+}catch(e){}
 try{apiUrlInput.value=localStorage.getItem('floodwatchApiBaseUrl')||''}catch(e){}
 async function checkBackendApi(){
  const raw=apiUrlInput.value.trim(),statusBox=$('apiConnectionStatus'),details=$('apiStatusDetails');
