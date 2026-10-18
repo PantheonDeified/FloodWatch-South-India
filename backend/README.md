@@ -7,6 +7,7 @@ This folder contains the versioned FastAPI service source.
 - `GET /` — basic service information.
 - `GET /health` — health check.
 - `GET /api/v1/status` — provider and capability status.
+- `GET /api/v1/river-flow?latitude=19.15&longitude=77.30` — 90-day historical context and 7-day Open-Meteo Flood API/GloFAS discharge series; this is modelled external data, not a locally trained FloodWatch prediction.
 - `GET /api/v1/water-observations?state=Kerala&limit=100` — paginated published NWDP/NWIC snapshot with optional state, measurement kind, freshness, search, and nearby-coordinate/radius filters. Nearby results use only published station coordinates and include `distance_km`; records without usable coordinates are excluded. If the repo data file is absent on the server, it fetches the public snapshot from GitHub and caches it for five minutes.
 - `GET /api/v1/models/status` — model readiness report; confirms whether a locally trained forecast is available and lists prerequisites.
 - `GET /api/v1/weather?latitude=19.15&longitude=77.30` — current Open-Meteo model conditions and two days of hourly forecast for coordinates within the prototype's South India coverage (latitude 7–21.8, longitude 73–87).
