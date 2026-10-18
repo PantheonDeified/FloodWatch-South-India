@@ -16,6 +16,7 @@ This checklist separates repository checks already passed from checks that must 
 - [ ] Run `uname -m` and `lscpu`; record the output. Do not infer the processor architecture from the VM label.
 - [ ] From a clone of the repository, run `bash deploy/ibm-linuxone/install-user-service.sh`.
 - [ ] Capture successful `systemctl --user status floodwatch-api`, `/health`, `/api/v1/status`, and `/api/v1/models/status` output.
+- [ ] Run `bash deploy/ibm-linuxone/run-regional-lstm.sh preflight`; on LinuxONE, save the exact compatibility result. Do not claim LSTM training on the VM unless `preflight` succeeds and `train` completes there.
 - [ ] If connecting the public webpage to the API, use HTTPS, verify the configured CORS origin and never expose port 8000 directly to the public Internet.
 - [ ] Open the site in a clean browser and check: location search, continuous contours, one cell popup, one station timestamp, NASA overlay and source-check status.
 - [ ] Confirm the current submission portal, registered team details, eligibility, and rules about pre-existing project code with the organiser if not already confirmed.
