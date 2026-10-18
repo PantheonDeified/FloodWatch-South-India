@@ -1,6 +1,6 @@
 # Water-observation snapshot — automated quality audit
 
-- Snapshot generation timestamp: **2026-10-18T11:12:26.375614+00:00**
+- Snapshot generation timestamp: **2026-10-18T15:54:42.203385+00:00**
 - Records in snapshot: **407**
 - Resource files checked: **37**
 - Report generated from this snapshot by the GitHub Actions pipeline; source records are not modified.
