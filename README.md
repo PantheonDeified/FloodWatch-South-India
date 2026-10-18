@@ -10,6 +10,8 @@ Full feature matrix: [FloodWatch capabilities and implementation status](docs/FE
 
 IBM Z Datathon: [3-minute demo, architecture, ML metrics and Ubuntu VM runbook](docs/IBM_Z_DATATHON_DEMO.md).
 
+**Deploy the API on the event VM:** [Ubuntu/LinuxONE quick installer and service commands](deploy/ibm-linuxone/README.md).
+
 New: [Problems solved, early-warning workflow and infrastructure accountability](docs/EARLY_WARNING_AND_ACCOUNTABILITY.md).
 
 ## Backend and ML status
