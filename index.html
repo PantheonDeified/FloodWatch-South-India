@@ -253,7 +253,7 @@ const tiles={
  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:18,maxZoom:18,attribution:'Tiles © Esri'})
 };tiles.street.addTo(map);
 let marker=null,overlay=null,cycloneLayer=null,selected=null,activeOverlay='rain',currentBaseLayer='street',historyRequest=0,waterSnapshot=null,waterDisplayedRecords=[],waterStationsLayer=null,waterStationsEnabled=false;
-let riskFloodLayers=[],riskCycloneLayer=null,riskGridLayer=null,riskLayerRequest=0,riskCycloneRequest=0,riskCalculatedCells=[],riskCalculatedResults=[],riskBasinLayer=null;let riskWeatherRows=[],riskCurrentMask=null;
+let riskFloodLayers=[],riskCycloneLayer=null,riskGridLayer=null,riskLayerRequest=0,riskCycloneRequest=0,riskCalculatedCells=[],riskCalculatedResults=[],riskBasinLayer=null;let riskWeatherRows=[],riskCurrentMask=null;let basinGeoPromise=null;
 const $=id=>document.getElementById(id),fmt=(v,u='',d=0)=>v==null?'—':Number(v).toFixed(d)+u;
 function updateZoomStatus(){
  // Leaflet can upscale tiles beyond their native zoom. The old warning incorrectly
@@ -1130,6 +1130,28 @@ function basinForPoint(lon,lat,geo){
  }
  return null;
 }
+async function loadSouthIndiaBasins(){
+ if(window.__floodwatchBasinGeoJSON)return window.__floodwatchBasinGeoJSON;
+ if(!basinGeoPromise){
+  basinGeoPromise=(async()=>{
+   try{
+    const response=await fetch('data/south-india-basins.geojson',{cache:'force-cache'});
+    if(!response.ok)throw Error('Basin GeoJSON returned HTTP '+response.status);
+    const candidate=await response.json();
+    if(!Array.isArray(candidate?.features)||!candidate.features.length)throw Error('Basin GeoJSON has no usable features');
+    window.__floodwatchBasinGeoJSON=candidate;
+    updateBasinRiskContext();
+    return candidate;
+   }catch(error){
+    basinGeoPromise=null;
+    const el=$('basinRiskSummary');
+    if(el&&selected&&!window.__floodwatchBasinGeoJSON)el.textContent='Basin layer unavailable: '+error.message+'. Basin aggregate remains UNKNOWN; nearest-by-distance is not treated as upstream.';
+    return null;
+   }
+  })();
+ }
+ return basinGeoPromise;
+}
 function appendRiskMaskPath(ctx,geo,width,height,bounds){
  const xy=coord=>[(Number(coord[0])-bounds.west)/(bounds.east-bounds.west)*width,
                   (bounds.north-Number(coord[1]))/(bounds.north-bounds.south)*height];
@@ -1275,13 +1297,8 @@ async function setComputedRiskGrid(requestId){
   const maskResponse=await fetch(FLOODWATCH_RISK_GRID.statesFile,{cache:'force-cache'});
   if(!maskResponse.ok)throw Error('Regional state mask returned HTTP '+maskResponse.status);
   const geo=await maskResponse.json(),cells=buildRiskGridCells(geo);
-  let basinGeo=null;
-  try{
-   const basinResponse=await fetch('data/south-india-basins.geojson',{cache:'force-cache'});
-   if(basinResponse.ok){const candidate=await basinResponse.json();if(Array.isArray(candidate?.features)&&candidate.features.length)basinGeo=candidate}
-  }catch(e){/* Optional HydroBASINS data; basin status remains unknown if missing. */}
+  const basinGeo=await loadSouthIndiaBasins();
   if(basinGeo){
-   window.__floodwatchBasinGeoJSON=basinGeo;
    cells.forEach(cell=>{const basin=basinForPoint(cell.lon,cell.lat,basinGeo);if(basin){cell.basinId=basin.id;cell.basinName=basin.name}});
   }
   if(requestId!==riskLayerRequest||$('riskLayer').value!=='computed-risk')return;
@@ -1414,6 +1431,7 @@ $('goCoords').addEventListener('click',()=>{const lat=Number($('latInput').value
 $('locate').addEventListener('click',()=>{if(!navigator.geolocation){$('overlayStatus').textContent='Location is not supported by this browser.';return}$('overlayStatus').textContent='Waiting for your browser location permission…';navigator.geolocation.getCurrentPosition(p=>{const {latitude:lat,longitude:lon}=p.coords;if(lat<7||lat>21.8||lon<73||lon>87){$('overlayStatus').textContent='Your location appears outside the supported South India region.';return}map.setView([lat,lon],11);selectLocation(lat,lon,'Your current location');$('overlayStatus').textContent='Location selected; accuracy about '+Math.round(p.coords.accuracy)+' m. Weather resolution may be coarser.'},e=>{$('overlayStatus').textContent='Could not get location: '+e.message},{enableHighAccuracy:true,timeout:12000,maximumAge:60000})});
 // Start with a regional overview; the user chooses the exact point.
 updateZoomStatus();
+loadSouthIndiaBasins();
 $('placeName').textContent='Choose a location';$('coords').textContent='Click the map, search for a place, or enter coordinates.';$('updated').textContent='No location selected yet';$('temp').textContent='—';$('rain').textContent='—';$('wind').textContent='—';$('humidity').textContent='—';
 // Connect the station-table controls and map buttons.
 $('toggleWaterMap').addEventListener('click',()=>{waterStationsEnabled=!waterStationsEnabled;renderWaterStations()});
