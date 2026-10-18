@@ -8,7 +8,7 @@ import tempfile
 from pathlib import Path
 
 HTML_PATH = Path("index.html")
-SCRIPT_PATTERN = re.compile(r"<script\\b[^>]*>(.*?)</script\\s*>", re.IGNORECASE | re.DOTALL)
+SCRIPT_PATTERN = re.compile(r"<script\b[^>]*>(.*?)</script\s*>", re.IGNORECASE | re.DOTALL)
 
 
 def main() -> int:
