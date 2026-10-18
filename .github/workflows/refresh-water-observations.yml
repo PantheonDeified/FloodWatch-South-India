@@ -3,7 +3,13 @@ name: Refresh official water observations
 on:
   push:
     paths:
-      - 'data_pipeline/**'
+      - 'data_pipeline/sources.json'
+      - 'data_pipeline/requirements.txt'
+      - 'data_pipeline/scripts/refresh_water_observations.py'
+      - 'data_pipeline/scripts/validate_water_snapshot.py'
+      - 'data_pipeline/scripts/audit_water_snapshot.py'
+      - 'data_pipeline/tests/test_validate_water_snapshot.py'
+      - 'data_pipeline/tests/test_audit_water_snapshot.py'
       - '.github/workflows/refresh-water-observations.yml'
   workflow_dispatch:
   schedule:
