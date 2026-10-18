@@ -29,6 +29,35 @@ def metrics(a, p):
             "nse": float(1 - (err ** 2).sum() / denom) if denom else None,
             "samples": int(a.size)}
 
+def sample_station_windows(rows, max_windows, peak_threshold=None):
+    """Bound per-station window memory while preserving timeline coverage and some training peaks.
+
+    For validation/test, sampling is uniform in chronological candidate order. For training,
+    up to one third of the cap is reserved for evenly spread windows whose target horizon
+    includes a station-specific high-flow value derived from the training period only.
+    """
+    if len(rows) <= max_windows:
+        return rows
+    selected = set()
+    if peak_threshold is not None and np.isfinite(peak_threshold):
+        peak_indices = [i for i, row in enumerate(rows)
+                        if np.nanmax(np.asarray(row[2], dtype=float)) >= peak_threshold]
+        peak_budget = max_windows // 3
+        if peak_indices and peak_budget:
+            chosen_positions = np.linspace(
+                0, len(peak_indices) - 1,
+                num=min(peak_budget, len(peak_indices)), dtype=int
+            )
+            selected.update(peak_indices[int(pos)] for pos in chosen_positions)
+    remaining = [i for i in range(len(rows)) if i not in selected]
+    slots = max_windows - len(selected)
+    if slots > 0 and remaining:
+        positions = np.linspace(0, len(remaining) - 1,
+                                num=min(slots, len(remaining)), dtype=int)
+        selected.update(remaining[int(pos)] for pos in positions)
+    return [rows[i] for i in sorted(selected)]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--observations", type=pathlib.Path, required=True)
@@ -37,13 +66,17 @@ def main():
     ap.add_argument("--lead-days", type=int, default=7)
     ap.add_argument("--window-stride", type=int, default=7, help="Sample forecast origins every N days to control memory and reduce overlapping-window redundancy.")
     ap.add_argument("--epochs", type=int, default=40)
-    ap.add_argument("--patience", type=int, default=10)
+    ap.add_argument("--patience", type=int, default=5)
     ap.add_argument("--min-stations", type=int, default=5)
     ap.add_argument("--max-missing-fraction", type=float, default=0.2)
+    ap.add_argument("--max-windows-per-station-split", type=int, default=180,
+                    help="Upper bound on retained windows per station per split to control RAM; train sampling preserves some high-flow horizons.")
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
-    if args.lookback_days < 14 or args.lead_days < 1 or args.epochs < 1 or args.window_stride < 1:
-        raise SystemExit("Require lookback >=14, lead >=1, epochs >=1 and window-stride >=1.")
+    if (args.lookback_days < 14 or args.lead_days < 1 or args.epochs < 1
+            or args.window_stride < 1 or args.patience < 1
+            or args.max_windows_per_station_split < 40):
+        raise SystemExit("Require lookback >=14, lead >=1, epochs/stride/patience >=1 and max-windows-per-station-split >=40.")
     random.seed(args.seed); np.random.seed(args.seed); torch.manual_seed(args.seed)
     cols = ["station_id","state","latitude","longitude","observed_at","discharge_m3_s"]
     try:
@@ -76,12 +109,21 @@ def main():
     mu, sd = float(np.mean(fit_log)), float(np.std(fit_log))
     if sd < 1e-6: raise SystemExit("Near-constant training discharge.")
     data = {"train":[],"validation":[],"test":[]}; used=set()
+    candidate_counts = {"train":0,"validation":0,"test":0}
+    station_peak_thresholds = {}
     for sid,s in series_by_station.items():
         station_dates=pd.date_range(s.index.min(),s.index.max(),freq="D")
         offset=int((station_dates[0]-dates[0]).days)
         raw=s.reindex(station_dates).to_numpy(float)
         log=np.full(len(station_dates),np.nan); ok=np.isfinite(raw); log[ok]=np.log1p(raw[ok])
         lat,lon=map(float,meta.loc[sid].tolist())
+        # The station-specific high-flow threshold is derived from this station's
+        # training-period observations only; never use validation/test targets to select train peaks.
+        train_count=max(0,min(len(raw),tr-offset))
+        train_values=raw[:train_count]
+        train_values=train_values[np.isfinite(train_values)]
+        station_peak_thresholds[sid]=float(np.quantile(train_values,0.9)) if len(train_values)>=10 else None
+        station_rows = {"train":[],"validation":[],"test":[]}
         for local_end in range(args.lookback_days-1,len(station_dates)-args.lead_days,args.window_stride):
             global_end=offset+local_end
             a=local_end-args.lookback_days+1; hist=log[a:local_end+1]; mask=np.isfinite(hist)
@@ -99,9 +141,16 @@ def main():
                                np.full(len(hist),lat),np.full(len(hist),lon)]).astype("float32")
             y=((target-mu)/sd).astype("float32")
             last=float(raw[a:local_end+1][mask][-1])
-            data[split].append((x,y,np.expm1(target).astype("float32"),
-                                np.repeat(last,args.lead_days).astype("float32"),sid))
+            station_rows[split].append((x,y,np.expm1(target).astype("float32"),
+                                        np.repeat(last,args.lead_days).astype("float32"),sid))
+        if any(station_rows.values()):
             used.add(sid)
+        for split, rows in station_rows.items():
+            candidate_counts[split] += len(rows)
+            if not rows:
+                continue
+            threshold = station_peak_thresholds.get(sid) if split == "train" else None
+            data[split].extend(sample_station_windows(rows, args.max_windows_per_station_split, threshold))
     if len(used)<args.min_stations: raise SystemExit(f"Only {len(used)} stations have usable windows; need {args.min_stations}.")
     for split,minimum in [("train",200),("validation",40),("test",40)]:
         if len(data[split])<minimum: raise SystemExit(f"Only {len(data[split])} {split} windows; need {minimum}.")
@@ -151,12 +200,18 @@ def main():
       "lookback_days":args.lookback_days,"lead_days":args.lead_days,"window_stride_days":args.window_stride,
       "input_features":["scaled log1p discharge","observation mask","day-of-year sin/cos","latitude","longitude"],
       "windows":{k:len(v) for k,v in data.items()},
+      "candidate_windows_before_sampling":candidate_counts,
+      "max_windows_per_station_split":args.max_windows_per_station_split,
+      "window_sampling":{"validation_test":"uniformly spread across available chronological candidates per station; no target-based selection",
+        "training":"uniform time coverage plus up to one-third of each station's cap from high-flow target horizons; station threshold is the 90th percentile of training-period observed discharge"},
       "split":{"train_before":str(dates[tr].date()),"validation_before":str(dates[va].date()),"test_from":str(dates[va].date())},
       "test_metrics":m,"persistence_baseline_test_metrics":b,"rmse_skill_vs_persistence":skill,
       "beats_persistence_baseline_on_rmse":bool(skill is not None and skill>0),"per_horizon_metrics":per_horizon,
       "training_history":history,"model_file":str(model_path),"created_at_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
       "weather_forecast_inputs_available":False,"operational_status":"not_validated_for_public_warnings",
       "limitations":["No rainfall/weather forecast forcing or static basin descriptors.",
+      "Window counts are bounded per station/split for CPU/RAM; validation/test windows are evenly time-sampled rather than exhaustive.",
+      "High-flow training sampling uses each station's training-period 90th percentile, not an official flood danger threshold.",
       "No flood probability, water depth, or inundation extent.","Compare station-wise and flood-event metrics before any operational use."]}
     report_path.write_text(json.dumps(report,indent=2),encoding="utf-8")
     print(json.dumps({k:v for k,v in report.items() if k!="training_history"},indent=2))
