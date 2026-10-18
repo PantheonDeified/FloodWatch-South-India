@@ -140,6 +140,31 @@ jobs:
                       print("DISCOVERED LAYERS:")
                       for name, title in layers:
                           print(f"  {name} | {title}")
+                      if "mapcache" in base:
+                          import urllib.parse
+                          available = {name for name, _ in layers}
+                          expected = ["ap_hz", "agg_karnataka", "agg_kerala", "agg_tamilnadu"]
+                          for layer_name in expected:
+                              if layer_name not in available:
+                                  print(f"WARN expected South India hazard layer absent from WMS catalogue: {layer_name}")
+                                  continue
+                              params = urllib.parse.urlencode({
+                                  "SERVICE":"WMS","VERSION":"1.1.1","REQUEST":"GetMap",
+                                  "LAYERS":layer_name,"STYLES":"","SRS":"EPSG:4326",
+                                  "BBOX":"73,7,87,22","WIDTH":"128","HEIGHT":"128",
+                                  "FORMAT":"image/png","TRANSPARENT":"TRUE"
+                              })
+                              try:
+                                  map_req = urllib.request.Request(base+"?"+params, headers={"User-Agent":"FloodWatch-source-discovery/1.0"})
+                                  with urllib.request.urlopen(map_req, timeout=18) as map_response:
+                                      image_body = map_response.read()
+                                      content_type = map_response.headers.get("Content-Type","")
+                                  if image_body.startswith(b"\\x89PNG\\r\\n\\x1a\\n") or "image/png" in content_type.lower():
+                                      print(f"PASS WMS GetMap {layer_name}: {len(image_body)} bytes, {content_type}")
+                                  else:
+                                      print(f"WARN WMS GetMap {layer_name}: non-image response {content_type}, {image_body[:100]!r}")
+                              except Exception as map_exc:
+                                  print(f"WARN WMS GetMap {layer_name}: {map_exc}")
                   else:
                       print("WARN no named layer records parsed. XML preview: " + raw[:700].decode("utf-8", errors="replace").replace("\\n", " ") )
               except Exception as exc:
