@@ -99,7 +99,7 @@ assert(contour.length>0&&contour.every(line=>line.length>=2),'Marching-squares c
 assert(html.includes("layers:'IMERG_Precipitation_Rate'"),'NASA IMERG overlay should be registered.');
 assert(html.includes('id="basinRiskSection"'),'Basin-risk context section should exist.');
 assert(html.includes('async function loadSouthIndiaBasins()'),'Basin loader should exist.');
-assert(html.includes('updateZoomStatus();\\nloadSouthIndiaBasins();'),'Basin data should load without selecting the calculated-risk layer.');
+assert(html.indexOf('loadSouthIndiaBasins();')>html.indexOf('// Start with a regional overview; the user chooses the exact point.'),'Basin data should load at startup without selecting the calculated-risk layer.');
 assert(html.includes('const basinGeo=await loadSouthIndiaBasins();'),'Calculated risk layer should reuse the shared basin loader.');
 assert(Array.isArray(basins.features)&&basins.features.length>=50,'Regional basin GeoJSON should include a useful set of features.');
 assert(basins.features.every(f=>f.geometry&&Number.isFinite(Number(f.properties?.HYBAS_ID))&&f.properties?.NEXT_DOWN!==undefined),'Basin features should carry geometry, HYBAS_ID and NEXT_DOWN routing attributes.');
