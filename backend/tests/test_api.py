@@ -67,7 +67,8 @@ def test_status_lists_weather_proxy():
     assert data["water_observations_endpoint"].startswith("/api/v1/water-observations")
     assert data["model_readiness_endpoint"] == "/api/v1/models/status"
     assert "GloFAS proxy available" in data["flood_forecast_model"]
-    assert "not yet trained" in data["flood_forecast_model"]
+    assert "completed a historical holdout evaluation" in data["flood_forecast_model"]
+    assert "not served by this API" in data["flood_forecast_model"]
 
 
 def test_weather_returns_provider_payload_and_metadata(monkeypatch):
@@ -128,16 +129,30 @@ def test_weather_rejects_provider_payload_without_current_conditions(monkeypatch
     assert "did not include current conditions" in response.json()["detail"]
 
 
-def test_model_status_reports_experimental_training_without_claiming_operational_forecast():
+def test_model_status_reports_regional_metrics_without_claiming_operational_forecast():
     response = client.get("/api/v1/models/status")
     assert response.status_code == 200
     data = response.json()
+    assert data["status"] == "regional_lstm_trained_evaluated_not_served"
     assert data["validated_south_india_flood_forecast"] is False
     assert data["live_inference_available"] is False
-    assert data["trained_model_artifact"] == "available_as_temporary_github_actions_artifact_not_loaded_by_this_api"
-    assert data["single_station_test_metrics"]["overall_rmse_skill_vs_persistence"] > 0
+    assert data["model_served_by_api"] is False
+    assert data["connected_to_frontend_risk_score"] is False
+    regional = data["regional_model"]
+    assert regional["status"] == "trained_and_evaluated_in_github_actions"
+    assert regional["states"] == [
+        "Andhra Pradesh", "Karnataka", "Kerala", "Tamil Nadu", "Telangana"
+    ]
+    assert regional["test_targets"] == 89824
+    assert regional["validation_blend_alpha"] == 0.25
+    assert regional["validation_selection"]["test_set_used_for_selection"] is False
+    metrics = regional["test_metrics_m3_s"]
+    assert metrics["raw_lstm"]["rmse"] > metrics["persistence_baseline"]["rmse"]
+    assert metrics["selected_lstm_persistence_blend"]["rmse"] < metrics["persistence_baseline"]["rmse"]
+    assert metrics["selected_blend_rmse_skill_vs_persistence"] > 0.07
+    assert "available_as_temporary_github_actions_artifact" in data["trained_model_artifact"]
     assert data["single_station_test_metrics"]["high_flow_nse"] < 0
-    assert "persist and load a versioned model artifact" in " ".join(data["required_before_operational_inference"])
+    assert "not a flood-probability" in data["message"]
 
 
 def test_water_observations_are_paginated_and_labelled(monkeypatch):

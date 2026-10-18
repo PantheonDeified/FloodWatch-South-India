@@ -11,7 +11,8 @@ Full feature matrix: [FloodWatch capabilities and implementation status](docs/FE
 IBM Z Datathon: [3-minute demo, architecture, ML metrics and Ubuntu VM runbook](docs/IBM_Z_DATATHON_DEMO.md).  
 Final hand-in checks: [submission checklist and verified CI evidence](docs/DATATHON_SUBMISSION_CHECKLIST.md).
 
-**Deploy the API on the event VM:** [Ubuntu/LinuxONE quick installer and service commands](deploy/ibm-linuxone/README.md).
+**Deploy the API on the event VM:** [Ubuntu/LinuxONE quick installer and service commands](deploy/ibm-linuxone/README.md).  
+**Regional ML runner/preflight:** [run and verify the LSTM pipeline where PyTorch support is available](deploy/ibm-linuxone/run-regional-lstm.sh).
 
 New: [Problems solved, early-warning workflow and infrastructure accountability](docs/EARLY_WARNING_AND_ACCOUNTABILITY.md).
 
@@ -19,13 +20,13 @@ New: [Problems solved, early-warning workflow and infrastructure accountability]
 
 The FastAPI backend is in `backend/`. It includes health/status endpoints, the Open-Meteo weather proxy, a paginated `/api/v1/water-observations` endpoint, and `/api/v1/models/status`. The water endpoint can read a local snapshot or fetch the public repository snapshot. Updating files in GitHub does **not** automatically update the separately running Linux API service; follow [backend deployment notes](backend/README.md).
 
-### Verified experimental model status (18 October 2026)
+### Trained and evaluated model status (18 October 2026)
 
 A **single-station discharge LSTM has successfully trained and completed a chronological holdout evaluation** using CWC/NWDP-derived daily maximum discharge for the Yadgir station in Karnataka. Its downloadable weights, scaler file, and JSON evaluation report are attached to [GitHub Actions training run #39115932750](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39115932750) as artifact `floodwatch-discharge-lstm-6` (artifact retention is temporary). The report shows overall test RMSE **1,043.61 m³/s** versus **1,274.75 m³/s** for persistence, an 18.1% reduction. High-flow subset NSE is **−0.013**, so extreme-flow skill remains weak. This is one station only, not a South India-wide forecast.
 
-The separate [regional multi-station LSTM workflow](https://github.com/PantheonDeified/FloodWatch-South-India/actions/workflows/train-regional-lstm.yml) is experimental and must be evaluated from its own final report before any regional metric is claimed. Its training settings use a 90-day lookback, 7-day forecast horizon and a seven-day stride to bound memory use. The model currently uses historical discharge, observation masks, calendar seasonality and station coordinates; it does **not** ingest rainfall/weather forecasts or produce flood probabilities, depth or inundation extent.
+The separate [regional multi-station LSTM workflow](https://github.com/PantheonDeified/FloodWatch-South-India/actions/workflows/train-regional-lstm.yml) has completed a five-state training, saved-weight inference and chronological holdout evaluation. Its recorded cohort covers 241 source station IDs with usable forecast windows for 231 and 89,824 sampled held-out targets. Raw LSTM RMSE was **830.45 m³/s**, worse than persistence at **700.88 m³/s**; a blend with **25% LSTM / 75% persistence**, selected on validation data only, achieved **649.63 m³/s** held-out RMSE (7.3% lower than persistence). Station-level and high-flow performance remains mixed. The model uses historical discharge, observation masks, calendar seasonality and station coordinates; it does **not** ingest future rainfall/weather forecasts or predict flood probabilities, depth or inundation extent.
 
-**These trained weights are not yet integrated into the live website/API.** The website's river-flow outlook is separately labelled external Open-Meteo Flood API/GloFAS model data. Do not confuse that feed with the local LSTM.
+**Both trained models remain disconnected from the live API and map score.** The website's river-flow outlook is separately labelled external Open-Meteo Flood API/GloFAS model data. The `/api/v1/models/status` endpoint reports the regional evaluation metrics and makes this separation explicit; do not confuse that feed with the local LSTM.
 
 See [verified ML metrics and code tests](docs/ML_VALIDATION_SNAPSHOT.md), [ML upgrade plan](docs/ML_UPGRADE_PLAN.md), and the [model card](data_pipeline/SUBMISSION_MODEL_CARD.md).
 

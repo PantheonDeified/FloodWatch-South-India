@@ -15,7 +15,7 @@ from urllib.request import Request, urlopen
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-APP_VERSION = "0.3.0"
+APP_VERSION = "0.4.0"
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SNAPSHOT = REPO_ROOT / "data" / "water-observations.json"
 SNAPSHOT_URL = "https://raw.githubusercontent.com/PantheonDeified/FloodWatch-South-India/main/data/water-observations.json"
@@ -73,7 +73,7 @@ def api_status():
         "water_observations_endpoint": "/api/v1/water-observations?limit=100",
         "model_readiness_endpoint": "/api/v1/models/status",
         "water_observations": "Published GitHub Pages JSON snapshot; collector runs every six hours when scheduled execution succeeds; observation freshness varies by source",
-        "flood_forecast_model": "External Open-Meteo Flood API/GloFAS proxy available; local FloodWatch model not yet trained or validated",
+        "flood_forecast_model": "External Open-Meteo Flood API/GloFAS proxy available; a five-state regional discharge LSTM has completed a historical holdout evaluation, but model inference is not served by this API and no flood-probability model is deployed.",
         "last_checked": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -252,14 +252,43 @@ def get_river_flow(
 
 @app.get("/api/v1/models/status")
 def model_status():
-    """Report trained research artifacts separately from models actually served by this API."""
+    """Report completed research-model evaluation separately from inference actually served."""
     return {
-        "status": "experimental_single_station_model_trained_not_deployed",
-        "streamflow_lstm_code": "PyTorch single-station LSTM is implemented and training has completed for one Karnataka gauge",
-        "event_classifier_code": "scikit-learn event baseline exists; reliable reviewed event labels are still required",
-        "trained_model_artifact": "available_as_temporary_github_actions_artifact_not_loaded_by_this_api",
-        "training_run_url": "https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39114067094",
-        "evaluation_report_url": "https://github.com/PantheonDeified/FloodWatch-South-India/blob/main/docs/ML_VALIDATION_SNAPSHOT.md",
+        "status": "regional_lstm_trained_evaluated_not_served",
+        "api_version": APP_VERSION,
+        "regional_model": {
+            "status": "trained_and_evaluated_in_github_actions",
+            "model_type": "regional multi-station masked-input LSTM with validation-selected persistence blend",
+            "states": ["Andhra Pradesh", "Karnataka", "Kerala", "Tamil Nadu", "Telangana"],
+            "source_station_count": 241,
+            "stations_with_usable_windows": 231,
+            "lookback_days": 90,
+            "forecast_horizon_days": 7,
+            "validation_blend_alpha": 0.25,
+            "test_targets": 89824,
+            "test_metrics_m3_s": {
+                "selected_lstm_persistence_blend": {
+                    "mae": 75.6971, "rmse": 649.6332, "nse": 0.6524
+                },
+                "raw_lstm": {
+                    "mae": 90.0275, "rmse": 830.4477, "nse": 0.4320
+                },
+                "persistence_baseline": {
+                    "mae": 79.8152, "rmse": 700.8768, "nse": 0.5954
+                },
+                "selected_blend_rmse_skill_vs_persistence": 0.0731
+            },
+            "validation_selection": {
+                "method": "Choose the LSTM contribution alpha on the chronological validation split by RMSE; ties prefer persistence.",
+                "alpha": 0.25,
+                "test_set_used_for_selection": False
+            },
+            "training_duration_seconds_cached_fit": 21.53,
+            "source_history_end_date": "2026-10-17",
+            "training_run_url": "https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39126986154",
+            "artifact_url": "https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39126986154/artifacts/12136079681",
+            "artifact_note": "GitHub Actions artifact is temporary and may expire; run the regional training workflow to reproduce it."
+        },
         "single_station_test_metrics": {
             "station": "Yadgir, Karnataka",
             "target": "daily maximum river discharge in m3/s",
@@ -267,18 +296,23 @@ def model_status():
             "persistence_rmse_m3s": 1274.75,
             "overall_rmse_skill_vs_persistence": 0.1813,
             "high_flow_nse": -0.0129,
-            "high_flow_performance_warning": "Extreme-flow skill remains weak; not suitable for public warning use."
+            "note": "The single-station pilot's overall metric improved but high-flow performance remains weak."
         },
+        "trained_model_artifact": "available_as_temporary_github_actions_artifact_not_loaded_by_this_api",
+        "training_run_url": "https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39126986154",
+        "evaluation_report_url": "https://github.com/PantheonDeified/FloodWatch-South-India/blob/main/data_pipeline/SUBMISSION_MODEL_CARD.md",
         "live_inference_available": False,
+        "model_served_by_api": False,
+        "connected_to_frontend_risk_score": False,
         "validated_south_india_flood_forecast": False,
         "required_before_operational_inference": [
-            "persist and load a versioned model artifact plus matching scalers in the deployed service",
-            "validate predictions on independent gauges and flood events across the target region",
-            "align observed discharge and weather forecast inputs with station/catchment metadata",
-            "report per-station and per-horizon skill, uncertainty and missing-data behavior",
-            "reviewed catchment mapping, monitoring, rollback and published model card"
+            "run reproducible inference using a current, source-validated station history",
+            "validate predictions on independent gauges, years and flood events across the region",
+            "align discharge and weather inputs with station/catchment metadata and confirmed units",
+            "report per-station, per-horizon, high-flow skill and uncertainty",
+            "review catchment mapping, monitoring, rollback and a published model card"
         ],
-        "message": "A one-station experimental LSTM has trained and beaten persistence on overall holdout RMSE, but high-flow skill is weak and this API does not serve its predictions. External Open-Meteo/GloFAS products remain separate and must not be presented as FloodWatch-trained forecasts."
+        "message": "The regional LSTM has trained and completed a chronological holdout evaluation. The raw network is weaker than persistence on pooled RMSE; a validation-selected 25% LSTM / 75% persistence blend improves pooled test RMSE by 7.3%. The API does not serve this model and its output does not colour the map. This is a discharge research model, not a flood-probability or official-warning service."
     }
 
 

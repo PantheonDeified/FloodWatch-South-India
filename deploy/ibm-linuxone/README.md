@@ -11,9 +11,11 @@ df -h /
 free -h
 ```
 
-From your checkout of this repository:
+Install the small OS prerequisites first, then run the installer from a checkout of this repository:
 
 ```bash
+sudo apt-get update
+sudo apt-get install -y git python3-venv python3-pip curl
 git pull origin main
 bash deploy/ibm-linuxone/install-user-service.sh
 ```
@@ -27,6 +29,20 @@ git clone https://github.com/PantheonDeified/FloodWatch-South-India.git
 cd FloodWatch-South-India
 bash deploy/ibm-linuxone/install-user-service.sh
 ```
+
+## Optional regional LSTM workflow
+
+The regional neural network has a repeatable training/inference pipeline. The official tested training workflow currently runs on the GitHub Actions Linux runner; the FastAPI service on this VM does not serve the model or use it to colour the frontend risk map.
+
+From the repository root, run a runtime check first:
+
+```bash
+bash deploy/ibm-linuxone/run-regional-lstm.sh preflight
+```
+
+On a conventional x86_64 Linux runner, dependencies can be prepared with `bash deploy/ibm-linuxone/run-regional-lstm.sh setup`, then validated with `preflight`. If preflight succeeds, `bash deploy/ibm-linuxone/run-regional-lstm.sh train` downloads source-linked data, normalizes CWC/NWDP discharge, trains the five-state LSTM, evaluates the persistence comparison, and writes the inference/model report under `data_pipeline/output/regional_models/`. To rerun against an already-normalized dataset, set `FLOODWATCH_SKIP_DOWNLOAD=1`.
+
+**On s390x/LinuxONE:** do not install a generic x86 PyTorch wheel. The public IBM PyTorch-on-Z page currently documents older CPU-only wheels for Python 3.6–3.9; the current FloodWatch model workflow is tested with PyTorch 2.10 on GitHub Actions, not with that legacy wheel. The runner reports this as a compatibility blocker rather than pretending training succeeded. Keep model training in the tested [GitHub Actions workflow](https://github.com/PantheonDeified/FloodWatch-South-India/actions/workflows/train-regional-lstm.yml) unless a compatible PyTorch `>=2.2` build is available and `preflight` passes on the VM. This still lets the VM host the API, while model training/evaluation remains reproducible and separately evidenced.
 
 ## Service commands
 
