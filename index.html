@@ -41,22 +41,96 @@
 .risk-official-legend{border-top:1px solid #34475f;padding-top:5px;margin-top:4px;font-size:10px;color:#c4d0df}
 .risk-official-legend img{display:block;max-width:100%;max-height:95px;height:auto;object-fit:contain;background:#fff;border-radius:4px;margin-top:3px}
 .risk-legend{max-height:70vh;overflow-y:auto}
+
+/* Datathon presentation polish: strong hierarchy, shorter summaries and responsive controls. */
+header{position:sticky;top:0;z-index:1100;backdrop-filter:blur(14px);box-shadow:0 5px 24px rgba(0,0,0,.18)}
+.brand h1{letter-spacing:-.025em}.brand small{display:block;margin-top:2px;font-size:11px}
+.tag{background:rgba(35,91,130,.18);white-space:nowrap}
+.toolbar{position:relative;z-index:500;gap:9px}
+.toolbar input,.toolbar select,.toolbar button{min-height:42px}
+button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #7bd3ff;outline-offset:2px}
+#ibmZDatathonBanner{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(250px,.8fr);gap:28px;align-items:center;margin:0!important;padding:clamp(20px,3vw,34px) clamp(16px,3vw,40px)!important;border:0!important;border-bottom:1px solid #29405a!important;border-radius:0!important;background:radial-gradient(ellipse at 12% 5%,rgba(29,129,185,.2),transparent 42%),linear-gradient(115deg,#0b1625,#101e30 70%,#101a2a)}
+#ibmZDatathonBanner .hero-kicker{font-size:10px;font-weight:800;letter-spacing:.16em;color:#88d4ff}
+#ibmZDatathonBanner h2{font-size:clamp(26px,3vw,40px);line-height:1.08;letter-spacing:-.045em;margin:10px 0 10px}
+#ibmZDatathonBanner .hero-main>p{max-width:640px;margin:0;color:#b9cde1;font-size:14px}
+#ibmZDatathonBanner .hero-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:18px}
+#ibmZDatathonBanner .hero-primary,#ibmZDatathonBanner .hero-secondary{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px}
+#ibmZDatathonBanner .hero-primary{color:#061626;background:linear-gradient(135deg,#8bd9ff,#5bb7f0);box-shadow:0 5px 18px rgba(71,169,223,.15)}
+#ibmZDatathonBanner .hero-secondary{color:#b9dfff;border:1px solid #355473;background:rgba(18,40,63,.55)}
+#ibmZDatathonBanner .hero-aside{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:center}
+#ibmZDatathonBanner .hero-chip{border:1px solid #283f58;border-radius:12px;background:rgba(7,18,31,.42);padding:12px;min-height:64px}
+#ibmZDatathonBanner .hero-chip strong{display:block;color:#ecf7ff;font-size:13px}
+#ibmZDatathonBanner .hero-chip span{display:block;color:#91a9c2;font-size:10px;margin-top:3px}
+#ibmZDatathonBanner .hero-chip:first-child{border-color:#286182;background:rgba(18,63,93,.28)}
+#ibmZDatathonBanner .hero-details{grid-column:1/-1;margin-top:2px;padding:9px 11px;border:1px solid #283f58;background:rgba(7,18,31,.35);border-radius:10px}
+#ibmZDatathonBanner .hero-details summary,.compact-details summary{cursor:pointer;list-style:none;color:#9dcff2;font-size:11px;font-weight:700}
+#ibmZDatathonBanner .hero-details summary::-webkit-details-marker,.compact-details summary::-webkit-details-marker{display:none}
+#ibmZDatathonBanner .hero-details summary:after,.compact-details summary:after{content:"＋";float:right;color:#6fbbe8}
+#ibmZDatathonBanner .hero-details[open] summary:after,.compact-details[open] summary:after{content:"−"}
+#ibmZDatathonBanner .hero-details p{font-size:11px;line-height:1.55;color:#aebfd1;margin:9px 0}
+#ibmZDatathonBanner .hero-details a,.compact-details a{color:#82cdff}
+.section-title-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.section-title-row h2{margin:0}
+.mini-tag{white-space:nowrap;border:1px solid #294c69;background:#10263a;color:#a9dbff;padding:3px 7px;border-radius:999px;font-size:9px;font-weight:700;letter-spacing:.04em}
+.section-summary{font-size:11px;color:var(--muted);margin:8px 0}
+.compact-details{margin-top:10px;padding:10px 11px;border:1px solid #273b52;background:rgba(8,19,33,.43);border-radius:10px}
+.compact-details p{font-size:11px;line-height:1.55;color:#b3c5d8;margin:9px 0}
+.compact-details .warning{margin-top:8px}
+#regionalMlStatus .metric{padding:10px}
+#regionalMlStatus .metric strong{font-size:clamp(18px,2vw,23px);letter-spacing:-.035em}
+#regionalMlStatus .metric span{line-height:1.4}
+#basinRiskSummary{line-height:1.6}
+#officialDataCatalog .history-note{font-size:11px}
+#officialDataCatalog details .warning{font-size:10px}
+#mapWrap{box-shadow:inset 0 0 0 1px rgba(117,158,196,.18)}
+.leaflet-popup-content{line-height:1.5}
+.risk-legend{backdrop-filter:blur(10px);border-color:rgba(97,146,187,.55)}
+@media(max-width:900px){
+ header{position:relative}
+ #ibmZDatathonBanner{grid-template-columns:1fr;gap:18px;padding:22px 16px!important}
+ #ibmZDatathonBanner .hero-aside{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #ibmZDatathonBanner .hero-details{grid-column:1/-1}
+ #map{height:62vh}
+}
+@media(max-width:520px){
+ #ibmZDatathonBanner h2{font-size:28px}
+ #ibmZDatathonBanner .hero-aside{grid-template-columns:1fr 1fr}
+ #ibmZDatathonBanner .hero-chip{min-height:60px;padding:10px}
+ #ibmZDatathonBanner .hero-chip:last-of-type{grid-column:1/-1}
+ #ibmZDatathonBanner .hero-details{grid-column:1/-1}
+ #map{min-height:360px;height:55vh}
+ .toolbar{padding:9px}
+ .toolbar form{min-width:100%!important}
+ .metric-grid{gap:6px}
+ .metric{padding:9px}
+ .metric strong{font-size:19px}
+ .section{padding:12px 0}
+}
+
 </style>
 </head>
 <body>
 <header><div class="brand"><div class="logo">🌧</div><div><h1>FloodWatch South India</h1><small>Regional weather & flood situational awareness</small></div></div><span class="tag">SOURCE-LABELLED DATA · PROTOTYPE</span></header>
-<section id="ibmZDatathonBanner" class="section" style="margin:16px auto;max-width:1240px;border:1px solid #2f5d83;border-radius:14px;padding:18px;background:linear-gradient(120deg,rgba(24,58,89,.35),rgba(18,31,47,.4))">
- <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#8fd0ff;font-weight:700">AI for Good · IBM Z Datathon presentation</div>
- <h2 style="margin:8px 0">FloodWatch South India</h2>
- <p style="margin:0 0 10px;color:#d4e4f3">A source-aware flood-signal exploration prototype combining rainfall forecasts, observed river changes, watershed context and documented infrastructure evidence to support earlier human review.</p>
- <div style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0">
-  <a href="https://github.com/PantheonDeified/FloodWatch-South-India" target="_blank" rel="noopener noreferrer" style="color:#8fd0ff">Source repository ↗</a>
-  <span style="color:#5b7792">·</span>
-  <a href="https://github.com/PantheonDeified/FloodWatch-South-India/blob/main/docs/IBM_Z_DATATHON_DEMO.md" target="_blank" rel="noopener noreferrer" style="color:#8fd0ff">Architecture & 3-minute demo ↗</a>
-  <span style="color:#5b7792">·</span>
-  <a href="https://github.com/PantheonDeified/FloodWatch-South-India/blob/main/data_pipeline/SUBMISSION_MODEL_CARD.md" target="_blank" rel="noopener noreferrer" style="color:#8fd0ff">Model card ↗</a>
- </div>
- <div class="warning" style="margin:8px 0 0">Prototype status: the current hosted version is GitHub Pages with browser-side data calls. IBM LinuxONE / IBM Z deployment is the target architecture, not a claim of completed platform deployment. The neural network is research-only and does not issue public warnings.</div>
+<section id="ibmZDatathonBanner" aria-labelledby="heroTitle">
+  <div class="hero-main">
+    <div class="hero-kicker">IBM Z DATATHON · SOUTH INDIA</div>
+    <h2 id="heroTitle">See the signal. Trace the source.</h2>
+    <p>Rainfall, river observations and watershed context in one flood-signal map.</p>
+    <div class="hero-actions">
+      <a class="hero-primary" href="#mapWrap">Explore map <span aria-hidden="true">↓</span></a>
+      <a class="hero-secondary" href="https://github.com/PantheonDeified/FloodWatch-South-India/blob/main/docs/IBM_Z_DATATHON_DEMO.md" target="_blank" rel="noopener noreferrer">3-minute demo ↗</a>
+    </div>
+  </div>
+  <div class="hero-aside">
+    <div class="hero-chip"><strong>5 states</strong><span>One regional view</span></div>
+    <div class="hero-chip"><strong>Source-aware</strong><span>Timestamps stay visible</span></div>
+    <div class="hero-chip"><strong>ML evaluated</strong><span>Compared with persistence</span></div>
+    <details class="hero-details">
+      <summary>Technical status</summary>
+      <p>The public map is hosted on GitHub Pages. The IBM Z virtual-server API must pass its health checks before we claim that it is running on LinuxONE. The discharge model is not an official warning or calibrated flood probability.</p>
+      <a href="https://github.com/PantheonDeified/FloodWatch-South-India/blob/main/data_pipeline/SUBMISSION_MODEL_CARD.md" target="_blank" rel="noopener noreferrer">Model card ↗</a>
+    </details>
+  </div>
 </section>
 <main><section class="map-area"><div class="toolbar"><form id="searchForm" style="display:flex;gap:8px;flex:1;min-width:260px"><input id="search" placeholder="Search a town, village or district in South India…" autocomplete="off"><button class="primary">Find</button></form><button id="locate">◎ My location</button><input id="latInput" aria-label="Latitude" placeholder="Latitude" inputmode="decimal" style="flex:0 1 112px;min-width:90px"><input id="lonInput" aria-label="Longitude" placeholder="Longitude" inputmode="decimal" style="flex:0 1 112px;min-width:90px"><button id="goCoords">Go to coordinates</button><select id="layer" aria-label="Base map"><option value="street">Street map</option><option value="terrain">Terrain</option><option value="satellite">Satellite</option></select><select id="riskLayer" aria-label="Flood and cyclone risk overlay"><option value="computed-risk">Continuous risk contours · FloodWatch</option><option value="off">Risk map: Off</option><option value="historical-flood">Historical flood evidence (NRSC/ISRO)</option><option value="cyclone-threat">Cyclone alerts / events (GDACS)</option><option value="combined">Historic flood evidence + cyclone alerts</option></select></div><div style="padding:8px 12px;background:#13253a;color:#cfe7ff;border-bottom:1px solid #26364c">📍 <b>Select any point:</b> click directly on the map, search for a place, or enter latitude and longitude. The selected point updates the weather panel.</div><div id="mapWrap" style="position:relative"><div id="map" aria-label="Interactive map. Click any point to select its location."></div><div id="zoomStatus" role="status" aria-live="polite" hidden></div><div id="riskMapLegend" class="risk-legend" role="status" aria-live="polite" hidden><strong id="riskLegendTitle">Risk overlay</strong><div id="riskLegendContent" class="risk-legend-content"></div><div id="riskLegendNote" class="muted">Only source-supported regions are classified. Missing coverage is unknown, not safe.</div><a id="riskLegendSource" href="https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty" target="_blank" rel="noopener noreferrer">Open official NRSC hazard atlas ↗</a></div></div></section>
 <aside class="side"><section class="section"><h2>Selected location</h2><div id="placeName">South India overview</div><div class="status" id="coords">Click anywhere on the map to inspect conditions.</div><div class="status" id="updated">No location selected — choose a point to load location-specific data.</div></section>
@@ -218,29 +292,38 @@
 <div class="history-note">Design, future alert workflow and accountability safeguards: <a href="https://github.com/PantheonDeified/FloodWatch-South-India/blob/main/docs/EARLY_WARNING_AND_ACCOUNTABILITY.md" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">Read the implementation plan ↗</a> · <a href="https://github.com/PantheonDeified/FloodWatch-South-India/blob/main/docs/FEATURES_AND_CAPABILITIES.md" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">Full capability matrix ↗</a></div>
 </section>
 <section class="section" id="basinRiskSection">
-<h2>Basin & upstream risk management</h2>
-<div class="history-note" id="basinRiskSummary">Select a map location to see its HydroBASINS level-6 sub-basin ID, source NEXT_DOWN value and sampled mean/max FloodWatch score. Basin IDs are available; actual gauge-to-channel routing remains a candidate until validated against river flowlines and gauge metadata.</div>
-<div class="history-note">Basin workflow: combine catchment rainfall, recent river-level/discharge trends, reservoir inflow/release notices, downstream gauge records and embankment/drainage evidence. A nearby gauge is not automatically upstream, and a dam is not assumed to affect a location without a documented hydrological link.</div>
-<div class="history-note">Reference datasets: <a href="https://www.hydrosheds.org/products/hydrobasins" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">HydroBASINS catchment polygons ↗</a> · <a href="https://indiawris.gov.in/wris/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">India-WRIS water-resource/basin context ↗</a>.</div>
-<div class="warning">The repository bundles clipped HydroBASINS v1c level-6 polygons with <code>HYBAS_ID</code> and <code>NEXT_DOWN</code>. The map follows NEXT_DOWN chains only to label same-basin/upstream/downstream candidates; it does not treat that generalized basin graph as proof of a continuous channel or dam-to-location impact. Per-basin means/maxima are summaries of local grid samples, not a calibrated basin-wide hydraulic forecast.</div>
+  <h2>Basin context</h2>
+  <div class="history-note" id="basinRiskSummary">Choose a map point to inspect its sub-basin and local signal summary.</div>
+  <details class="compact-details">
+    <summary>How basin context works</summary>
+    <p>FloodWatch uses generalized HydroBASINS level-6 polygons and their NEXT_DOWN identifiers to show basin relationships. These links are candidates, not verified river-channel connectivity or proof that a dam affects a location.</p>
+    <p>Per-basin mean and maximum values summarize nearby grid samples; they are not a calibrated hydraulic forecast.</p>
+    <p><a href="https://www.hydrosheds.org/products/hydrobasins" target="_blank" rel="noopener noreferrer">HydroBASINS ↗</a> · <a href="https://indiawris.gov.in/wris/" target="_blank" rel="noopener noreferrer">India-WRIS ↗</a></p>
+  </details>
 </section>
 <section class="section" id="regionalMlStatus">
-<h2>Experimental neural-network model</h2>
-<div class="history-note"><b>Latest run:</b> five-state regional LSTM training, saved-weight inference and artifact upload passed. Cached model fitting took 21.53 seconds; first-time data acquisition and normalization take longer.</div>
-<div class="metric-grid">
- <div class="metric"><span>Latest model-fit time</span><strong>21.53 s</strong><span>Training only; data preparation takes longer</span></div>
- <div class="metric"><span>Stations with usable windows</span><strong>231</strong><span>Five-state cohort with usable forecast windows</span></div>
- <div class="metric"><span>Selected model test RMSE</span><strong>649.63</strong><span>m³/s; 89,824 held-out targets</span></div>
- <div class="metric"><span>Persistence test RMSE</span><strong>700.88</strong><span>m³/s; matched persistence baseline</span></div>
-</div>
-<div class="history-note">Quality-selected five-state holdout: 89,824 targets. The raw LSTM RMSE was 830.45 m³/s (18.5% worse than persistence at 700.88), so the validation-only selector retained alpha=0.25—25% LSTM plus 75% persistence. This selected blend achieved RMSE 649.63 m³/s (7.3% lower than persistence), with 135/218 stations and 78/116 comparable high-flow station subsets beating persistence. The network uses past discharge, season and coordinates; no future rainfall forcing yet. It does <b>not</b> colour this map or issue alerts.</div>
-<div class="warning"><b>Input freshness:</b> the latest inference used source records through 17 October 2026, one day before the workflow run. Timestamp age is only a freshness heuristic; it does not independently verify sensor transmission or the provider's update cadence.</div>
-<div class="history-note"><a href="https://github.com/PantheonDeified/FloodWatch-South-India/actions/workflows/train-regional-lstm.yml" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">Open regional retraining workflow ↗</a> · <a href="https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39126986154" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">Open latest five-state training/inference run ↗</a> · <a href="https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39126986154/artifacts/12136079681" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">Download latest model and evaluation artifacts ↗</a> · <a href="https://github.com/PantheonDeified/FloodWatch-South-India/blob/feature/continuous-risk-contours-data-basin-20261018/data_pipeline/SUBMISSION_MODEL_CARD.md" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">Read model card ↗</a></div>
-<div class="warning">Research status only. Do not interpret discharge output as flood probability, water level, inundation depth or an official warning. Model weights are not automatically deployed to the frontend or backend. Independent validation, high-flow reliability checks and current-source verification remain required.</div>
+  <div class="section-title-row"><h2>Regional ML results</h2><span class="mini-tag">5-state holdout</span></div>
+  <div class="history-note">Validation-selected LSTM/persistence blend · 89,824 held-out targets</div>
+  <div class="metric-grid">
+    <div class="metric"><span>Selected blend RMSE</span><strong>649.63</strong><span>m³/s · lower is better</span></div>
+    <div class="metric"><span>Persistence baseline</span><strong>700.88</strong><span>m³/s · same test targets</span></div>
+    <div class="metric"><span>Usable station windows</span><strong>231</strong><span>Regional data cohort</span></div>
+    <div class="metric"><span>Cached fit time</span><strong>21.53 s</strong><span>Excludes first-time data prep</span></div>
+  </div>
+  <details class="compact-details">
+    <summary>Evaluation, model artefacts & limits</summary>
+    <p>The raw LSTM RMSE was 830.45 m³/s, worse than persistence. A chronological validation-only selector chose alpha=0.25: 25% LSTM and 75% persistence. The selected blend's recorded test RMSE was 7.3% below persistence. The blend helps discharge prediction on this dataset; it does not establish flood-warning skill.</p>
+    <p>Inputs are historical discharge, observation masks, seasonality and station coordinates. There is no future rainfall forcing, verified river-network routing, inundation model or live model output on the map.</p>
+    <p>The latest recorded inference used source records through 17 October 2026; timestamp age alone cannot verify live sensor transmission.</p>
+    <p><a href="https://github.com/PantheonDeified/FloodWatch-South-India/actions/workflows/train-regional-lstm.yml" target="_blank" rel="noopener noreferrer">Retraining workflow ↗</a> · <a href="https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39126986154" target="_blank" rel="noopener noreferrer">Training/inference evidence ↗</a> · <a href="https://github.com/PantheonDeified/FloodWatch-South-India/blob/main/data_pipeline/SUBMISSION_MODEL_CARD.md" target="_blank" rel="noopener noreferrer">Model card ↗</a></p>
+    <div class="warning"><b>Scope:</b> this is a discharge research model, not a flood probability, inundation estimate or official warning. It does not colour the public map.</div>
+  </details>
 </section>
 <section class="section"><h2>Next 24 hours</h2><div id="hourly" class="muted">Loading forecast when a location is selected.</div></section>
 <section class="section" id="officialDataCatalog">
-<h2>NASA & Indian-government data</h2>
+<div class="section-title-row"><h2>Official sources</h2><span class="mini-tag">NASA · IMD · CWC</span></div>
+<p class="section-summary">Browse authoritative datasets and check whether browser-accessible endpoints respond.</p>
+<details class="compact-details"><summary>Sources and live-access check</summary>
 <div class="history-note"><b>NASA Earth observations</b></div>
 <div class="history-note"><a href="https://gpm.nasa.gov/data/imerg" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">NASA GPM IMERG precipitation ↗</a> · <a href="https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">NASA GIBS imagery service ↗</a> · <a href="https://worldview.earthdata.nasa.gov/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">NASA Worldview ↗</a> · <a href="https://search.earthdata.nasa.gov/" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">NASA Earthdata Search ↗</a>.</div>
 <div class="history-note">The NASA IMERG map overlay is satellite precipitation-rate imagery. It is separate from the current FloodWatch numerical score; imagery is not treated as a verified gauge reading.</div>
@@ -253,7 +336,7 @@
 <div class="history-note" id="officialBulletinRecords" aria-live="polite">IMD bulletin rows appear here only if the browser can read and validate the official endpoint response.</div>
 <div class="warning"><b>Source honesty:</b> these are a mixture of data feeds, visualisation services and official reference portals—not all are machine-readable live APIs. Individual values keep their source timestamp; follow current official IMD/CWC/state instructions for emergencies.</div>
 <div class="warning"><b>Scoring inputs:</b> Open-Meteo gridded forecasts, GloFAS modelled discharge and source-labelled water-observation history feed the experimental score. NASA IMERG imagery and historical NRSC map layers are visual context, not silently mixed into the numeric score.</div>
-</section></aside></main>
+</aside></main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onerror="document.getElementById('updated').textContent='Map library unavailable';document.getElementById('weatherStatus').textContent='The map library did not load. Check your connection or refresh. No live values are displayed.';document.getElementById('overlayStatus').textContent='Map controls are unavailable because the map library did not load.';"></script>
 <script>
 if (typeof window.L === 'undefined') {
