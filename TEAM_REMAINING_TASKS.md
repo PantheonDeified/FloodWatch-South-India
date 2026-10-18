@@ -54,6 +54,8 @@ These features still need end-to-end testing. A feature in the code does not aut
 
 **Important:** Do not hardcode a temporary Cloudflare URL as a permanent endpoint. A Quick Tunnel URL only works while the tunnel is running and is not a reliable production deployment.
 
+**Before final public release:** remove the developer-only backend testing panel from `index.html`, deploy the API to a stable HTTPS address, configure the frontend to use that stable address, and verify that no temporary tunnel URL is embedded in the public code.
+
 ## GitHub handoff
 
 Each teammate should:
