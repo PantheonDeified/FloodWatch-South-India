@@ -259,9 +259,11 @@ def main():
     for sid in sorted(set(test_station_ids.tolist())):
         mask_station = test_station_ids == sid
         station_actual = actual[mask_station]
-        station_pred = pred[mask_station]
+        station_pred = selected_pred[mask_station]
+        station_raw_pred = pred[mask_station]
         station_base = base[mask_station]
         station_model_metrics = metrics(station_actual, station_pred)
+        station_raw_metrics = metrics(station_actual, station_raw_pred)
         station_baseline_metrics = metrics(station_actual, station_base)
         station_baseline_rmse = station_baseline_metrics["rmse_m3s"]
         station_model_rmse = station_model_metrics["rmse_m3s"]
@@ -279,8 +281,10 @@ def main():
             if high_flow_count:
                 high_actual = station_actual[high_mask]
                 high_pred = station_pred[high_mask]
+                high_raw_pred = station_raw_pred[high_mask]
                 high_base = station_base[high_mask]
                 high_model_metrics = metrics(high_actual, high_pred)
+                high_raw_metrics = metrics(high_actual, high_raw_pred)
                 high_baseline_metrics = metrics(high_actual, high_base)
                 baseline_high_rmse = high_baseline_metrics["rmse_m3s"]
                 model_high_rmse = high_model_metrics["rmse_m3s"]
@@ -288,12 +292,14 @@ def main():
                     high_flow_skill = float(1 - model_high_rmse / baseline_high_rmse)
                     station_high_flow_skill.append(high_flow_skill)
                 high_flow_report = {
-                    "model": high_model_metrics,
+                    "selected_model": high_model_metrics,
+                    "raw_lstm": high_raw_metrics,
                     "persistence": high_baseline_metrics,
                     "rmse_skill_vs_persistence": high_flow_skill,
                 }
         per_station_metrics[sid] = {
             "test_metrics": station_model_metrics,
+            "raw_lstm_test_metrics": station_raw_metrics,
             "persistence_baseline_test_metrics": station_baseline_metrics,
             "rmse_skill_vs_persistence": station_skill,
             "training_period_90th_percentile_discharge_m3s": threshold,
@@ -319,12 +325,13 @@ def main():
     report_path=args.output_dir/"regional_discharge_lstm.report.json"
     torch.save(model.state_dict(),model_path)
     scaler_path.write_text(json.dumps({
-      "version":1,"target_transform":"log1p","global_log1p_mean":mu,"global_log1p_std":sd,
+      "version":2,"target_transform":"log1p","global_log1p_mean":mu,"global_log1p_std":sd,
+      "validation_blend_alpha":alpha,"validation_blend_selection":validation_selection,
       "lookback_days":args.lookback_days,"lead_days":args.lead_days,
       "input_features":["scaled_log1p_discharge","observation_mask","day_of_year_sin","day_of_year_cos","latitude_div_90","longitude_div_180"],
       "latitude_scaling":"latitude_degrees / 90; normalized to [-1,1]","longitude_scaling":"longitude_degrees / 180; normalized to [-1,1]"
     },indent=2),encoding="utf-8")
-    report={"model_type":"regional multi-station masked-input LSTM","status":"experimental_research_only",
+    report={"model_type":"regional multi-station masked-input LSTM with validation-selected blend","selected_model_type":selected_model_type,"status":"experimental_research_only",
       "states":STATES,"source_station_count":int(df.station_id.nunique()),"stations_with_windows":len(used),
       "calendar_start":str(dates.min().date()),"calendar_end":str(dates.max().date()),
       "lookback_days":args.lookback_days,"lead_days":args.lead_days,"window_stride_days":args.window_stride,
@@ -336,8 +343,11 @@ def main():
       "window_sampling":{"validation_test":"uniformly spread across available chronological candidates per station; no target-based selection",
         "training":"uniform time coverage plus up to one-third of each station's cap from high-flow target horizons; station threshold is the 90th percentile of training-period observed discharge"},
       "split":{"train_before":str(dates[tr].date()),"validation_before":str(dates[va].date()),"test_from":str(dates[va].date())},
-      "test_metrics":m,"persistence_baseline_test_metrics":b,"rmse_skill_vs_persistence":skill,
+      "test_metrics":m,"raw_lstm_test_metrics":raw_lstm_metrics,"persistence_baseline_test_metrics":b,
+      "validation_blend_alpha":alpha,"validation_blend_selection":validation_selection,
+      "raw_lstm_rmse_skill_vs_persistence":raw_skill,"rmse_skill_vs_persistence":skill,
       "beats_persistence_baseline_on_rmse":bool(skill is not None and skill>0),
+      "selected_model_type":selected_model_type,
       "per_station_summary":per_station_summary,
       "per_station_metrics":per_station_metrics,
       "per_horizon_metrics":per_horizon,
