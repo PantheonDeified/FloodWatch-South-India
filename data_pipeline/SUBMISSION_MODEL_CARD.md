@@ -10,7 +10,7 @@ FloodWatch has a completed experimental single-station LSTM pilot and a complete
 |---|---|---|
 | Regional neural-network weights | Trained artifact exists | [Regional training run #39124572229 (earlier broader-scope experiment)](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39122959850), artifact floodwatch-regional-lstm. |
 | Regional model evaluation | Completed on chronological holdout | 89,824 pooled test targets; LSTM RMSE 830.45 m³/s vs persistence 700.88 m³/s (18.5% worse pooled RMSE). This aggregate hides substantial station-level variance. |
-| Per-station robustness | Mixed; not a pass for deployment | 107 of 223 tested stations beat persistence on RMSE. Only 63 of 119 high-flow stations with a comparable baseline beat persistence on high-flow RMSE. |
+| Per-station robustness | Mixed; not a pass for deployment | 99 of 218 tested stations beat persistence on RMSE. Only 60 of 116 comparable high-flow station subsets with a comparable baseline beat persistence on high-flow RMSE. |
 | Reproducible inference | Predictor script and workflow smoke-test step added on feature branch | data_pipeline/scripts/predict_regional_lstm.py uses the saved weights, saved scaling values and an eligible 90-day history. Re-check the latest workflow run before treating the smoke test as passed. |
 | Single-station neural-network pilot | Previously trained | Yadgir station holdout RMSE was 1,043.61 m³/s vs persistence 1,274.75 m³/s; high-flow NSE was −0.013, so extreme-flow reliability remains weak. |
 | ML event classifier | Prototype code exists | data_pipeline/scripts/train_event_ml.py implements a scikit-learn classifier with chronological evaluation. It needs reviewed event labels before flood-event claims. |
