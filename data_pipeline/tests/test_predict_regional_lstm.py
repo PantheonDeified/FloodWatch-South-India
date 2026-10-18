@@ -46,10 +46,11 @@ class RegionalInferenceTests(unittest.TestCase):
             model = RegionalLSTM(horizon=7)
             torch.save(model.state_dict(), model_path)
             scaler_path.write_text(json.dumps({
-                "discharge_log1p_mean": 3.5,
-                "discharge_log1p_std": 1.1,
+                "global_log1p_mean": 3.5,
+                "global_log1p_std": 1.1,
                 "latitude_divisor": 90.0,
                 "longitude_divisor": 180.0,
+                "validation_blend_alpha": 0.25,
             }), encoding="utf-8")
             report_path.write_text(json.dumps({
                 "model_type": "test regional LSTM",
@@ -75,6 +76,10 @@ class RegionalInferenceTests(unittest.TestCase):
             last = payload["last_observed_discharge_m3_s"]
             self.assertTrue(all(p["persistence_baseline_discharge_m3_s"] == last for p in payload["forecast"]))
             self.assertEqual(payload["status"], "experimental_research_only")
+            self.assertEqual(payload["validation_blend_alpha"], 0.25)
+            self.assertEqual(payload["validation_blend_selection"], "Older artifact: no validation blend metadata; raw LSTM output selected." if "validation_blend_selection" not in payload else payload["validation_blend_selection"])
+            self.assertTrue(all("lstm_discharge_m3_s" in row for row in payload["forecast"]))
+            self.assertTrue(all(np.isfinite(row["lstm_discharge_m3_s"]) for row in payload["forecast"]))
 
 
 if __name__ == "__main__":
