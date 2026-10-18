@@ -21,9 +21,10 @@ import requests
 from bs4 import BeautifulSoup
 
 DEFAULT_PAGES = [
-    "https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-central-water-commission-cwc",
+    # Prioritize observed discharge targets for streamflow training, then rainfall and water level.
     "https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-central-water-commission-cwc",
     "https://nwdp.nwic.gov.in/en/dataset/rainfall-manual-daily-central-water-commission-cwc",
+    "https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-central-water-commission-cwc",
 ]
 DEFAULT_KEYWORDS = [
     "andhra pradesh", "karnataka", "kerala", "tamil nadu", "telangana",
