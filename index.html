@@ -247,6 +247,7 @@ function renderWaterStations(){
   const sourceUrl=String(record.source_dataset_url||'');
   const sourceLink=sourceUrl.startsWith('https://')?'<a href="'+escapeHtml(sourceUrl)+'" target="_blank" rel="noopener noreferrer">Open official dataset</a>':'Official source link unavailable';
   const popup='<div style="min-width:190px;max-width:280px"><b>'+escapeHtml(name)+'</b><div>'+escapeHtml(readableKind(record.kind))+'</div><div style="font-size:16px;font-weight:700;margin:4px 0">'+escapeHtml(value+unit)+'</div><div>Source time: '+escapeHtml(sourceTime)+'</div><div>Freshness: '+escapeHtml(freshness.label)+'</div><div style="font-size:11px;margin-top:5px">'+escapeHtml(record.source_name||record.agency||'Public source')+'</div><div style="margin-top:5px">'+sourceLink+'</div><div style="font-size:10px;margin-top:5px">Source-reported value; not a flood warning. Source timezone may be unspecified.</div></div>';
+  marker.on('click',()=>{map.setView([lat,lon],Math.max(map.getZoom(),10));selectLocation(lat,lon,name)});
   marker.bindPopup(popup);
   layer.addLayer(marker);
  });
