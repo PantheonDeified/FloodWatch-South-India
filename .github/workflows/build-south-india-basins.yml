@@ -28,18 +28,40 @@ jobs:
           python-version: '3.12'
       - name: Install vector geometry dependencies
         run: python -m pip install --upgrade pip geopandas
-      - name: Download official HydroBASINS Asia level-6 geometry
+      - name: Query HydroBASINS Asia level-6 features for South India
+        env:
+          BASIN_QUERY_URL: https://services2.arcgis.com/PYn6bWCjT6bhw1z3/ArcGIS/rest/services/Global_Loaches_2022_WFL1/FeatureServer/2/query
         run: |
-          curl --fail --location --retry 3 --retry-delay 2 --max-time 480 \
-            --user-agent 'Mozilla/5.0 (compatible; FloodWatchDataPipeline/1.0)' \
-            --referer 'https://www.hydrosheds.org/products/hydrobasins' \
-            'https://data.hydrosheds.org/file/hydrobasins/standard/hybas_as_lev01-12_v1c.zip' \
-            --output /tmp/hybas_as_lev01-12_v1c.zip
-          test -s /tmp/hybas_as_lev06_v1c.zip
+          # The data provider ZIP endpoint returned HTTP 403 to GitHub Actions.
+          # This public feature service documents the same HydroBASINS Asia level-6 data.
+          curl --fail --location --retry 3 --retry-delay 2 --max-time 240 --get "$BASIN_QUERY_URL" \
+            --data-urlencode 'where=1=1' \
+            --data-urlencode 'geometry=73.5,7.5,86.5,21.5' \
+            --data-urlencode 'geometryType=esriGeometryEnvelope' \
+            --data-urlencode 'inSR=4326' \
+            --data-urlencode 'spatialRel=esriSpatialRelIntersects' \
+            --data-urlencode 'outFields=HYBAS_ID,NEXT_DOWN,NEXT_SINK,MAIN_BAS,SUB_AREA,UP_AREA,PFAF_ID' \
+            --data-urlencode 'returnGeometry=true' \
+            --data-urlencode 'outSR=4326' \
+            --data-urlencode 'f=geojson' \
+            --data-urlencode 'resultRecordCount=2000' \
+            --output /tmp/hydrobasins_south_india.geojson
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path('/tmp/hydrobasins_south_india.geojson')
+          payload = json.loads(path.read_text(encoding='utf-8'))
+          features = payload.get('features')
+          if not isinstance(features, list) or len(features) < 10:
+              raise SystemExit(f'Invalid/insufficient HydroBASINS GeoJSON feature count: {len(features) if isinstance(features, list) else "missing"}')
+          if not all(f.get('geometry') and f.get('properties', {}).get('HYBAS_ID') is not None and 'NEXT_DOWN' in f.get('properties', {}) for f in features):
+              raise SystemExit('HydroBASINS query response lacks polygon geometry or routing ID attributes.')
+          print(f'Validated {len(features)} regional HydroBASINS features from the public feature service.')
+          PY
       - name: Clip and validate basin polygons for the five-state mask
         run: |
           python data_pipeline/scripts/build_south_india_basins.py \
-            --basins-zip /tmp/hybas_as_lev06_v1c.zip \
+            --basins-geojson /tmp/hydrobasins_south_india.geojson \
             --states data/south-india-states.geojson \
             --output data/south-india-basins.geojson \
             --metadata data/south-india-basins.metadata.json
