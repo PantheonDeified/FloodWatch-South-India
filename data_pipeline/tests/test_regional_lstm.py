@@ -44,6 +44,22 @@ class RegionalLSTMTests(unittest.TestCase):
         self.assertEqual(result["rmse_m3s"], 0.0)
         self.assertAlmostEqual(result["nse"], 1.0)
 
+    def test_validation_blend_falls_back_to_persistence_when_lstm_is_worse(self):
+        actual = np.array([[10.0, 12.0], [15.0, 14.0], [9.0, 10.0]])
+        persistence = np.array([[10.0, 10.0], [10.0, 10.0], [10.0, 10.0]])
+        bad_lstm = persistence + 100.0
+        alpha, selected_rmse = MODULE.select_validation_blend_alpha(actual, bad_lstm, persistence)
+        self.assertEqual(alpha, 0.0)
+        self.assertAlmostEqual(selected_rmse, MODULE.metrics(actual, persistence)["rmse_m3s"])
+
+    def test_validation_blend_can_select_lstm_when_validation_skill_is_real(self):
+        actual = np.array([[10.0, 12.0], [15.0, 14.0], [9.0, 10.0]])
+        persistence = np.zeros_like(actual)
+        lstm = actual.copy()
+        alpha, selected_rmse = MODULE.select_validation_blend_alpha(actual, lstm, persistence)
+        self.assertEqual(alpha, 1.0)
+        self.assertEqual(selected_rmse, 0.0)
+
     def test_constant_series_has_undefined_nse(self):
         result = MODULE.metrics(np.array([4.0, 4.0]), np.array([4.0, 5.0]))
         self.assertIsNone(result["nse"])
@@ -63,6 +79,8 @@ class RegionalLSTMTests(unittest.TestCase):
         self.assertIn('"forecast_is_live": bool(history_age_days <= 3)', source)
         self.assertIn('"history_freshness": history_freshness', source)
         self.assertIn('model.load_state_dict(weights, strict=True)', source)
+        self.assertIn('"validation_blend_alpha"', source)
+        self.assertIn('"lstm_discharge_m3_s"', source)
 
     def test_training_coordinates_are_scaled_once_and_match_inference(self):
         trainer = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "train_regional_lstm.py"
