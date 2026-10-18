@@ -839,8 +839,13 @@ function riskLegend(mode,title,rows,note,sourceUrl){
 }
 function addNRSCOfficialLegendImage(){
  const item=document.createElement('div');item.className='risk-official-legend';
- item.textContent='Colour classes are drawn from the official NRSC/ISRO map layers. The MapCache legend endpoint did not return a legend during service validation, so FloodWatch will not invent red/amber/green thresholds. Open the official state hazard atlas to interpret the source colours.';
+ item.textContent='Source-native colours/symbology are retained. The MapCache legend endpoint returned HTTP 501 during validation, so FloodWatch does not guess what red, green or other colours mean. Open the official atlas to interpret the products and their coverage.';
  $('riskLegendContent').appendChild(item);
+}
+function addGDACSSourceLink(){
+ const link=document.createElement('a');link.href='https://www.gdacs.org/';link.target='_blank';link.rel='noopener noreferrer';
+ link.textContent='Open official GDACS event map ↗';link.style.color='#80ceff';link.style.display='inline-block';link.style.marginTop='6px';
+ $('riskLegendContent').appendChild(link);
 }
 function addHistoricalFloodHazard(){
  const failed=[];
@@ -927,6 +932,7 @@ async function setRiskMapLayer(mode){
    {text:'Telangana and uncovered map areas stay unknown. Source flood colours are not re-labelled; the NRSC MapCache legend endpoint returns HTTP 501, so use the official atlas link for class definitions.'}
   ],'Loading source layers…','https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty');
   addNRSCOfficialLegendImage();
+  addGDACSSourceLink();
   await addRiskCycloneThreat();
  }
 }
