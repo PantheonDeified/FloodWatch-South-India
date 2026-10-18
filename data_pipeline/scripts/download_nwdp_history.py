@@ -36,10 +36,17 @@ DEFAULT_KEYWORDS = [
 MAX_BYTES = 300 * 1024 * 1024
 
 
-def slugify(text: str) -> str:
+def slugify(text: str, resource_url: str = "") -> str:
+    """Return a stable filename unique to the resource URL, not just its title."""
     text = re.sub(r"(?i)csv$", "", text)
     text = re.sub(r"[^a-zA-Z0-9]+", "-", text).strip("-").lower()
-    return (text[:150] or "nwdp-resource") + ".csv"
+    base = (text or "nwdp-resource")[:130].rstrip("-") or "nwdp-resource"
+    # Different NWDP pages can publish similarly named resources. Include a stable
+    # URL-derived suffix to prevent silently reusing a different CSV by title alone.
+    if resource_url:
+        suffix = hashlib.sha256(resource_url.strip().encode("utf-8")).hexdigest()[:12]
+        return f"{base}-{suffix}.csv"
+    return base[:150] + ".csv"
 
 
 def title_years(text: str) -> list[int]:
@@ -112,6 +119,20 @@ def main() -> int:
     keywords = [x.strip().lower() for x in args.keywords.split(",") if x.strip()]
     session = requests.Session()
     session.headers.update({"User-Agent": "FloodWatch-South-India/0.1 (source-linked hydrology research)"})
+    existing_manifest_entries: dict[str, dict] = {}
+    old_manifest_path = args.out_dir / "manifest.json"
+    if old_manifest_path.is_file():
+        try:
+            old_manifest = json.loads(old_manifest_path.read_text(encoding="utf-8"))
+            for item in old_manifest.get("files", []):
+                local_name = pathlib.Path(str(item.get("local_path") or "")).name
+                if local_name:
+                    existing_manifest_entries[local_name] = item
+        except (OSError, json.JSONDecodeError, AttributeError, TypeError) as exc:
+            raise SystemExit(
+                f"Existing manifest is unreadable; refusing unsafe reuse of local CSV files: {exc}"
+            ) from exc
+
     report = {
         "created_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
         "historical_period_requested": [args.start_year, args.end_year],
@@ -153,12 +174,25 @@ def main() -> int:
                 try:
                     download_url = get_download_url(session, resource_page)
                     entry["download_url"] = download_url
-                    destination = args.out_dir / slugify(title)
-                    # Resource titles should be unique, but don't silently overwrite a different resource.
+                    destination = args.out_dir / slugify(title, resource_page)
+                    # Reuse only when the prior manifest binds this exact path to
+                    # the same resource and download URL and its checksum still matches.
                     if destination.exists():
-                        digest = hashlib.sha256(destination.read_bytes()).hexdigest()
+                        previous = existing_manifest_entries.get(destination.name, {})
+                        existing_digest = hashlib.sha256(destination.read_bytes()).hexdigest()
+                        same_resource = (
+                            previous.get("resource_page_url") == resource_page
+                            and previous.get("download_url") == download_url
+                        )
+                        same_checksum = previous.get("sha256") == existing_digest
+                        if not same_resource or not same_checksum:
+                            raise RuntimeError(
+                                "Local filename collision or stale provenance: existing CSV is not "
+                                "verified as this exact resource. Use a clean output directory or "
+                                "remove the unverified local file before retrying."
+                            )
                         entry.update({"status": "already_downloaded", "local_path": str(destination),
-                                      "bytes": destination.stat().st_size, "sha256": digest})
+                                      "bytes": destination.stat().st_size, "sha256": existing_digest})
                     else:
                         size, digest = download(session, download_url, destination)
                         entry.update({"status": "downloaded", "local_path": str(destination),
