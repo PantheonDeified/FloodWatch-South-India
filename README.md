@@ -24,6 +24,32 @@ The separate [regional multi-station LSTM workflow](https://github.com/PantheonD
 
 See [verified ML metrics and code tests](docs/ML_VALIDATION_SNAPSHOT.md), [ML upgrade plan](docs/ML_UPGRADE_PLAN.md), and the [model card](data_pipeline/SUBMISSION_MODEL_CARD.md).
 
+## Problems FloodWatch targets
+
+- **Fragmented flood information:** brings weather, radar, river-flow model context, public water observations and official warning links into one map-led workflow.
+- **Late awareness:** helps users notice changing rainfall/river conditions and quickly reach the relevant official advisory.
+- **Data uncertainty:** exposes source timestamps, provenance and known limitations so stale or modelled data are not mistaken for direct observations.
+- **Human factors in flood impact:** planned infrastructure-accountability layer for public records about reservoir operations, embankments, drainage maintenance, floodplain changes and road closures.
+
+## How early warning should work
+
+1. Ingest timestamped rainfall forecasts/observations, radar, river gauges, published reservoir updates, cyclone advisories and official warnings.
+2. Validate units, station identity, source and freshness. A stale feed means **risk unknown**, not safe.
+3. Combine multiple signals with locally validated hydrological models; never use a neural network as the sole authority.
+4. Use locally approved thresholds tested against historical events, and clearly distinguish a modelled watch from an official warning.
+5. After authorization and end-to-end testing, alerts could be sent by opt-in web/app/SMS/email with location, issue time, evidence, uncertainty, official guidance and source links.
+6. Evaluate lead time, missed events, false alarms, delivery success and correction/cancellation handling.
+
+## Human-made infrastructure and accountability
+
+A future infrastructure evidence register should link each record to an authoritative public source, location, issuing agency, publication/observation time, last verification time, status and correction history. Candidate records include published reservoir level/release updates, official inspection or maintenance notices, verified embankment concerns, drainage maintenance/blockage reports, official floodplain/land-use records, road closures and verified shelters.
+
+**Important safeguards:** reservoir level alone cannot establish structural strength; this requires qualified engineering assessment and competent-authority records. A release occurring before a flood does not by itself prove causation. Distinguish unverified reports from agency-confirmed facts, avoid unsupported accusations, and do not publish sensitive infrastructure-security information.
+
+**Current boundary:** map/weather/radar/wind/cyclone context, historical rainfall context, external modelled river-flow context, public water-observation exploration, data-quality pipeline and experimental discharge LSTMs exist in the project. A validated local risk engine, automated geofenced alert delivery and the infrastructure evidence register are not yet claimed as implemented. Open-Meteo/GloFAS forecasts are external model products, not predictions from FloodWatch's LSTM.
+
+See the [early-warning and accountability design](docs/EARLY_WARNING_AND_ACCOUNTABILITY.md) for the intended workflow and limitations.
+
 ## Current frontend capabilities
 
 - Interactive Leaflet map with street, terrain and satellite basemaps.
