@@ -280,8 +280,8 @@ def main():
     scaler_path.write_text(json.dumps({
       "version":1,"target_transform":"log1p","global_log1p_mean":mu,"global_log1p_std":sd,
       "lookback_days":args.lookback_days,"lead_days":args.lead_days,
-      "input_features":["scaled_log1p_discharge","observation_mask","day_of_year_sin","day_of_year_cos","latitude_div_90","longitude_div_180"],
-      "latitude_scaling":"latitude_degrees / 90","longitude_scaling":"longitude_degrees / 180"
+      "input_features":["scaled_log1p_discharge","observation_mask","day_of_year_sin","day_of_year_cos","latitude_degrees_raw","longitude_degrees_raw"],
+      "latitude_scaling":"raw degrees clipped to [-90,90]; no division","longitude_scaling":"raw degrees clipped to [-180,180]; no division"
     },indent=2),encoding="utf-8")
     report={"model_type":"regional multi-station masked-input LSTM","status":"experimental_research_only",
       "states":STATES,"source_station_count":int(df.station_id.nunique()),"stations_with_windows":len(used),
