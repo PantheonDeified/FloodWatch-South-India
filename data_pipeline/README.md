@@ -55,6 +55,8 @@ The official CWC telemetry portal currently lists historical archive resources f
 
 By default it searches the official CWC water-level telemetry, daily river-discharge, and daily rainfall dataset pages for South India state/basin resources across available historical periods. The portal lists older archive periods for daily discharge in Andhra Pradesh, Karnataka, Kerala, Tamil Nadu and Telangana, plus newer 2021–2025 and 2026–2030 resources; each file still requires inspection for actual station coverage and valid rows. It records the dataset page, each resource page, exact download URL, byte count and SHA-256 in a local `manifest.json`. Add other official NWDP dataset pages with repeated `--source-url` arguments. Raw archives are intentionally not committed to Git; they may be large and have their own metadata/usage conditions.
 
+You can also run this download from GitHub without installing Python locally: open the repository's **Actions** tab, choose **Download historical South India hydrology data**, select **Run workflow**, and download the `floodwatch-south-india-historical-hydrology` artifact when it completes. The artifact is temporary (7-day retention) and contains raw source files plus checksums/URLs; it is not yet a cleaned model-training dataset.
+
 After downloading, inspect a specific file before deciding which columns and units to normalize:
 
     python data_pipeline/scripts/inspect_cwc_csv.py --input data_pipeline/raw/nwdp_history/<file>.csv --date-column "Date"
