@@ -2,33 +2,56 @@
 
 Last repository review: 2026-10-18.
 
-## Accurate status for a Datathon demo
+## Accurate status for a demo
 
-FloodWatch has a reproducible **single-station discharge-only LSTM pilot** and a live end-to-end GitHub Actions training run. It is not yet an operational or validated South India flood-forecasting model.
+FloodWatch has a completed experimental single-station LSTM pilot and a completed regional multi-station discharge LSTM training run. A subsequent feature-branch run is adding an inference smoke test that loads model weights plus preprocessing scalers and emits a research-only seven-day output. Neither model is validated for public flood warnings, and neither model is connected to or deployed on the public map.
 
 | Capability | Status | Evidence |
 |---|---|---|
-| Local neural network architecture | Prototype code + guarded inference | `scripts/train_discharge_lstm.py` and `scripts/predict_discharge_lstm.py` implement a discharge-only PyTorch LSTM; `scripts/train_streamflow_lstm.py` is the separate weather-plus-discharge research path. |
-| General ML event classifier | Prototype code exists | `scripts/train_event_ml.py` implements a scikit-learn classifier with chronological evaluation and a decision threshold selected on validation data only. |
-| Trained local model / saved weights | Training workflow in progress; artifacts are run outputs | [Train FloodWatch discharge LSTM](../.github/workflows/train-discharge-lstm.yml) downloads CWC/NWDP discharge archives, normalizes source rows, trains a selected station, and uploads model/scalers/metrics as a temporary artifact. No weights are auto-deployed. |
-| Historical measured training observations | Available for a research pilot; station/event review remains | The CWC/NWDP archive pipeline produces normalized historical discharge with source metadata and quality reports. The pilot uses a high-coverage Yadgir station record; it is not yet a curated multi-basin training corpus. |
-| External river-flow forecast | Present in frontend | Open-Meteo Flood API / GloFAS model estimates, not a FloodWatch-trained NN and not a direct gauge observation. |
-| Validated flood probability | Not available | No calibrated, out-of-time validation on verified South India flood events has been published. |
+| Regional neural-network weights | Trained artifact exists | [Regional training run #39122959850](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39122959850), artifact floodwatch-regional-lstm. |
+| Regional model evaluation | Completed on chronological holdout | 92,015 pooled test targets; LSTM RMSE 1,121.33 m³/s vs persistence 2,079.66 m³/s (46.1% lower pooled RMSE). This aggregate hides substantial station-level variance. |
+| Per-station robustness | Mixed; not a pass for deployment | 107 of 223 tested stations beat persistence on RMSE. Only 63 of 119 high-flow stations with a comparable baseline beat persistence on high-flow RMSE. |
+| Reproducible inference | Predictor script and workflow smoke-test step added on feature branch | data_pipeline/scripts/predict_regional_lstm.py uses the saved weights, saved scaling values and an eligible 90-day history. Re-check the latest workflow run before treating the smoke test as passed. |
+| Single-station neural-network pilot | Previously trained | Yadgir station holdout RMSE was 1,043.61 m³/s vs persistence 1,274.75 m³/s; high-flow NSE was −0.013, so extreme-flow reliability remains weak. |
+| ML event classifier | Prototype code exists | data_pipeline/scripts/train_event_ml.py implements a scikit-learn classifier with chronological evaluation. It needs reviewed event labels before flood-event claims. |
+| Calibrated flood probability / inundation map | Not available | Neither discharge LSTM estimates flood probability, water depth, inundation extent, evacuation routes nor household impact. |
 
-## Training strategy
+## Regional training configuration and metrics
 
-1. Acquire source-linked, station-identified CWC/state water-level and discharge records. Preserve each measurement's unit, source URL, timestamp, station ID and data quality. The discharge-only LSTM workflow now automates the CWC/NWDP download and normalization for the first station experiment.
-2. Build daily features from verified discharge plus rainfall/weather. Reanalysis products such as ERA5-Land must be labelled estimates, not gauge observations.
-3. Train per-gauge or multi-gauge model only where enough continuous discharge history exists. A water-level series cannot be silently substituted for discharge.
-4. Keep training/validation/test periods chronological. Compare the LSTM against a simple persistence baseline; report MAE/RMSE/NSE, skill versus persistence, and quantify missing-data coverage. Do not promote the model if it fails to beat the baseline.
-5. Train a separate flood-event classifier only with reviewed positive and negative labels tied to cited event records. “No record found” is not automatically a negative flood label.
-6. The discharge-only LSTM report compares against persistence and includes a peak-period diagnostic. Use `predict_discharge_lstm.py` only with matching weights/scalers and a complete recent history; stale observations are explicitly labelled. The weather-plus-discharge path uses `review_streamflow_model.py`. Neither path auto-deploys models. Publish and review a full model card before showing locally modelled estimates. Keep the GloFAS baseline separately labelled.
+The accelerated run used a 90-day input history, seven-day forecast horizon, a 48-unit single-layer LSTM, batch size 512, a maximum of six epochs, early-stopping patience two and two CPU threads. Training itself took 47.27 seconds after acquisition and normalization; total workflow wall-clock time is longer because official archive retrieval and normalization precede training.
 
-## Research baseline / references
+| Pooled chronological test metric | Regional LSTM | Persistence baseline |
+|---|---:|---:|
+| MAE (m³/s) | 93.46 | 106.03 |
+| RMSE (m³/s) | 1,121.33 | 2,079.66 |
+| NSE | 0.343 | −1.261 |
+| Test targets | 92,015 | 92,015 |
 
-- CWC/NWIC hourly river-level records: https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-central-water-commission-cwc
-- Open-Meteo Flood API (GloFAS modelled discharge): https://open-meteo.com/en/docs/flood-api
-- Google Research open flood-forecasting model implementations: https://github.com/google-research/flood-forecasting
-- Caravan hydrological dataset / data-pipeline reference: https://github.com/kratzert/Caravan
+The report uses 247 source station IDs and produced usable forecast windows for 236. The holdout spans from 2016-11-07 to the end of the available source period. Test windows are sampled across stations rather than exhaustive. Source station metadata and coordinate identity need additional audit. Pooled RMSE skill is not proof that most stations improve: only 107 of 223 test stations beat persistence on RMSE, and 63 of 119 comparable high-flow station subsets beat their baseline. Review each station and high-flow counts before making performance claims.
 
-**Do not claim parity with Google Flood Hub.** Its public open-source research implementation is not the entire production Flood Hub service. FloodWatch is a research prototype and is not an official warning system.
+Interpretation: the model is a meaningful training milestone, not an operational flood-prediction model. A physical discharge value, a station-relative high-flow threshold and an official flood-warning level are distinct concepts.
+
+## What the network uses
+
+The model's six daily sequence features are scaled log-transformed historical discharge, an observation mask, day-of-year sine/cosine, and station latitude/longitude. It predicts a seven-day discharge sequence. It does not consume rainfall forecast forcing, upstream/downstream river-network connectivity, validated catchment attributes or a hydraulic inundation model. It does not infer a dam's structural strength.
+
+The separate frontend risk score is not the LSTM: it currently uses Open-Meteo gridded forecast inputs, GloFAS discharge-model context and sufficiently fresh gauge history, plus manually entered source-linked human-made incidents when evidence meets documented guardrails. NASA IMERG imagery is visual context, not silently mixed into the numeric score. Risk contour colours are an experimental project-defined score, not a calibrated probability.
+
+## Guardrails before deployment
+
+1. Keep train/validation/test time order and fit scaling values only on training-period records.
+2. Retain source URLs, station identity, units, valid time and quality flags; a data-archive time range alone is not enough.
+3. Report pooled, station-specific, lead-specific and high-flow metrics against a persistence baseline. Here the pooled result improves while many individual stations and a substantial fraction of high-flow subsets do not.
+4. Independently validate station coordinates, basin/routing relationships, high-flow events, data freshness and uncertainty.
+5. Keep model output disconnected from the public risk map until a reviewed inference service, monitoring, uncertainty and clear model status are in place.
+6. Never treat missing input as zero, green/safe, or evidence of no flood. Official IMD, CWC and state disaster-management warnings remain authoritative.
+
+## Research references
+
+- CWC/NWIC river telemetry: https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-central-water-commission-cwc
+- Open-Meteo Flood API / GloFAS context: https://open-meteo.com/en/docs/flood-api
+- Google Research flood-forecasting implementation: https://github.com/google-research/flood-forecasting
+- Caravan hydrological data reference: https://github.com/kratzert/Caravan
+- HydroBASINS catchment polygons: https://www.hydrosheds.org/products/hydrobasins
+
+Do not claim parity with Google Flood Hub. Its public open-source research code is not the entire production service. FloodWatch remains a research prototype and is not an official warning system.
