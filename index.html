@@ -941,22 +941,35 @@ function gaugeSignalForCell(cell){
  }
  return best;
 }
-function computeRiskScore(cell,weather){
- if(!weather||weather.failed)return {score:null,level:'unknown',reason:'Forecast unavailable'};
- const h=weather.hourly||{},precip=Array.isArray(h.precipitation)?h.precipitation.map(Number):[];
+function computeRiskScore(cell,bundle){
+ const weather=bundle?.weather&&!bundle.weather.failed?bundle.weather:null;
+ const h=weather?.hourly||{},precip=Array.isArray(h.precipitation)?h.precipitation.map(Number):[];
  const prob=Array.isArray(h.precipitation_probability)?h.precipitation_probability.map(Number):[];
- const rain24=precip.slice(0,24).filter(Number.isFinite);
- const rain72=precip.slice(0,72).filter(Number.isFinite);
- const p24=prob.slice(0,24).filter(Number.isFinite);
- const current=Number(weather.current?.precipitation);
- const components=[];
+ const rain24=precip.slice(0,24).filter(Number.isFinite),rain72=precip.slice(0,72).filter(Number.isFinite),p24=prob.slice(0,24).filter(Number.isFinite);
+ const current=Number(weather?.current?.precipitation),components=[];
  if(rain24.length>=12)components.push({weight:40,value:40*clamp01(rain24.reduce((a,b)=>a+b,0)/100)});
  if(rain72.length>=36)components.push({weight:30,value:30*clamp01(rain72.reduce((a,b)=>a+b,0)/150)});
  if(p24.length>=12)components.push({weight:15,value:15*clamp01(Math.max(...p24)/100)});
  if(Number.isFinite(current)&&current>=0)components.push({weight:15,value:15*clamp01(current/20)});
- if(components.length<2)return {score:null,level:'unknown',reason:'Insufficient forecast fields'};
- const weight=components.reduce((s,x)=>s+x.weight,0);
- let score=components.reduce((s,x)=>s+x.value,0)/weight*100;
+ const rainWeight=components.reduce((s,x)=>s+x.weight,0);
+ const rainScore=rainWeight?components.reduce((s,x)=>s+x.value,0)/rainWeight*100:null;
+
+ // Compare the raw 7-day GloFAS flow outlook with the last ~90 available days
+ // at this coordinate. This percentile is calculated here, not copied from any risk map.
+ const daily=bundle?.flow?.daily||{},times=Array.isArray(daily.time)?daily.time:[],flows=Array.isArray(daily.river_discharge)?daily.river_discharge.map(Number):[];
+ const today=new Date().toISOString().slice(0,10),history=[],future=[];
+ times.forEach((date,i)=>{const val=flows[i];if(!Number.isFinite(val)||val<0)return;if(String(date)<today)history.push(val);else if(String(date)>today)future.push(val)});
+ let flowPercentile=null,flowForecastMax=null,flowHistoryCount=history.length,flowScore=null;
+ if(history.length>=20&&future.length>=1){
+  flowForecastMax=Math.max(...future.slice(0,7));
+  flowPercentile=100*history.filter(v=>v<=flowForecastMax).length/history.length;
+  flowScore=100*clamp01((flowPercentile-50)/50);
+ }
+ let score=null,componentsUsed=[];
+ if(rainScore!=null&&flowScore!=null){score=.75*rainScore+.25*flowScore;componentsUsed=['rainfall','rain probability','GloFAS 7-day flow vs recent history']}
+ else if(rainScore!=null){score=rainScore;componentsUsed=['rainfall','rain probability']}
+ else if(flowScore!=null){score=flowScore;componentsUsed=['GloFAS 7-day flow vs recent history']}
+ if(score==null)return {score:null,level:'unknown',reason:'No adequate forecast fields or flow history'};
  const gauge=gaugeSignalForCell(cell);
  if(gauge){
   if(gauge.percentile>=95)score+=25;
@@ -966,9 +979,10 @@ function computeRiskScore(cell,weather){
  }
  score=Math.max(0,Math.min(100,score));
  const level=score>=65?'red':score>=35?'amber':'green';
- return {score,level,components:components.length,weight,rain24:rain24.length>=12?rain24.reduce((a,b)=>a+b,0):null,
+ return {score,level,components:componentsUsed,rain24:rain24.length>=12?rain24.reduce((a,b)=>a+b,0):null,
   rain72:rain72.length>=36?rain72.reduce((a,b)=>a+b,0):null,
-  probability24:p24.length>=12?Math.max(...p24):null,current:Number.isFinite(current)?current:null,gauge,weatherTime:weather.current?.time||null};
+  probability24:p24.length>=12?Math.max(...p24):null,current:Number.isFinite(current)?current:null,
+  flowPercentile,flowForecastMax,flowHistoryCount,gauge,weatherTime:weather?.current?.time||null};
 }
 function riskLevelColor(level){return level==='red'?'#ef4444':level==='amber'?'#f59e0b':level==='green'?'#22c55e':'#64748b'}
 function riskLevelShort(level){return level==='red'?'High signal':level==='amber'?'Elevated':level==='green'?'Lower signal':'Unknown'}
@@ -980,8 +994,9 @@ function riskCellPopup(cell,result){
  if(result.rain72!=null)lines.push('Rain next 72h: '+result.rain72.toFixed(1)+' mm');
  if(result.probability24!=null)lines.push('Rain chance (24h): '+Math.round(result.probability24)+'%');
  if(result.current!=null)lines.push('Current model rain: '+result.current.toFixed(1)+' mm/h');
- if(result.gauge)lines.push('Nearest fresh river gauge: '+Math.round(result.gauge.distanceKm)+' km · own-history percentile '+Math.round(result.gauge.percentile)+'%'+(result.gauge.rising?' · rising':''));
- if(result.weatherTime)lines.push('Model time: '+result.weatherTime+' UTC');
+ if(result.flowPercentile!=null)lines.push('GloFAS 7-day flow peak: '+Math.round(result.flowPercentile)+'th percentile of '+result.flowHistoryCount+' recent days');
+ if(result.gauge)lines.push('Nearby fresh gauge: '+Math.round(result.gauge.distanceKm)+' km · own-history percentile '+Math.round(result.gauge.percentile)+'%'+(result.gauge.rising?' · rising':''));
+ if(result.weatherTime)lines.push('Weather model time: '+result.weatherTime+' UTC');
  const detail=document.createElement('div');detail.textContent=lines.join(' · ')||result.reason||'No usable data';detail.style.maxWidth='260px';wrap.appendChild(detail);
  const note=document.createElement('small');note.textContent='FloodWatch experimental index, not an official warning or calibrated flood probability.';wrap.appendChild(note);
  return wrap;
@@ -1006,7 +1021,7 @@ function drawComputedRiskCells(cells,weatherRows,requestId){
   {color:'#f59e0b',text:'AMBER · Elevated (35–64)'},
   {color:'#22c55e',text:'GREEN · Lower signal (<35)'},
   {color:'#64748b',text:'GREY · Missing / insufficient data'}
- ],'Own score from raw forecast rain (24h/72h), 24h rain chance and current rain. A fresh nearby river gauge can raise it using its own history. Experimental, not a calibrated flood probability.','https://open-meteo.com/en/docs');
+ ],'Own score from raw 24h/72h rain forecasts, rain chance, GloFAS flow vs its recent 92-day history and fresh nearby gauge trends. Experimental, not a calibrated flood probability.','https://open-meteo.com/en/docs/flood-api');
  $('riskLegendNote').textContent+=' Grid cells: '+cells.length+' · red '+counts.red+' · amber '+counts.amber+' · green '+counts.green+' · unknown '+counts.unknown+'.';
 }
 async function setComputedRiskGrid(requestId){
@@ -1038,15 +1053,28 @@ async function setComputedRiskGrid(requestId){
      daily:'precipitation_sum,precipitation_probability_max',
      forecast_days:'3',timezone:'UTC'
     });
-    try{
-     const response=await fetch('https://api.open-meteo.com/v1/forecast?'+params.toString(),{cache:'no-store'});
-     if(!response.ok)throw Error('Open-Meteo HTTP '+response.status);
-     const payload=await response.json(),points=Array.isArray(payload)?payload:[payload];
-     if(points.length!==batch.length)throw Error('Forecast point count mismatch');
-     points.forEach((point,j)=>{weatherRows[offset+j]=point});
-    }catch(e){failedBatches++;batch.forEach((_,j)=>{weatherRows[offset+j]={failed:true,error:e.message}})}
+    const flowParams=new URLSearchParams({
+     latitude:batch.map(x=>x.lat.toFixed(3)).join(','),
+     longitude:batch.map(x=>x.lon.toFixed(3)).join(','),
+     daily:'river_discharge',past_days:'92',forecast_days:'7',timezone:'GMT',models:'seamless_v4'
+    });
+    const [weatherResult,flowResult]=await Promise.allSettled([
+     fetch('https://api.open-meteo.com/v1/forecast?'+params.toString(),{cache:'no-store'}).then(async response=>{if(!response.ok)throw Error('Weather API HTTP '+response.status);return response.json()}),
+     fetch('https://flood-api.open-meteo.com/v1/flood?'+flowParams.toString(),{cache:'no-store'}).then(async response=>{if(!response.ok)throw Error('GloFAS Flood API HTTP '+response.status);return response.json()})
+    ]);
+    const weatherPoints=weatherResult.status==='fulfilled'?(Array.isArray(weatherResult.value)?weatherResult.value:[weatherResult.value]):[];
+    const flowPoints=flowResult.status==='fulfilled'?(Array.isArray(flowResult.value)?flowResult.value:[flowResult.value]):[];
+    if(weatherPoints.length!==batch.length){failedBatches++}
+    if(flowPoints.length!==batch.length){/* GloFAS may not return usable river data at every location. */}
+    batch.forEach((_,j)=>{
+     const weatherPoint=weatherPoints[j]||null,flowPoint=flowPoints[j]||null;
+     weatherRows[offset+j]={
+      weather:weatherPoint||{failed:true,error:weatherResult.status==='rejected'?String(weatherResult.reason):'Weather point missing'},
+      flow:flowPoint
+     };
+    });
     completed++;
-    $('riskLegendNote').textContent='Analysing regional rainfall grid '+completed+'/'+batches.length+' batches…';
+    $('riskLegendNote').textContent='Analysing raw rainfall and river-flow data '+completed+'/'+batches.length+' regional batches…';
    }
   }
   await Promise.all([worker(),worker(),worker()]);
