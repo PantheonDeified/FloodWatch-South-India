@@ -71,7 +71,7 @@ jobs:
 
       - name: Check optional live backend API
         env:
-          BACKEND_BASE_URL: ${{ inputs.backend_base_url }}
+          BACKEND_BASE_URL: ${{ github.event.inputs.backend_base_url || '' }}
         run: |
           python - <<'PY'
           import json
