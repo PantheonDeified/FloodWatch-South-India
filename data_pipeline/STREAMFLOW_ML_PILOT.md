@@ -1,47 +1,41 @@
 # FloodWatch streamflow ML pilot
 
-## What the neural network does
+## What is implemented
 
-The pilot is a **single-gauge LSTM (Long Short-Term Memory) regression model**. It reads 90 days of aligned daily historical weather and observed river discharge and predicts the next 7 daily discharge values (m³/s). The horizon and lookback can be changed in the workflow inputs.
+FloodWatch now has a reproducible **single-station LSTM neural-network training workflow** that downloads CWC/NWDP historical river-discharge archives, normalizes the source rows with provenance, trains a PyTorch model, and evaluates it on a later chronological test period.
 
-It is a research baseline, not Google's production Flood Forecasting model, and it does not currently predict flood probability, water depth, or inundation area. It also does not use future weather forecasts.
-
-## Data required before training
-
-The feature CSV must be produced and reviewed using the pipeline scripts. It must contain these columns:
-
-- Identity/time: `station_id`, `date`
-- Weather: `precipitation_sum`, `temperature_2m_mean`, `temperature_2m_max`, `temperature_2m_min`, `wind_speed_10m_max`
-- Rainfall history: `rain_sum_3d_mm`, `rain_sum_7d_mm`, `rain_sum_14d_mm`, `rain_sum_30d_mm`
-- Target: `river_discharge_last_m3s`
-
-The target must be **observed river discharge in m³/s**. Do not train this model on river level, reservoir level, mixed measurement types, synthetic data, or records with unverified units. Check station identifiers, source URLs, timestamp semantics, coordinate provenance, missing intervals, and station/catchment mapping before training.
-
-Keep raw archives and large data files out of Git when possible. For the current workflow, put a reviewed feature CSV in the repository at `data_pipeline/training_data/features.csv` or set the workflow's `features_path` to another repository-relative CSV path. Do not commit sensitive credentials.
+The first version uses the previous 90 days of **daily maximum observed river discharge** to predict the next 7 daily maxima. This makes it possible to start neural-network experiments without pretending that the current 407-record snapshot is a training dataset or waiting for rainfall/weather data to be spatially matched. It is an initial autoregressive baseline, not the final flood forecasting system.
 
 ## Run it
 
-1. Open [Train and evaluate streamflow LSTM](../actions/workflows/train-streamflow-lstm.yml).
-2. Choose **Run workflow**.
-3. Set `station_id` to an exact identifier in the feature CSV.
-4. Keep the default 90-day lookback and 7-day horizon for the first experiment.
-5. Open the run and download the `floodwatch-lstm-...` artifact.
+1. Open [Train FloodWatch discharge LSTM](../actions/workflows/train-discharge-lstm.yml).
+2. Select **Run workflow**.
+3. The default station is `karnataka|yadgir|16.73750000|77.12527778`, chosen because the current station audit shows a long, high-coverage record. You can select another exact station ID from the generated audit.
+4. Keep the 90-day lookback, 7-day horizon and 80 maximum epochs for the first run.
+5. Download the run artifact containing the trained model, scalers, metrics report and data-quality report.
 
-The workflow audits readiness, trains the LSTM with chronological train/validation/test splits, compares it against a persistence baseline (repeat the latest observed discharge), applies a review gate, and uploads the report/model/scalers. It intentionally does not deploy the model automatically.
+The model artifacts are not automatically committed or deployed. The workflow can take several minutes because it downloads and normalizes the historical archive before training.
 
-## Acceptance criteria
+## Model and evaluation
 
-- At least 100 complete sequence windows and adequate train/validation/test windows.
-- No silent filling of missing observations or calendar gaps.
-- Normalization is fitted on training data only.
-- Report includes MAE, RMSE, NSE, and persistence-baseline comparison on the held-out chronological test period.
-- Do not present the model as useful unless it beats persistence on test RMSE and the result is reviewed across meaningful high-flow events.
-- Passing a software gate is not proof of hydrological validity or a public-warning capability.
+- Architecture: one-layer PyTorch LSTM followed by a dense multi-output head.
+- Inputs: previous daily maximum observed discharge only; no weather features in this first experiment.
+- Target: daily maximum discharge in m³/s, preserving higher observations when a source has multiple readings on a calendar day.
+- Missing calendar days remain missing. Sequence windows containing gaps are excluded rather than interpolated or zero-filled.
+- The chronological split is 70% training, 15% validation and 15% testing by calendar time. Scaling is fitted on training windows only.
+- Test metrics include MAE, RMSE, Nash–Sutcliffe efficiency (NSE), and a persistence baseline that repeats the latest observed discharge for all forecast days.
+- A peak-period diagnostic is included using the 90th percentile of the training targets. This is a model diagnostic, **not** an official flood threshold.
 
-## Next scientific upgrades
+## Important limitations
 
-1. Build a multi-gauge, basin-aware dataset with verified upstream connectivity.
-2. Add forecast weather inputs from a documented provider and align issue time vs valid time to prevent leakage.
-3. Evaluate event-based lead-time skill, uncertainty intervals, high-flow performance and seasonal transfer.
-4. Compare LSTM with persistence, linear/ridge and tree-based baselines before choosing the final architecture.
-5. Only after validation, integrate outputs into the map as clearly labelled experimental discharge estimates, not official warnings.
+This is a research model, not Google's production Flood Forecasting model. It does not currently predict rainfall-driven runoff, flood probability, water depth, inundation extent, or official warnings. It must not be presented as operational until the source station, units and event periods are reviewed and it demonstrates skill on independent high-flow events. Station timestamps are kept as reported because source timezone semantics are unspecified.
+
+The downloaded CWC archives include gaps and duplicate observations. The normalization and station audit reports must be reviewed alongside the model metrics. Good average RMSE alone is not sufficient if peak-flow performance is poor.
+
+## Next ML milestones
+
+1. Run the first station experiment and inspect the report and peak-period metrics.
+2. Train at several stations across Krishna, Cauvery, Godavari and west-flowing basins; compare against persistence and simpler ML baselines.
+3. Add historical rainfall aligned to verified station coordinates and valid times; later add forecast rainfall from a documented forecast source.
+4. Build a multi-gauge/basin-aware model and evaluate flood-event recall, lead-time skill and uncertainty.
+5. Only after independent validation, show experimental estimates on the map with clear provenance and status labels.
