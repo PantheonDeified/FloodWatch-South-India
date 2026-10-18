@@ -17,7 +17,8 @@ import sys
 import geopandas as gpd
 import pandas as pd
 
-OFFICIAL_SOURCE = 'https://data.hydrosheds.org/file/hydrobasins/standard/hybas_as_lev01-12_v1c.zip'
+OFFICIAL_SOURCE = 'https://services2.arcgis.com/PYn6bWCjT6bhw1z3/ArcGIS/rest/services/Global_Loaches_2022_WFL1/FeatureServer/2/query'
+ARCGIS_LAYER = 'https://services2.arcgis.com/PYn6bWCjT6bhw1z3/ArcGIS/rest/services/Global_Loaches_2022_WFL1/FeatureServer/2'
 ATTRIBUTION = 'HydroBASINS v1c, Lehner & Grill (2013), HydroSHEDS; https://www.hydrosheds.org/products/hydrobasins'
 
 def find_field(columns, options):
@@ -105,18 +106,21 @@ def build_layer(basin_path: pathlib.Path, states_path: pathlib.Path, output_path
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--basins-zip', required=True, type=pathlib.Path)
+    source_group = parser.add_mutually_exclusive_group(required=True)
+    source_group.add_argument('--basins-zip', type=pathlib.Path, help='Official HydroBASINS Asia ZIP, when directly downloadable.')
+    source_group.add_argument('--basins-geojson', type=pathlib.Path, help='Regional GeoJSON queried from the documented HydroBASINS feature service.')
     parser.add_argument('--states', type=pathlib.Path, default=pathlib.Path('data/south-india-states.geojson'))
     parser.add_argument('--output', type=pathlib.Path, default=pathlib.Path('data/south-india-basins.geojson'))
     parser.add_argument('--metadata', type=pathlib.Path, default=pathlib.Path('data/south-india-basins.metadata.json'))
     parser.add_argument('--simplify-degrees', type=float, default=0.012)
     args = parser.parse_args()
-    if not args.basins_zip.is_file():
-        raise SystemExit(f'Basins ZIP not found: {args.basins_zip}')
+    source_path = args.basins_zip or args.basins_geojson
+    if source_path is None or not source_path.is_file():
+        raise SystemExit(f'Basin source file not found: {source_path}')
     if args.simplify_degrees <= 0 or args.simplify_degrees > 0.1:
         raise SystemExit('--simplify-degrees must be >0 and <=0.1 degrees.')
     with tempfile.TemporaryDirectory(prefix='floodwatch-hydrobasins-') as temp:
-        shape = extract_shapefile(args.basins_zip, pathlib.Path(temp))
+        shape = extract_shapefile(args.basins_zip, pathlib.Path(temp)) if args.basins_zip else args.basins_geojson
         metadata = build_layer(shape, args.states, args.output, args.simplify_degrees)
     args.metadata.parent.mkdir(parents=True, exist_ok=True)
     args.metadata.write_text(json.dumps(metadata, indent=2) + '\n', encoding='utf-8')
