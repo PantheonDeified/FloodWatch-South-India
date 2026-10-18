@@ -14,7 +14,7 @@ The project lead is handling the tasks that were originally split between teamma
 - The cyclone overlay now calls GDACS when selected, and a spatial wind overlay has been added to the frontend. These new changes still need a browser end-to-end test after GitHub Pages publishes them.
 - Water snapshot now reports source/resource errors, unit counts, state coverage and timestamp quality. Latest successful collector run published 407 records from 37 resources; eight resources had no usable records, with zero source-page/resource errors in that run.
 - Historical CWC discharge/rainfall downloader, raw-archive checksum manifest, schema inspection script, station-level quality audit, unverified-coordinate station catalogue, common observation-schema adapter, and a manual GitHub Actions workflow that uploads raw/processed artifacts for seven days. A research-readiness queue now ranks stations for manual review and deliberately blocks coordinate-based weather joins until the coordinate and source URL are independently verified. Exact resource-page and download URLs plus raw-file SHA-256 are now preserved per normalized row and checked by a fail-closed provenance validator; the downloader's CSV filenames are collision-safe across resource URLs. A preliminary audit summary is documented in `docs/cwc-discharge-review.md`.
-- Research ML path includes a single-gauge PyTorch LSTM, persistence-baseline comparison, guarded inference, per-station readiness audit, and a separately labelled event classifier. No trained/validated FloodWatch model artifact exists.
+- Research ML path: a single-gauge PyTorch LSTM for Yadgir, Karnataka, trained successfully and its saved weights passed the inference smoke test in [run #39115932750](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39115932750). On the earlier chronological holdout, RMSE was 1,043.61 m³/s versus 1,274.75 m³/s for persistence, but high-flow NSE was -0.013. This is a real experimental artifact, **not** a validated public flood-warning model. Regional multi-station run #39114366885 was cancelled during training and must be rerun and evaluated.
 
 ## Highest priority: verify the complete experience
 
@@ -28,12 +28,19 @@ The project lead is handling the tasks that were originally split between teamma
 
 ## Longer-term engineering work — not yet completed
 
-- Re-run the [historical archive workflow](https://github.com/PantheonDeified/FloodWatch-South-India/actions/workflows/download-historical-hydrology.yml) after the latest review-queue update, download the new artifact, inspect the station audit/readiness queue and curate a gauge dataset with documented units and source provenance. The earlier archive run passed, but it predates the new queue step.
+- Re-run the [historical archive workflow](https://github.com/PantheonDeified/FloodWatch-South-India/actions/workflows/download-historical-hydrology.yml) after the latest review-queue update, inspect the station audit/readiness queue and curate a gauge dataset with documented units and source provenance.
+- Re-run the regional multi-station LSTM after fixing workflow cancellation behavior; inspect its actual evaluation artifact and per-lead metrics.
 - Validate station-to-catchment and upstream/downstream river connections using reviewed geographic data.
-- Establish baseline streamflow forecasts and only then train/evaluate an LSTM or other local model on suitable discharge data and aligned weather inputs.
+- Extend the successful single-station discharge-only LSTM with verified, time-aligned rainfall/weather inputs, then evaluate high-flow and flood-event performance before considering any warning integration.
 - Build a separately validated flood-event or flash-flood model with reviewed positive/negative labels.
 - Add inundation extent/depth mapping only when a suitable validated hydrology/hydraulics model and flood footprints are available.
 - Add alerts/notifications only after thresholds, reliability, delivery and official-warning handoff are designed and tested.
+
+## Early warning and infrastructure accountability
+
+- The workflow and safeguards are documented in [docs/EARLY_WARNING_AND_ACCOUNTABILITY.md](docs/EARLY_WARNING_AND_ACCOUNTABILITY.md). The dashboard currently explains this plan; it does not yet run a validated alert engine or maintain a server-side evidence register.
+- Next accountability deliverable: source-linked public records for dam/reservoir bulletins, latest inspection date/status, embankment/drainage maintenance reports, land-use records, and official warning/response timelines. Missing inspection information must be marked **not verified**. Never infer structural strength from water level or assign blame without a competent investigation.
+- Before operational alerts: locally approved thresholds, IMD/CWC/state cross-checking, event-based validation, false-alarm/missed-event analysis, human review, delivery testing and audit logs.
 
 ## Source links
 
