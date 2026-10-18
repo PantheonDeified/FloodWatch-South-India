@@ -11,7 +11,7 @@ This is a short task list for tonight. You can do the work yourself or paste you
 - Historical rainfall comparisons using ERA5-Land.
 - Modelled river-discharge context using Open-Meteo Flood API/GloFAS.
 - Water-observation table interface, filters, and a rainfall-to-river evidence chain.
-- GitHub Pages project and a basic FastAPI backend on IBM LinuxONE. The health endpoint has returned `healthy` through the temporary HTTPS tunnel. A configurable backend-check panel has been added to the frontend.
+- GitHub Pages project and a FastAPI backend on IBM LinuxONE. The health and status endpoints returned JSON through the temporary HTTPS tunnel. The versioned `backend/main.py` now includes a South-India-bounded Open-Meteo weather proxy; it still needs to be deployed to the running Linux server and tested.
 
 These features still need end-to-end testing. A feature in the code does not automatically mean every live data source is currently working.
 
@@ -46,11 +46,11 @@ These features still need end-to-end testing. A feature in the code does not aut
 
 ## Project lead — Frontend, map, and backend
 
-1. Open the published website and verify that the new backend connection panel appears after GitHub Pages redeploys.
-2. Paste the current HTTPS Quick Tunnel URL and test both `/health` and `/api/v1/status`; confirm both JSON responses in the browser panel.
-3. Keep the Linux API and Quick Tunnel running during the demo. The temporary URL is not a permanent deployment.
-4. Integrate teammates’ verified outputs only after reviewing their pull requests.
-5. Check errors, data timestamps, and locations across all five states, then prepare a short demo showing what is working and what is experimental.
+1. Deploy `backend/main.py` to the IBM LinuxONE server by following `backend/README.md`; preserve the existing `main.py` backup and run `python -m py_compile` before restarting.
+2. Test `GET /api/v1/weather?latitude=19.15&longitude=77.30` locally and through the HTTPS tunnel; confirm the JSON contains `current`, `hourly`, and `_floodwatch` metadata.
+3. Open the published website and verify the backend panel appears after GitHub Pages redeploys. Paste the current HTTPS tunnel URL, test `/health` and `/api/v1/status`, then select a map point and confirm the status says `FloodWatch API → Open-Meteo` (rather than direct fallback).
+4. Keep the Linux API and Quick Tunnel running during the demo; the temporary URL is not a permanent deployment.
+5. Integrate teammates’ verified outputs only after reviewing their pull requests; then check timestamps and locations across all five states.
 
 **Important:** Do not hardcode a temporary Cloudflare URL as a permanent endpoint. A Quick Tunnel URL only works while the tunnel is running and is not a reliable production deployment.
 
