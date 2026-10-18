@@ -440,6 +440,7 @@ async function loadWaterObservations(){
   $('waterSnapshotStatus').textContent='Public station snapshot unavailable: '+e.message+'. Use the official source links below to check readings.';
   $('waterMeta').textContent='No water observations are displayed until a valid snapshot can be loaded.';
   waterSnapshot={observations:[],series:[]};
+  renderWaterStations();
   renderWaterObservations();
  }
 }
