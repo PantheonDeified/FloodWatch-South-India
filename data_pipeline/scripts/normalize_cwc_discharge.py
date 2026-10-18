@@ -33,18 +33,46 @@ def parse_time(raw: str) -> str:
     return ""
 
 
+def load_source_metadata(manifest_path: pathlib.Path | None) -> dict[str, dict[str, str]]:
+    """Map each downloaded filename to its exact NWDP resource provenance."""
+    if manifest_path is None or not manifest_path.is_file():
+        return {}
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    metadata: dict[str, dict[str, str]] = {}
+    for item in payload.get("files", []):
+        if item.get("status") not in {"downloaded", "already_downloaded"}:
+            continue
+        local_name = pathlib.Path(str(item.get("local_path") or "")).name
+        if not local_name:
+            continue
+        entry = {
+            "source_resource_title": str(item.get("title") or "").strip(),
+            "source_url": str(item.get("resource_page_url") or "").strip(),
+            "source_download_url": str(item.get("download_url") or "").strip(),
+            "source_dataset_url": str(item.get("dataset_page_url") or "").strip(),
+            "source_sha256": str(item.get("sha256") or "").strip(),
+        }
+        previous = metadata.get(local_name)
+        if previous is not None and previous != entry:
+            raise ValueError(f"Manifest has conflicting resource provenance for {local_name}")
+        metadata[local_name] = entry
+    return metadata
+
+
 def normalize(inputs: list[pathlib.Path], output: pathlib.Path, report_path: pathlib.Path,
-              source_url: str) -> dict:
+              source_url: str, source_metadata: dict[str, dict[str, str]] | None = None) -> dict:
     output.parent.mkdir(parents=True, exist_ok=True)
     report_path.parent.mkdir(parents=True, exist_ok=True)
     columns = ["station_id", "station_name", "state", "district", "river", "basin",
                "latitude", "longitude", "observed_at", "discharge_m3_s", "source_url",
-               "source_file", "source_timezone", "quality_flag"]
+               "source_download_url", "source_dataset_url", "source_resource_title", "source_sha256",
+               "source_provenance_status", "source_file", "source_timezone", "quality_flag"]
     stats = { "input_files": [], "rows_seen": 0, "rows_written": 0,
               "rows_rejected": 0, "reject_reasons": {}, "negative_values_rejected": 0,
               "missing_values_rejected": 0, "bad_timestamps_rejected": 0,
               "duplicate_station_timestamp_rows": 0, "stations": 0,
               "states": {}, "date_min": None, "date_max": None,
+              "source_provenance_by_file": {},
               "large_value_review_threshold_by_station": {},
               "notes": [
                 "Source timestamps are preserved as timezone-naive; archive timezone is unspecified.",
@@ -63,6 +91,18 @@ def normalize(inputs: list[pathlib.Path], output: pathlib.Path, report_path: pat
         writer.writeheader()
         for path in inputs:
             file_rows = 0
+            meta = (source_metadata or {}).get(path.name, {})
+            exact_resource_url = meta.get("source_url", "")
+            source_provenance_status = (
+                "manifest_exact_resource" if exact_resource_url and meta.get("source_download_url")
+                else ("manifest_partial_resource" if exact_resource_url or meta.get("source_download_url")
+                      else "dataset_page_fallback")
+            )
+            stats["source_provenance_by_file"][path.name] = {
+                **meta,
+                "source_url_used": exact_resource_url or source_url,
+                "provenance_status": source_provenance_status,
+            }
             with path.open("r", newline="", encoding="utf-8-sig", errors="replace") as src:
                 reader = csv.DictReader(src)
                 required = {"Station", "State", "District", "River", "Basin", "Latitude",
@@ -117,7 +157,13 @@ def normalize(inputs: list[pathlib.Path], output: pathlib.Path, report_path: pat
                         "river": (row.get("River") or "").strip(),
                         "basin": (row.get("Basin") or "").strip(), "latitude": lat, "longitude": lon,
                         "observed_at": observed, "discharge_m3_s": f"{value:.8g}",
-                        "source_url": source_url, "source_file": path.name,
+                        "source_url": exact_resource_url or source_url,
+                        "source_download_url": meta.get("source_download_url", ""),
+                        "source_dataset_url": meta.get("source_dataset_url", "") or source_url,
+                        "source_resource_title": meta.get("source_resource_title", ""),
+                        "source_sha256": meta.get("source_sha256", ""),
+                        "source_provenance_status": source_provenance_status,
+                        "source_file": path.name,
                         "source_timezone": "unspecified; timestamp preserved without timezone conversion",
                         "quality_flag": "retained_for_review" if value > 100000 else "unreviewed"
                     })
@@ -146,12 +192,22 @@ def main() -> int:
     parser.add_argument("--input-dir", type=pathlib.Path, required=True)
     parser.add_argument("--output", type=pathlib.Path, required=True)
     parser.add_argument("--report", type=pathlib.Path, required=True)
-    parser.add_argument("--source-url", default="https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-central-water-commission-cwc")
+    parser.add_argument("--source-url", default="https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-central-water-commission-cwc",
+                        help="Fallback dataset page URL when no exact resource entry exists in manifest.json.")
+    parser.add_argument("--manifest", type=pathlib.Path,
+                        help="Manifest path; defaults to manifest.json in --input-dir when present.")
     args = parser.parse_args()
     files = sorted(args.input_dir.glob("*.csv"))
     if not files:
         raise SystemExit(f"No CSV files found in {args.input_dir}")
-    report = normalize(files, args.output, args.report, args.source_url)
+    manifest_path = args.manifest if args.manifest is not None else args.input_dir / "manifest.json"
+    if args.manifest is not None and not args.manifest.is_file():
+        raise SystemExit(f"Manifest file not found: {args.manifest}")
+    try:
+        source_metadata = load_source_metadata(manifest_path if manifest_path.is_file() else None)
+        report = normalize(files, args.output, args.report, args.source_url, source_metadata)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        raise SystemExit(f"Could not normalize CWC discharge provenance/data: {exc}") from exc
     print(json.dumps({k: report[k] for k in ("rows_seen", "rows_written", "rows_rejected",
           "negative_values_rejected", "stations", "states", "date_min", "date_max")}, indent=2))
     return 0 if report["rows_written"] else 1
