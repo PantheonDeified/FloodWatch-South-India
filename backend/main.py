@@ -255,8 +255,8 @@ def model_status():
     """Report model readiness honestly; a source-code architecture is not a trained model."""
     return {
         "status": "research_pipeline_only",
-        "streamflow_lstm_code": "available",
-        "event_classifier_code": "available",
+        "streamflow_lstm_code": "research script in repository; not part of live inference service",
+        "event_classifier_code": "research script in repository; not part of live inference service",
         "trained_model_artifact": "not_deployed",
         "validated_south_india_flood_forecast": False,
         "required_before_inference": [
