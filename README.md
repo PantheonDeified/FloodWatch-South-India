@@ -50,14 +50,11 @@ This is an independent project, not affiliated with or endorsed by Google Flood 
 
 ## Optional IBM LinuxONE backend connection
 
-The basic FastAPI service can expose `/health` and `/api/v1/status`. The website's **FloodWatch backend connection** panel lets you paste the current HTTPS API URL and test both endpoints.
+The FastAPI service exposes `/health` and `/api/v1/status`; the versioned source is in [backend/main.py](backend/main.py). It also contains `GET /api/v1/weather?latitude=19.15&longitude=77.30`, a source-labelled proxy to Open-Meteo current conditions and hourly forecasts for the supported South India area.
 
-1. Start the API on the IBM LinuxONE server.
-2. Start Cloudflare Quick Tunnel to the API and keep both processes running.
-3. Open the published website, paste the `https://…trycloudflare.com` URL into the backend connection panel, and select **Test API**.
-4. Check that both endpoints return JSON. This is only a backend connectivity check; the API does not yet aggregate live flood data or serve a validated flood forecast.
+The frontend can try the backend weather endpoint when an HTTPS API base URL is configured in the current browser. If the endpoint is unavailable or not yet deployed, it falls back to the existing direct Open-Meteo request and labels that fallback. Follow [backend deployment instructions](backend/README.md) to update the IBM LinuxONE process to the versioned source, then use the website's backend connection panel to verify connectivity.
 
-The Quick Tunnel URL is temporary and may change whenever the tunnel is restarted. The website stores the URL in the current browser's local storage, not in the public repository. Never treat a Quick Tunnel as a production hosting setup; do not expose secrets or private data through this demo API.
+The temporary connection panel is a developer tool, not part of the intended final user experience. It stores the URL in the current browser's local storage, not in the public repository. The Quick Tunnel URL may change and has no uptime guarantee; do not treat it as production hosting, and never expose secrets or private data through this demo API. The backend does not yet aggregate all flood datasets or serve a validated FloodWatch flood forecast.
 
 ## Publish with GitHub Pages
 
