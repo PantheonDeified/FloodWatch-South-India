@@ -1,6 +1,7 @@
 name: Train FloodWatch regional discharge LSTM
 
 on:
+  workflow_dispatch: {}
   push:
     paths:
       - '.github/workflows/train-regional-lstm.yml'
@@ -13,7 +14,7 @@ permissions:
 
 concurrency:
   group: floodwatch-regional-discharge-lstm
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   regional-train:
