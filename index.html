@@ -213,6 +213,7 @@ const tiles={
  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:18,maxZoom:18,attribution:'Tiles © Esri'})
 };tiles.street.addTo(map);
 let marker=null,overlay=null,cycloneLayer=null,selected=null,activeOverlay='rain',currentBaseLayer='street',historyRequest=0,waterSnapshot=null,waterDisplayedRecords=[],waterStationsLayer=null,waterStationsEnabled=false;
+let riskFloodLayers=[],riskCycloneLayer=null,riskLayerRequest=0,riskCycloneRequest=0;
 const $=id=>document.getElementById(id),fmt=(v,u='',d=0)=>v==null?'—':Number(v).toFixed(d)+u;
 function updateZoomStatus(){
  // Leaflet can upscale tiles beyond their native zoom. The old warning incorrectly
@@ -808,6 +809,121 @@ async function loadCyclones(){
   $('overlayStatus').textContent='GDACS cyclone feed unavailable: '+e.message+'. Use the official IMD <a href="https://dss.imd.gov.in/dwr_img/GIS/marine.php" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">Cyclone Warning Decision Support System</a> and <a href="https://mausam.imd.gov.in/imd_latest/contents/cyclone.php" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">cyclone bulletins</a>.';
  }
 }
+
+const NRSC_HAZARD_WMS='https://bhuvan-ras2.nrsc.gov.in/mapcache?';
+const NRSC_HAZARD_LAYER_SPECS=[
+ {name:'ap_hz',area:'Andhra Pradesh'},
+ {name:'agg_karnataka',area:'Karnataka'},
+ {name:'agg_kerala',area:'Kerala'},
+ {name:'agg_tamilnadu',area:'Tamil Nadu'}
+];
+function clearRiskLayers(){
+ riskFloodLayers.forEach(layer=>{try{map.removeLayer(layer)}catch(e){}});
+ riskFloodLayers=[];
+ if(riskCycloneLayer){try{map.removeLayer(riskCycloneLayer)}catch(e){}riskCycloneLayer=null}
+}
+function riskLegend(mode,title,rows,note,sourceUrl){
+ $('riskMapLegend').hidden=mode==='off';
+ $('riskLegendTitle').textContent=title;
+ $('riskLegendContent').innerHTML=rows.map(r=>'<div class="risk-legend-row">'+
+   (r.color?'<span class="risk-swatch" style="background:'+escapeHtml(r.color)+'"></span>':'')+
+   '<span>'+escapeHtml(r.text)+'</span></div>').join('');
+ $('riskLegendNote').textContent=note;
+ $('riskLegendSource').href=sourceUrl;
+ $('riskLegendSource').textContent=(mode==='cyclone-threat'?'Open official GDACS event map ↗':'Open official NRSC flood-hazard atlas ↗');
+}
+function addHistoricalFloodHazard(){
+ const failed=[];
+ NRSC_HAZARD_LAYER_SPECS.forEach(spec=>{
+  const layer=L.tileLayer.wms(NRSC_HAZARD_WMS,{
+   layers:spec.name,styles:'',format:'image/png',transparent:true,version:'1.1.1',
+   opacity:.66,tileSize:256,attribution:'Historical flood hazard © NRSC/ISRO Bhuvan'
+  });
+  layer.on('tileerror',()=>{if(!failed.includes(spec.area))failed.push(spec.area)});
+  layer.addTo(map);
+  riskFloodLayers.push(layer);
+ });
+ const legendRows=[
+  {text:'Official NRSC hazard classes and their native map colours are retained; no colours are assigned by FloodWatch.'},
+  {text:'Mapped source coverage: Andhra Pradesh, Karnataka, Kerala and Tamil Nadu (layers verified in the service catalogue).'},
+  {text:'Telangana and any unmapped area: UNKNOWN / insufficient verified layer coverage — not marked green or safe.'}
+ ];
+ riskLegend('historical-flood','Historical flood hazard · NRSC/ISRO',legendRows,
+  'Historical inundation-derived hazard zonation (NRSC portal describes layers integrated from 1998–2019). This is background hazard, not a live flood forecast. Green/lower source classes do not guarantee safety. Current rain radar, river observations and cyclone alerts remain separately selectable.',
+  'https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty');
+ // Render the service's own legend. The image preserves its published colours/classes.
+ const imgUrl=NRSC_HAZARD_WMS+'SERVICE=WMS&VERSION=1.1.1&REQUEST=GetLegendGraphic&LAYER=ap_hz&FORMAT=image/png';
+ const img=document.createElement('img');img.alt='Official NRSC hazard-map legend for Andhra Pradesh layer';img.loading='lazy';img.src=imgUrl;
+ img.onerror=()=>{img.remove()};
+ $('riskLegendContent').appendChild(img);
+}
+async function addRiskCycloneThreat(){
+ const requestId=++riskCycloneRequest;
+ try{
+  $('riskLegendNote').textContent='Loading current/recent GDACS tropical-cyclone event records. No storm buffer or future path is invented.';
+  const now=new Date(),from=new Date(now.getTime()-14*24*60*60*1000);
+  const toDay=now.toISOString().slice(0,10),fromDay=from.toISOString().slice(0,10);
+  const url='https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=TC&fromdate='+fromDay+'&todate='+toDay+'&alertlevel=red;orange;green';
+  const response=await fetch(url,{cache:'no-store',headers:{Accept:'application/json'}});
+  if(!response.ok)throw Error('GDACS returned HTTP '+response.status);
+  const data=await response.json();
+  if(requestId!==riskCycloneRequest)return;
+  if(!data||!Array.isArray(data.features))throw Error('GDACS response did not contain GeoJSON features');
+  const features=data.features.filter(f=>f&&f.geometry&&f.properties);
+  const levelColor=p=>{
+   const level=String(p?.alertlevel||'').toLowerCase();
+   return level==='red'?'#dc2626':level==='orange'?'#f97316':level==='green'?'#facc15':'#a3a3a3';
+  };
+  riskCycloneLayer=L.geoJSON({type:'FeatureCollection',features},{
+   style:feature=>({color:levelColor(feature.properties),weight:2.5,fillColor:levelColor(feature.properties),fillOpacity:.17,opacity:.9}),
+   pointToLayer:(feature,latlng)=>L.circleMarker(latlng,{radius:8,color:'#f8fafc',weight:1.5,fillColor:levelColor(feature.properties),fillOpacity:.92}),
+   onEachFeature:(feature,layer)=>{
+    const p=feature.properties||{},box=document.createElement('div');
+    const title=document.createElement('strong');title.textContent=p.name||p.eventname||'Tropical cyclone event';box.appendChild(title);
+    const body=document.createElement('div');
+    body.textContent=[p.alertlevel?'GDACS alert level: '+p.alertlevel:null,p.fromdate?'Start: '+p.fromdate:null,p.todate?'End: '+p.todate:null,p.country?'Reported area: '+p.country:null].filter(Boolean).join(' · ')||'Open the official GDACS record for details.';
+    box.appendChild(body);layer.bindPopup(box);
+   }
+  }).addTo(map);
+  const note=features.length
+    ?'GDACS event features: '+features.length+' for '+fromDay+' through '+toDay+'. Recent events can remain in this window after impact; this is not a forecast track or an official local evacuation boundary.'
+    :'No GDACS tropical-cyclone event features were returned for '+fromDay+' through '+toDay+'. No event shown does not prove no threat; check current IMD bulletins.';
+  $('riskLegendNote').textContent=note+' Flood colours, where present, come from NRSC historical hazard classes, not current flood probability.';
+ }catch(e){
+  if(requestId!==riskCycloneRequest)return;
+  $('riskLegendNote').textContent='GDACS cyclone overlay unavailable: '+e.message+'. No cyclone-threat polygons are being fabricated. Check IMD cyclone bulletins.';
+ }
+}
+async function setRiskMapLayer(mode){
+ const requestId=++riskLayerRequest;
+ clearRiskLayers();
+ if(mode==='off'){$('riskMapLegend').hidden=true;return}
+ $('riskMapLegend').hidden=false;
+ if(mode==='historical-flood'||mode==='combined'){
+  addHistoricalFloodHazard();
+ }
+ if(mode==='cyclone-threat'){
+  riskLegend('cyclone-threat','Current / recent cyclone alerts · GDACS',[
+   {color:'#dc2626',text:'GDACS Red alert'},
+   {color:'#f97316',text:'GDACS Orange alert'},
+   {color:'#facc15',text:'GDACS Green alert (lowest GDACS alert class, not a “safe area”)'},
+   {text:'Only source-supplied event geometry is drawn; no guessed danger radius.'}
+  ],'Requesting GDACS event feed…','https://www.gdacs.org/');
+  await addRiskCycloneThreat();return;
+ }
+ if(mode==='combined'){
+  riskLegend('combined','Historical flood hazard + cyclone alerts',[
+   {text:'Flood overlay retains the official NRSC/ISRO hazard palette; these are historical hazard classes, not current flood probabilities.'},
+   {color:'#dc2626',text:'GDACS Red alert'},
+   {color:'#f97316',text:'GDACS Orange alert'},
+   {color:'#facc15',text:'GDACS Green alert class (not a safety label)'},
+   {text:'Historical WMS coverage verified for Andhra Pradesh, Karnataka, Kerala and Tamil Nadu. Uncovered areas, including Telangana in this service catalogue, remain unknown.'}
+  ],'Loading source layers…','https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty');
+  await addRiskCycloneThreat();
+ }
+}
+$('riskLayer').addEventListener('change',e=>setRiskMapLayer(e.target.value));
+
 document.querySelectorAll('[data-overlay]').forEach(b=>b.addEventListener('click',()=>setOverlay(b.dataset.overlay)));
 $('searchForm').addEventListener('submit',async e=>{e.preventDefault();const q=$('search').value.trim();if(!q)return;$('overlayStatus').textContent='Searching OpenStreetMap…';try{const u='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&countrycodes=in&q='+encodeURIComponent(q+', South India');const r=await fetch(u,{headers:{Accept:'application/json'}});if(!r.ok)throw Error('Search service unavailable');const results=await r.json();const south=results.find(x=>{const a=Number(x.lat),b=Number(x.lon);return a>=7&&a<=21.8&&b>=73&&b<=87});if(!south)throw Error('No matching South India location found. Try adding the district or state.');const lat=Number(south.lat),lon=Number(south.lon);map.setView([lat,lon],11);selectLocation(lat,lon,south.display_name.split(',').slice(0,3).join(','));$('overlayStatus').textContent='Found '+south.display_name}catch(err){$('overlayStatus').textContent=err.message}});
 $('goCoords').addEventListener('click',()=>{const lat=Number($('latInput').value),lon=Number($('lonInput').value);if(!Number.isFinite(lat)||!Number.isFinite(lon)||$('latInput').value.trim()===''||$('lonInput').value.trim()===''||lat < -90||lat>90||lon < -180||lon>180){$('overlayStatus').textContent='Enter valid coordinates: latitude −90 to 90 and longitude −180 to 180.';return}map.setView([lat,lon],11);selectLocation(lat,lon,'Manually entered coordinates')});
