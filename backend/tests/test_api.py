@@ -121,3 +121,53 @@ def test_weather_rejects_provider_payload_without_current_conditions(monkeypatch
     )
     assert response.status_code == 502
     assert "did not include current conditions" in response.json()["detail"]
+
+
+def test_model_status_does_not_claim_a_trained_forecast():
+    response = client.get("/api/v1/models/status")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["validated_south_india_flood_forecast"] is False
+    assert data["trained_model_artifact"] == "not_deployed"
+    assert "verified historical discharge" in " ".join(data["required_before_inference"])
+
+
+def test_water_observations_are_paginated_and_labelled(monkeypatch):
+    monkeypatch.setattr(main, "load_water_snapshot", lambda: {
+        "generated_at_utc": "2026-10-18T00:00:00+00:00",
+        "resource_count_checked": 37,
+        "observations": [
+            {
+                "station_id": "A1", "station_name": "Gauge A", "state": "Telangana",
+                "kind": "river_level", "value": 2.1, "unit": "m",
+                "observed_at": "2026-10-17T00:00:00+00:00", "source_timezone": "UTC",
+            },
+            {
+                "station_id": "B1", "station_name": "Gauge B", "state": "Kerala",
+                "kind": "river_discharge", "value": 20.0, "unit": "m3/s",
+                "observed_at": "2026-10-17T00:00:00", "source_timezone": "unknown",
+            },
+        ],
+    })
+    response = client.get("/api/v1/water-observations", params={"state": "Telangana", "limit": 1})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_records"] == 1
+    assert data["observations"][0]["station_id"] == "A1"
+    assert data["observations"][0]["freshness"] in {"recent", "delayed", "stale"}
+    assert data["metadata"]["not_a_flood_warning"] is True
+
+
+def test_water_observation_unknown_timezone_is_not_guessed(monkeypatch):
+    monkeypatch.setattr(main, "load_water_snapshot", lambda: {
+        "generated_at_utc": "2026-10-18T00:00:00+00:00",
+        "observations": [{
+            "station_id": "B1", "station_name": "Gauge B", "state": "Kerala",
+            "kind": "river_level", "observed_at": "2026-10-17T00:00:00",
+            "source_timezone": "unknown",
+        }],
+    })
+    response = client.get("/api/v1/water-observations", params={"freshness": "unknown"})
+    assert response.status_code == 200
+    assert response.json()["observations"][0]["freshness"] == "unknown"
+    assert response.json()["observations"][0]["age_hours"] is None
