@@ -30,29 +30,14 @@ jobs:
           cache: pip
       - name: Install public-feed collector dependencies
         run: python -m pip install "requests>=2.31,<3" "beautifulsoup4>=4.12,<5"
+      - name: Test snapshot validator
+        run: python -m unittest discover -s data_pipeline/tests -p "test_*.py"
       - name: Fetch current-period public observations
         run: python data_pipeline/scripts/refresh_water_observations.py --sources data_pipeline/sources.json --out data/water-observations.json --max-resources 40
-      - name: Validate JSON and summarize output
+      - name: Validate snapshot structure and data quality
         run: |
           python -m json.tool data/water-observations.json > /dev/null
-          python - <<'PY'
-          import json
-          with open("data/water-observations.json", encoding="utf-8") as handle:
-              data = json.load(handle)
-          print("observations:", data.get("observation_count"))
-          print("resources checked:", data.get("resource_count_checked"))
-          print("generated at:", data.get("generated_at_utc"))
-          observations = data.get("observations")
-          if not isinstance(observations, list):
-              raise SystemExit("Invalid observation list")
-          if len(observations) == 0:
-              raise SystemExit("Collector returned zero observations; refusing to publish an empty snapshot. Check the source diagnostics and provider availability.")
-          if data.get("observation_count") != len(observations):
-              raise SystemExit("observation_count does not match the observations list length")
-          if not data.get("generated_at_utc"):
-              raise SystemExit("Missing generated_at_utc metadata")
-          print("latest reported observation:", max((row.get("observed_at", "") for row in observations), default=""))
-          PY
+          python data_pipeline/scripts/validate_water_snapshot.py --snapshot data/water-observations.json
       - name: Publish changed snapshot to GitHub Pages
         run: |
           git config user.name "github-actions[bot]"
