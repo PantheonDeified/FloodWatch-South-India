@@ -60,7 +60,8 @@ print("Python:", sys.version.split()[0])
 print("NumPy:", numpy.__version__)
 print("pandas:", pandas.__version__)
 print("PyTorch:", torch.__version__)
-assert torch.__version__.split("+")[0] >= "2.2.0"
+version = tuple(int(part) for part in torch.__version__.split("+")[0].split(".")[:2])
+assert version >= (2, 2), f"PyTorch >=2.2 required, found {torch.__version__}"
 assert hasattr(torch, "inference_mode")
 PY
     echo "ML environment ready at: $DEFAULT_VENV"
