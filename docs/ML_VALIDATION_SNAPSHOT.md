@@ -27,9 +27,9 @@ For the report's high-flow subset (threshold 797.7 m³/s), the LSTM has MAE 1,35
 
 ## Trained-weight inference smoke test
 
-I also loaded the actual saved `.pt` weights and matching `.scalers.npz` from the completed single-station training artifact, selected the same station's latest 90 consecutive observed days, and ran a CPU forward forecast. The model loaded successfully and returned seven finite non-negative discharge estimates. The archive's last observed day was **2025-12-31**, so the generated forecast dates were **2026-01-01 through 2026-01-07**; this is a functional inference test on stale historical input, **not a current forecast**.
+The single-station trainer has already produced model weights and matching scalers, but the earlier training run did **not** record a separate automated live-inference smoke-test step. I added that step to the subsequent training workflow: it loads the just-trained weights, requires a contiguous 90-day history for the configured station, writes a seven-day CSV forecast plus freshness metadata, and includes those files in the artifact. Treat that inference test as **pending until the new workflow run shows the step succeeded**. If the latest observations are stale, the generated output is a functional test only—not a current forecast.
 
-The single-station GitHub Actions workflow now runs this inference smoke test after training and includes its CSV and freshness metadata in the model artifact. The compact artifact is configured for 90-day retention and excludes the multi-gigabyte normalized source CSV.
+The compact model artifact is configured for 90-day retention and excludes the multi-gigabyte normalized source CSV so the downloadable result stays manageable.
 
 ## Automated code checks
 
