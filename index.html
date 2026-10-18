@@ -987,6 +987,11 @@ function scoreHumanMadeEvidence(cell,records,now=Date.now()){
   if(source.protocol!=='https:')continue;
   const host=source.hostname.toLowerCase();
   if(record.status==='Official public record'&&!(host==='gov.in'||host.endsWith('.gov.in')||host.endsWith('.nic.in')||host.endsWith('.gov')||host.endsWith('.nasa.gov')))continue;
+  if(record.status==='Corroborated'){
+   let second;
+   try{second=new URL(String(record.corroboratingSourceUrl||''))}catch(e){continue}
+   if(second.protocol!=='https:'||second.href===source.href||second.hostname.toLowerCase()===host)continue;
+  }
   const lat=Number(record.latitude),lon=Number(record.longitude);
   if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat < -90||lat > 90||lon < -180||lon > 180)continue;
   const eventMs=Date.parse(String(record.date||'')+'T00:00:00Z');
