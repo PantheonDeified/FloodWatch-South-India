@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FloodWatch South India</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--sky:#e3f3ff;--ink:#10294a;--soft:#5b7491;--blue:#2b8cff;--sun:#ffd23f;--mint:#3ddc97;--coral:#ff6b6b;--amber:#ffb02e;--card:#fff;--line:#10294a}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--sky);color:var(--ink);font-family:'Fredoka','Baloo 2','Trebuchet MS',system-ui,sans-serif;font-size:16px;line-height:1.4;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:12px;padding:12px 18px}
+.logo{width:46px;height:46px;border-radius:16px;background:var(--blue);border:3px solid var(--line);display:grid;place-items:center;font-size:26px;box-shadow:3px 3px 0 var(--line);transform:rotate(-6deg)}
+h1{font-size:28px;font-weight:700;margin:0;letter-spacing:-.01em;line-height:1}
+.sub{color:var(--soft);font-size:14px}
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:16px;padding:0 18px 18px}
+.mapcard{position:relative;border:3px solid var(--line);border-radius:26px;overflow:hidden;box-shadow:5px 5px 0 var(--line);background:#cfe6f7;display:flex;flex-direction:column;min-height:420px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;padding:10px;background:#fff;border-bottom:3px solid var(--line)}
+.bar form{display:flex;gap:8px;flex:1;min-width:220px}
+input,button{font:inherit;color:var(--ink)}
+input{flex:1;min-width:0;border:3px solid var(--line);border-radius:999px;padding:8px 16px;background:#f6fbff;font-weight:500}
+input:focus{outline:none;background:#fff;box-shadow:0 0 0 4px rgba(43,140,255,.3)}
+button{cursor:pointer;border:3px solid var(--line);border-radius:999px;padding:8px 16px;background:var(--sun);font-weight:600;box-shadow:2px 2px 0 var(--line);transition:transform .1s,box-shadow .1s}
+button:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--line)}
+button:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--line)}
+button.on{background:var(--blue);color:#fff}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+#map{flex:1;min-height:340px}
+.legend{position:absolute;left:12px;bottom:12px;z-index:900;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff;border:3px solid var(--line);border-radius:999px;padding:5px 14px;font-size:13px;font-weight:500}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid var(--line);margin-right:4px;vertical-align:-1px}
+.side{overflow:auto;display:flex;flex-direction:column;gap:14px;padding:2px 6px 8px 2px}
+.card{background:var(--card);border:3px solid var(--line);border-radius:24px;padding:16px;box-shadow:4px 4px 0 var(--line)}
+.place{font-size:20px;font-weight:700;line-height:1.2}
+.coords{color:var(--soft);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chips button{padding:3px 12px;font-size:13px;background:#fff}
+.risk{display:flex;gap:14px;align-items:center;border-radius:20px;border:3px solid var(--line);padding:14px;background:#eef3f8}
+.risk .face{font-size:54px;line-height:1;flex:none}
+.risk .lvl{font-size:26px;font-weight:700;line-height:1.1}
+.risk .num{font-size:14px;font-weight:500;color:var(--ink);opacity:.8}
+.risk.green{background:#c9f6df}.risk.amber{background:#ffe9b5}.risk.red{background:#ffc9c9}.risk.unk{background:#e6ebf1}
+.why{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px;font-size:15px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{border:3px solid var(--line);border-radius:18px;padding:10px 12px;background:#f6fbff}
+.tile b{display:block;font-size:24px;font-weight:700;line-height:1.1}
+.tile span{font-size:13px;color:var(--soft)}
+h2{font-size:17px;font-weight:700;margin:0 0 8px}
+.bars{display:flex;align-items:flex-end;gap:3px;height:84px;padding:4px 0;border-bottom:3px solid var(--line)}
+.bars i{flex:1;min-height:4px;border-radius:6px 6px 0 0;background:var(--blue)}
+.axis{display:flex;justify-content:space-between;font-size:12px;color:var(--soft);margin-top:4px}
+.note{font-size:13px;color:var(--soft)}
+.note a{color:var(--blue);font-weight:600}
+.status{font-size:14px;color:var(--soft);min-height:20px}
+.pin{width:26px;height:26px;border-radius:50%;border:3px solid var(--line);box-shadow:2px 2px 0 var(--line)}
+.leaflet-container{font-family:inherit}
+.leaflet-popup-content-wrapper{border:3px solid var(--line);border-radius:16px}
+.hovercard{position:absolute;z-index:1000;width:310px;max-width:calc(100% - 16px);background:#fff;border:3px solid var(--line);border-radius:20px;box-shadow:4px 4px 0 var(--line);padding:12px 14px;pointer-events:none;font-size:14px}
+.hovercard[hidden]{display:none}
+.hv-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.hv-head b{font-size:16px;line-height:1.2;display:block}
+.hv-head small{color:var(--soft);font-size:12px}
+.hv-pill{flex:none;border:2px solid var(--line);border-radius:999px;padding:2px 10px;font-size:13px;font-weight:600}
+.hv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
+.hv-grid div{background:#f6fbff;border:2px solid var(--line);border-radius:12px;padding:4px 6px}
+.hv-grid span{display:block;font-size:11px;color:var(--soft)}
+.hv-grid b{font-size:14px}
+.hv-sum{margin:0 0 8px;line-height:1.35}
+.hv-src{font-size:11.5px;color:var(--soft);line-height:1.35}
+.hv-load{font-weight:500}
+select{font:inherit;color:var(--ink);border:3px solid var(--line);border-radius:999px;padding:8px 14px;background:#fff;font-weight:600;cursor:pointer;max-width:100%}
+.ovlegend{position:absolute;left:12px;bottom:58px;z-index:900;max-width:340px;max-height:50%;overflow:auto;background:#fff;border:3px solid var(--line);border-radius:18px;padding:10px 12px;font-size:13px;line-height:1.35;box-shadow:3px 3px 0 var(--line)}
+.ovlegend[hidden]{display:none}
+.ovlegend b{font-size:15px}
+.ovrow{display:flex;gap:6px;align-items:flex-start;margin-top:4px}
+.ovrow .dot{flex:none;margin-top:3px}
+.ovnote{margin-top:6px;color:var(--soft)}
+.ovlegend a{color:var(--blue);font-weight:600;display:inline-block;margin-top:4px}
+details.card summary{cursor:pointer;list-style:none;font-size:17px}
+details.card summary::-webkit-details-marker{display:none}
+details.card summary:after{content:'＋';float:right;font-weight:700}
+details.card[open] summary:after{content:'−'}
+.infra{display:grid;gap:8px;margin-top:10px}
+.infra label{display:grid;gap:3px;font-size:13px;font-weight:500;color:var(--soft)}
+.infra input:not([type=checkbox]),.infra select,.infra textarea{width:100%;border:3px solid var(--line);border-radius:14px;padding:6px 10px;background:#f6fbff;font:inherit;color:var(--ink);flex:none}
+.infra textarea{resize:vertical}
+.infra .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.infra label.chk{display:flex;gap:8px;align-items:flex-start}
+.infra-entry{border:3px solid var(--line);border-radius:16px;padding:8px 10px;margin-top:8px;font-size:13px;background:#f6fbff;overflow-wrap:anywhere}
+.infra-entry button{padding:0 10px;font-size:12px}
+.badge{display:inline-block;border:2px solid var(--line);border-radius:999px;padding:0 8px;font-size:12px;background:#e6ebf1}
+.badge.on{background:var(--sun)}
+.infra-pin{background:#fff;display:grid;place-items:center;font-size:14px;width:28px;height:28px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+@media(max-width:900px){body{height:auto}html{height:auto}main{grid-template-columns:1fr}.side{overflow:visible}#map{min-height:380px}}
+@media(prefers-reduced-motion:reduce){button{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🌧️</div>
+  <div><h1>FloodWatch</h1><div class="sub">Rain and river signals for South India</div></div>
+</header>
+<main>
+  <section class="mapcard">
+    <div class="bar">
+      <form id="searchForm"><input id="search" placeholder="Search a town or district…" aria-label="Search a place" autocomplete="off"><button type="submit">Find</button></form>
+      <button id="locate" type="button">📍 Me</button>
+      <button id="radar" type="button" class="on">🛰️ Rain radar</button>
+      <select id="riskMode" aria-label="Risk map layer">
+        <option value="contours">🔥 Live risk contours</option>
+        <option value="historical">📜 Historical floods</option>
+        <option value="cyclone">🌀 Cyclone alerts</option>
+        <option value="combined">📜🌀 Historical + cyclone</option>
+        <option value="off">Overlay off</option>
+      </select>
+    </div>
+    <div id="map" aria-label="Map of South India. Tap anywhere to check flood signals."></div>
+    <div class="hovercard" id="hover" hidden></div>
+    <div class="ovlegend" id="ovLegend" hidden><b id="ovTitle"></b><div id="ovRows"></div><div class="ovnote" id="ovNote"></div><a id="ovSrc" href="#" target="_blank" rel="noopener noreferrer" hidden></a></div>
+    <div class="legend"><span><i class="dot" style="background:var(--mint)"></i>Chill</span><span><i class="dot" style="background:var(--amber)"></i>Heads up</span><span><i class="dot" style="background:var(--coral)"></i>High signal</span></div>
+  </section>
+
+  <aside class="side">
+    <div class="card">
+      <div class="place" id="place">Tap the map 👆</div>
+      <div class="coords" id="coords">Pick any spot, or jump to a city:</div>
+      <div class="chips" id="chips"></div>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="card">
+      <div class="risk unk" id="risk">
+        <div class="face" id="face">🗺️</div>
+        <div><div class="lvl" id="lvl">No spot yet</div><div class="num" id="num">Choose a place to see its flood signal.</div></div>
+      </div>
+      <ul class="why" id="why"></ul>
+      <p class="note" id="summary" style="margin:12px 0 0"></p>
+    </div>
+
+    <div class="tiles">
+      <div class="tile"><span>Temperature</span><b id="temp">—</b></div>
+      <div class="tile"><span>Rain right now</span><b id="rainNow">—</b></div>
+      <div class="tile"><span>Wind</span><b id="wind">—</b></div>
+      <div class="tile"><span>Humidity</span><b id="hum">—</b></div>
+    </div>
+
+    <div class="card">
+      <h2>Rain over the next 24 hours</h2>
+      <div class="bars" id="bars" aria-label="Hourly rainfall forecast"></div>
+      <div class="axis"><span>Now</span><span>+12h</span><span>+24h</span></div>
+      <div class="note" id="flow" style="margin-top:10px">River flow appears here once you pick a spot.</div>
+    </div>
+
+    <details class="card" id="infraCard">
+      <summary><b>🏗️ Infrastructure & human factors</b> <span class="badge" id="infraCount">0</span></summary>
+      <p class="note">Dams, embankments, drains and slow warnings can change what a flood does. Log dated, source-linked facts here. FloodWatch never rates a dam safe or unsafe: missing records mean “safety status not verified”.</p>
+      <form id="infraForm" class="infra">
+        <label>What happened
+          <select id="ifType" required>
+            <option value="Dam/gate malfunction or abnormal release">Dam or gate malfunction, abnormal release</option>
+            <option value="Dam release / gate operation">Dam release or gate operation (counts only if abnormally high)</option>
+            <option value="Embankment breach or erosion">Embankment breach or erosion</option>
+            <option value="Drainage/culvert blockage">Drain or culvert blockage</option>
+            <option value="Floodplain obstruction / documented land-use change">Floodplain obstruction or land-use change</option>
+            <option value="Dam/reservoir inspection or safety report">Inspection or safety report (record only)</option>
+            <option value="Official warning or response timeline">Warning or response timeline (record only)</option>
+            <option value="Other public infrastructure record">Other public record (record only)</option>
+          </select>
+        </label>
+        <label>Place or facility<input id="ifPlace" required maxlength="140" placeholder="Named reservoir, district or river reach"></label>
+        <div class="two">
+          <label>Latitude<input id="ifLat" type="number" step="any" min="-90" max="90" required placeholder="15.12"></label>
+          <label>Longitude<input id="ifLon" type="number" step="any" min="-180" max="180" required placeholder="76.82"></label>
+        </div>
+        <button type="button" id="ifUse">📍 Use my selected spot</button>
+        <label class="chk"><input id="ifHyd" type="checkbox"> Source confirms the dam is linked to this downstream area (needed for dam scoring)</label>
+        <div class="two">
+          <label>Agency<input id="ifAgency" required maxlength="140" placeholder="Named in the document"></label>
+          <label>Date<input id="ifDate" type="date" required></label>
+        </div>
+        <label>Review status
+          <select id="ifStatus">
+            <option>Official public record</option>
+            <option>Corroborated</option>
+            <option>Unverified report</option>
+            <option>Disputed</option>
+            <option>Needs follow-up</option>
+          </select>
+        </label>
+        <label>Source link (HTTPS)<input id="ifSource" type="url" required maxlength="1200" placeholder="https://…"></label>
+        <label>Second source (needed for Corroborated)<input id="ifCo" type="url" maxlength="1200" placeholder="Different website"></label>
+        <label>What the source says<textarea id="ifNotes" rows="3" maxlength="600" placeholder="Dates, figures and units exactly as published"></textarea></label>
+        <button type="submit">Save entry</button>
+        <div class="status" id="infraMsg" aria-live="polite">Entries stay in this browser only.</div>
+      </form>
+      <div class="row"><button type="button" id="infraExport">Export JSON</button><button type="button" id="infraClear">Clear all</button></div>
+      <div id="infraList"></div>
+      <p class="note">Scoring rules: only official (.gov.in, .nic.in) or two-source corroborated records add points. Points fade with distance and age. Inspections and response timelines are kept as records and never scored. Use public records only, no security-sensitive dam details.</p>
+    </details>
+
+    <div class="card note">
+      This is an experimental score built from forecast rain and modelled river flow. It is not an official warning or a calibrated probability. In an emergency, check
+      <a href="https://mausam.imd.gov.in/" target="_blank" rel="noopener noreferrer">IMD</a>,
+      <a href="https://ffs.india-water.gov.in/" target="_blank" rel="noopener noreferrer">CWC</a> and
+      <a href="https://sachet.ndma.gov.in/" target="_blank" rel="noopener noreferrer">NDMA SACHET</a>.
+      Data sources:
+      <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo forecast</a>,
+      <a href="https://open-meteo.com/en/docs/flood-api" target="_blank" rel="noopener noreferrer">GloFAS river model</a>,
+      <a href="https://www.rainviewer.com/api.html" target="_blank" rel="noopener noreferrer">RainViewer radar</a>,
+      <a href="https://nominatim.openstreetmap.org/" target="_blank" rel="noopener noreferrer">OpenStreetMap place names</a>.
+    </div>
+  </aside>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+if(typeof L==='undefined'){
+  $('map').innerHTML='<p style="padding:24px">The map library did not load. Check your internet connection and refresh.</p>';
+}else{
+const CITIES=[['Chennai',13.08,80.27],['Bengaluru',12.97,77.59],['Hyderabad',17.39,78.49],['Kochi',9.93,76.27],['Vijayawada',16.51,80.65],['Mangaluru',12.87,74.84],['Coimbatore',11.0,76.96],['Visakhapatnam',17.69,83.22]];
+const map=L.map('map',{minZoom:5,maxZoom:16}).setView([14,78],6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap contributors'}).addTo(map);
+
+const clamp=x=>Math.max(0,Math.min(1,x));
+const LEVELS={green:{face:'😎',text:'Chill',color:'#3ddc97'},amber:{face:'😬',text:'Heads up',color:'#ffb02e'},red:{face:'🌊',text:'High signal',color:'#ff6b6b'},unk:{face:'🤷',text:'Not enough data',color:'#cbd5e1'}};
+
+async function fetchBundle(pts){
+  const la=pts.map(p=>p[0].toFixed(3)).join(','),lo=pts.map(p=>p[1].toFixed(3)).join(',');
+  const wq='https://api.open-meteo.com/v1/forecast?latitude='+la+'&longitude='+lo+'&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=precipitation,precipitation_probability&forecast_days=4&timezone=UTC';
+  const fq='https://flood-api.open-meteo.com/v1/flood?latitude='+la+'&longitude='+lo+'&daily=river_discharge&past_days=60&forecast_days=7&timezone=GMT';
+  const get=(u,n)=>fetch(u,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error(n+' returned HTTP '+r.status);return r.json()});
+  const [w,f]=await Promise.allSettled([get(wq,'Weather'),get(fq,'River model')]);
+  if(w.status!=='fulfilled')throw w.reason;
+  const wa=[].concat(w.value),fa=f.status==='fulfilled'?[].concat(f.value):[];
+  return pts.map((_,i)=>({w:wa[i],f:fa[i]||null}));
+}
+
+function score(b){
+  const h=b.w.hourly||{},times=h.time||[],cutoff=Date.now()-30*60*1000;
+  const idx=times.map((t,i)=>[i,Date.parse(t+'Z')]).filter(x=>x[1]>=cutoff).map(x=>x[0]);
+  const rain=i=>+h.precipitation?.[i]||0;
+  const r24=idx.slice(0,24).reduce((s,i)=>s+rain(i),0),r72=idx.slice(0,72).reduce((s,i)=>s+rain(i),0);
+  const pr=Math.max(0,...idx.slice(0,24).map(i=>+h.precipitation_probability?.[i]||0));
+  const cur=+b.w.current?.precipitation||0;
+  if(idx.length<24)return {level:'unk',score:null,hours:[]};
+  let s=40*clamp(r24/100)+30*clamp(r72/150)+15*clamp(pr/100)+15*clamp(cur/20);
+  let pct=null,peak=null;
+  const d=b.f?.daily;
+  if(d&&d.time){
+    const today=new Date().toISOString().slice(0,10),hist=[],fut=[];
+    d.time.forEach((t,i)=>{const v=d.river_discharge[i];if(v==null)return;if(t<today)hist.push(v);else if(t>today)fut.push(v)});
+    if(hist.length>=20&&fut.length){
+      peak=Math.max(...fut.slice(0,7));
+      const lo=hist.filter(v=>v<peak).length,eq=hist.filter(v=>v===peak).length;
+      pct=100*(lo+eq/2)/hist.length;
+      s=.75*s+.25*100*clamp((pct-50)/50);
+    }
+  }
+  const level=s>=65?'red':s>=35?'amber':'green';
+  return {level,score:s,r24,r72,pr,cur,pct,peak,hours:idx.slice(0,24).map(rain)};
+}
+
+let pin=null,token=0;
+function setPin(lat,lon){
+  if(pin)map.removeLayer(pin);
+  pin=L.marker([lat,lon]).addTo(map);
+}
+async function selectLocation(lat,lon,name){
+  const my=++token;
+  setPin(lat,lon);
+  $('place').textContent=name||'Finding place name…';
+  $('coords').textContent=lat.toFixed(3)+', '+lon.toFixed(3);
+  $('status').textContent='Checking the sky… ⏳';
+  try{
+    const [[b],nm]=await Promise.all([fetchBundle([[lat,lon]]),name||reverseName(lat,lon)]);
+    if(my!==token)return;
+    $('place').textContent=nm||'Spot you picked';
+    render(b);
+    $('status').textContent='Updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  }catch(e){
+    if(my!==token)return;
+    $('status').textContent='Could not load data: '+e.message+'. Try again in a moment.';
+  }
+}
+function render(b){
+  const r=score(b),L1=LEVELS[r.level],c=b.w.current||{};
+  $('temp').textContent=c.temperature_2m!=null?Math.round(c.temperature_2m)+'°C':'—';
+  $('rainNow').textContent=c.precipitation!=null?c.precipitation.toFixed(1)+' mm':'—';
+  $('wind').textContent=c.wind_speed_10m!=null?Math.round(c.wind_speed_10m)+' km/h':'—';
+  $('hum').textContent=c.relative_humidity_2m!=null?Math.round(c.relative_humidity_2m)+'%':'—';
+  $('risk').className='risk '+r.level;
+  $('face').textContent=L1.face;
+  $('lvl').textContent=L1.text;
+  $('num').textContent=r.score==null?'The forecast did not return enough hours.':'Signal score '+Math.round(r.score)+' out of 100';
+  const why=[];
+  if(r.score!=null){
+    why.push('🌧️ '+r.r24.toFixed(0)+' mm of rain expected in 24 hours');
+    why.push('📅 '+r.r72.toFixed(0)+' mm over the next 72 hours');
+    why.push('☔ Up to '+Math.round(r.pr)+'% chance of rain');
+  }
+  $('why').innerHTML=why.map(t=>'<li>'+t+'</li>').join('');
+  $('summary').textContent='🤖 '+summarize(r,$('place').textContent);
+  const max=Math.max(2,...r.hours);
+  $('bars').innerHTML=r.hours.map(v=>'<i title="'+v.toFixed(1)+' mm" style="height:'+Math.max(4,v/max*100)+'%"></i>').join('');
+  $('flow').textContent=r.pct!=null
+    ?'🏞️ River model: next week’s peak flow is higher than '+Math.round(r.pct)+'% of the last 60 days ('+Math.round(r.peak).toLocaleString()+' m³/s). Modelled, not a gauge reading.'
+    :'🏞️ No river model data for this exact spot. Try a point closer to a river.';
+}
+
+// Plain-English summary written from the numbers (template-based, no LLM involved)
+function summarize(r,name){
+  const place=name&&!/^(Finding|Spot you|Selected)/.test(name)?name.split(',')[0]:'this spot';
+  if(r.score==null)return 'Not enough forecast data came back for '+place+' to judge it. Try again in a moment.';
+  const lead={green:'Flood signal looks low',amber:'Flood signal is elevated',red:'Flood signal is high'}[r.level]+' for '+place+'.';
+  const amt=r.r24>=50?'heavy rain':r.r24>=15?'moderate rain':r.r24>=2?'light rain':'little to no rain';
+  let s=lead+' The forecast shows '+amt+' (about '+r.r24.toFixed(0)+' mm in 24 h, '+r.r72.toFixed(0)+' mm over 72 h).';
+  if(r.pct!=null)s+=' River model flow is forecast to '+(r.pct>=90?'peak well above':r.pct>=60?'peak somewhat above':'stay within')+' its recent range.';
+  return s+' This is an experimental estimate, not an official warning.';
+}
+
+// Reverse geocode a point to a readable place name (OpenStreetMap Nominatim)
+async function reverseName(lat,lon){
+  try{
+    const r=await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&lat='+lat+'&lon='+lon,{headers:{Accept:'application/json'}});
+    if(!r.ok)throw Error('x');
+    const d=await r.json(),a=d.address||{};
+    const parts=[a.city||a.town||a.village||a.suburb||a.county,a.state_district||a.county,a.state].filter((v,i,arr)=>v&&arr.indexOf(v)===i).slice(0,3);
+    return parts.join(', ')||(d.display_name?d.display_name.split(',').slice(0,2).join(','):null);
+  }catch(e){return null}
+}
+
+// Hover card: rest the cursor on any spot for a moment to see a detailed overview
+const hv=$('hover'),hoverCache=new Map(),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let hTimer=null,hTok=0,hShown=null;
+function hideHover(){clearTimeout(hTimer);hTok++;hv.hidden=true;hShown=null}
+function placeHover(pos){
+  const m=$('map').parentElement.getBoundingClientRect(),w=hv.offsetWidth,h=hv.offsetHeight;
+  let x=pos.x-m.left+16,y=pos.y-m.top+16;
+  if(x+w>m.width-8)x=pos.x-m.left-w-16;
+  if(y+h>m.height-8)y=pos.y-m.top-h-16;
+  hv.style.left=Math.max(8,x)+'px';hv.style.top=Math.max(8,y)+'px';
+  hShown=pos;
+}
+function hoverHtml(b,name,ll){
+  const r=score(b),c=b.w.current||{},lv=LEVELS[r.level];
+  const f=(v,fn)=>v==null||!Number.isFinite(+v)?'—':fn(+v);
+  const st=(k,v)=>'<div><span>'+k+'</span><b>'+v+'</b></div>';
+  const src=['Open-Meteo forecast'];
+  if(r.pct!=null)src.push('GloFAS river model');
+  if(name)src.push('OpenStreetMap');
+  const tm=c.time?c.time.slice(11,16)+' UTC':'time not supplied';
+  return '<div class="hv-head"><div><b>'+esc(name||'Unnamed spot')+'</b><small>'+ll.lat.toFixed(3)+', '+ll.lng.toFixed(3)+'</small></div>'+
+    '<span class="hv-pill" style="background:'+lv.color+'">'+lv.face+' '+lv.text+'</span></div>'+
+    '<div class="hv-grid">'+
+      st('Temp',f(c.temperature_2m,v=>Math.round(v)+'°C'))+st('Rain now',f(c.precipitation,v=>v.toFixed(1)+' mm'))+
+      st('Wind',f(c.wind_speed_10m,v=>Math.round(v)+' km/h'))+st('Humidity',f(c.relative_humidity_2m,v=>Math.round(v)+'%'))+
+      st('Next 24h',f(r.r24,v=>v.toFixed(0)+' mm'))+st('Next 72h',f(r.r72,v=>v.toFixed(0)+' mm'))+
+      st('Chance',f(r.pr,v=>Math.round(v)+'%'))+st('River',f(r.pct,v=>Math.round(v)+'th'))+
+    '</div>'+
+    '<p class="hv-sum"><b>🤖 Auto summary:</b> '+esc(summarize(r,name))+'</p>'+
+    '<div class="hv-src">Sources: '+src.join(', ')+'.<br>Model time '+tm+'. Click for the full panel.</div>';
+}
+async function hoverLookup(ll,pos){
+  const my=++hTok,key=ll.lat.toFixed(2)+','+ll.lng.toFixed(2);
+  hv.hidden=false;
+  let hit=hoverCache.get(key);
+  if(!hit||Date.now()-hit.t>6e5){
+    hv.innerHTML='<div class="hv-load">Reading this spot… ⏳</div>';placeHover(pos);
+    try{
+      const [[b],name]=await Promise.all([fetchBundle([[ll.lat,ll.lng]]),reverseName(ll.lat,ll.lng)]);
+      hit={b,name,t:Date.now()};hoverCache.set(key,hit);
+    }catch(e){if(my===hTok)hv.innerHTML='<div class="hv-load">Could not load data for this spot.</div>';return}
+  }
+  if(my!==hTok)return;
+  hv.innerHTML=hoverHtml(hit.b,hit.name,ll);placeHover(pos);
+}
+const mapEl=map.getContainer();
+mapEl.addEventListener('mousemove',e=>{
+  if(e.target.closest('.leaflet-control')){hideHover();return}
+  const pos={x:e.clientX,y:e.clientY};
+  if(hShown&&Math.hypot(pos.x-hShown.x,pos.y-hShown.y)<14)return;
+  hideHover();
+  const ll=map.mouseEventToLatLng(e);
+  hTimer=setTimeout(()=>hoverLookup(ll,pos),450);
+});
+mapEl.addEventListener('mouseleave',hideHover);
+map.on('movestart zoomstart',hideHover);
+
+// Click map, search, locate, city chips
+map.on('click',e=>{hideHover();selectLocation(e.latlng.lat,e.latlng.lng,null)});
+$('chips').innerHTML=CITIES.map((c,i)=>'<button type="button" data-i="'+i+'">'+c[0]+'</button>').join('');
+$('chips').addEventListener('click',e=>{
+  const b=e.target.closest('[data-i]');if(!b)return;
+  const c=CITIES[+b.dataset.i];map.setView([c[1],c[2]],9);selectLocation(c[1],c[2],c[0]);
+});
+$('searchForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const q=$('search').value.trim();if(!q)return;
+  $('status').textContent='Searching… 🔎';
+  try{
+    const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&countrycodes=in&q='+encodeURIComponent(q+', South India'),{headers:{Accept:'application/json'}});
+    if(!r.ok)throw Error('Search is unavailable');
+    const hit=(await r.json()).find(x=>+x.lat>=7&&+x.lat<=21.8&&+x.lon>=73&&+x.lon<=87);
+    if(!hit)throw Error('No match in South India. Try adding the district or state.');
+    map.setView([+hit.lat,+hit.lon],10);
+    selectLocation(+hit.lat,+hit.lon,hit.display_name.split(',').slice(0,2).join(','));
+  }catch(err){$('status').textContent=err.message}
+});
+$('locate').addEventListener('click',()=>{
+  if(!navigator.geolocation){$('status').textContent='Your browser can’t share location.';return}
+  navigator.geolocation.getCurrentPosition(p=>{
+    const {latitude:la,longitude:lo}=p.coords;
+    if(la<7||la>21.8||lo<73||lo>87){$('status').textContent='You seem to be outside South India.';return}
+    map.setView([la,lo],10);selectLocation(la,lo,'Your location');
+  },err=>{$('status').textContent='Could not get your location: '+err.message},{timeout:12000});
+});
+
+// Rain radar toggle (RainViewer)
+let radarLayer=null;
+async function setRadar(on){
+  $('radar').classList.toggle('on',on);
+  if(radarLayer){map.removeLayer(radarLayer);radarLayer=null}
+  if(!on)return;
+  try{
+    const d=await (await fetch('https://api.rainviewer.com/public/weather-maps.json',{cache:'no-store'})).json();
+    const f=(d.radar?.past||[]).slice(-1)[0];if(!f)throw Error('no frames');
+    if(!$('radar').classList.contains('on'))return;
+    radarLayer=L.tileLayer('https://tilecache.rainviewer.com'+f.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:.62,maxNativeZoom:7,maxZoom:19,attribution:'Radar © RainViewer'}).addTo(map);
+  }catch(e){$('status').textContent='Rain radar is unavailable right now.';$('radar').classList.remove('on')}
+}
+$('radar').addEventListener('click',()=>setRadar(!$('radar').classList.contains('on')));
+setRadar(true);
+
+// ---------- Risk overlays: live contours, historical floods, cyclones ----------
+// Contours need the state outline from the repo: data/south-india-states.geojson (keep this html next to the data folder)
+const MASK_URL='data/south-india-states.geojson',NRSC_WMS='https://bhuvan-ras2.nrsc.gov.in/mapcache?',NRSC_LAYERS=['ap_hz','agg_karnataka','agg_kerala','agg_tamilnadu'];
+const GRID={step:.5,w:73.5,e:86.5,s:7.5,n:21.5};
+const HIST_ROWS=[{t:'Andhra Pradesh: flood-hazard zones from satellite floods, 1998–2019'},{t:'Karnataka, Kerala, Tamil Nadu: combined flood maps, 2003–2020'},{t:'Telangana and gaps: unknown, not safe'}];
+const CY_ROWS=[{c:'#ff4b55',t:'GDACS red alert'},{c:'#ff9f43',t:'GDACS orange alert'},{c:'#f4d35e',t:'GDACS green alert (lowest class, not “safe”)'}];
+const HIST_SRC=['https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty','Open NRSC flood atlas ↗'];
+let ovLayers=[],ovTok=0,maskPromise=null,contourState=null,infraRecords=[];
+function clearOverlay(){ovTok++;ovLayers.forEach(l=>{try{map.removeLayer(l)}catch(e){}});ovLayers=[]}
+function addOv(l){l.addTo(map);ovLayers.push(l);return l}
+function showLegend(title,rows,note,src){
+  $('ovLegend').hidden=!title;if(!title)return;
+  $('ovTitle').textContent=title;
+  $('ovRows').innerHTML=rows.map(r=>'<div class="ovrow">'+(r.c?'<i class="dot" style="background:'+r.c+'"></i>':'')+'<span>'+esc(r.t)+'</span></div>').join('');
+  $('ovNote').textContent=note;
+  if(src){$('ovSrc').href=src[0];$('ovSrc').textContent=src[1];$('ovSrc').hidden=false}else $('ovSrc').hidden=true;
+}
+function loadMask(){
+  if(!maskPromise)maskPromise=fetch(MASK_URL).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()}).then(g=>{if(!g.features||!g.features.length)throw Error('empty file');return g}).catch(e=>{maskPromise=null;throw e});
+  return maskPromise;
+}
+const polysOf=g=>g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];
+function inRing(x,y,ring){let ins=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi||1e-12)+xi))ins=!ins}return ins}
+function inMask(x,y,mask){
+  for(const f of mask.features){if(!f.geometry)continue;
+    for(const rings of polysOf(f.geometry)){if(!inRing(x,y,rings[0]))continue;let hole=false;for(let i=1;i<rings.length;i++)if(inRing(x,y,rings[i])){hole=true;break}if(!hole)return true}}
+  return false;
+}
+function gridCells(mask){
+  const st=GRID.step,out=[];
+  for(let la=GRID.s+st/2;la<=GRID.n-st/2+1e-6;la+=st)for(let lo=GRID.w+st/2;lo<=GRID.e-st/2+1e-6;lo+=st)if(inMask(lo,la,mask))out.push({lat:+la.toFixed(4),lon:+lo.toFixed(4)});
+  return out;
+}
+function maskPath(ctx,mask,W,H){
+  const xy=c=>[(c[0]-GRID.w)/(GRID.e-GRID.w)*W,(GRID.n-c[1])/(GRID.n-GRID.s)*H];
+  for(const f of mask.features){if(!f.geometry)continue;
+    for(const rings of polysOf(f.geometry))for(const ring of rings){if(!ring.length)continue;let p=xy(ring[0]);ctx.moveTo(p[0],p[1]);for(let i=1;i<ring.length;i++){p=xy(ring[i]);ctx.lineTo(p[0],p[1])}ctx.closePath()}}
+}
+function riskRgb(s){const g=[61,220,151],a=[255,176,46],r=[255,107,107],lo=s<35,A=lo?g:a,B=lo?a:r,t=lo?clamp(s/35):clamp((s-35)/30);return A.map((v,i)=>Math.round(v+(B[i]-v)*t))}
+function buildField(cells,scores,mask){
+  const st=GRID.step,minLat=GRID.s+st/2,minLon=GRID.w+st/2,cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const rows=Math.round((GRID.n-st/2-minLat)/st)+1,cols=Math.round((GRID.e-st/2-minLon)/st)+1;
+  const grid=Array.from({length:rows},()=>Array(cols).fill(null));
+  cells.forEach((c,i)=>{const r=Math.round((c.lat-minLat)/st),k=Math.round((c.lon-minLon)/st);if(r>=0&&r<rows&&k>=0&&k<cols)grid[r][k]=scores[i]});
+  const W=360,H=390,cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const cx=cv.getContext('2d'),img=cx.createImageData(W,H);
+  for(let py=0;py<H;py++)for(let px=0;px<W;px++){
+    const lon=GRID.w+(px+.5)/W*(GRID.e-GRID.w),lat=GRID.n-(py+.5)/H*(GRID.n-GRID.s);
+    const gx=cl((lon-minLon)/st,0,cols-1),gy=cl((lat-minLat)/st,0,rows-1);
+    const c0=Math.floor(gx),c1=Math.min(cols-1,c0+1),r0=Math.floor(gy),r1=Math.min(rows-1,r0+1),fx=gx-c0,fy=gy-r0;
+    const sm=[[grid[r0][c0],(1-fx)*(1-fy)],[grid[r0][c1],fx*(1-fy)],[grid[r1][c1],fx*fy],[grid[r1][c0],(1-fx)*fy]].filter(x=>x[0]!=null&&x[1]>0);
+    const wt=sm.reduce((a,x)=>a+x[1],0);
+    if(sm.length<2||wt<.7)continue;
+    const sc=sm.reduce((a,x)=>a+x[0]*x[1],0)/wt,rgb=riskRgb(sc),k=(py*W+px)*4;
+    img.data[k]=rgb[0];img.data[k+1]=rgb[1];img.data[k+2]=rgb[2];img.data[k+3]=175;
+  }
+  cx.putImageData(img,0,0);
+  const out=document.createElement('canvas');out.width=W;out.height=H;
+  const oc=out.getContext('2d');oc.beginPath();maskPath(oc,mask,W,H);oc.clip('evenodd');oc.drawImage(cv,0,0);
+  return {url:out.toDataURL('image/png'),grid,minLat,minLon,st};
+}
+function contourSegs(grid,th,st,minLat,minLon){
+  const segs=[],cross=(a,b)=>(a<th&&b>=th)||(a>=th&&b<th);
+  const lerp=(a,b)=>{const d=b.s-a.s,t=d===0?.5:(th-a.s)/d;return [a.la+(b.la-a.la)*t,a.lo+(b.lo-a.lo)*t]};
+  for(let r=0;r<grid.length-1;r++)for(let c=0;c<grid[r].length-1;c++){
+    const q=[{la:minLat+r*st,lo:minLon+c*st,s:grid[r][c]},{la:minLat+r*st,lo:minLon+(c+1)*st,s:grid[r][c+1]},{la:minLat+(r+1)*st,lo:minLon+(c+1)*st,s:grid[r+1][c+1]},{la:minLat+(r+1)*st,lo:minLon+c*st,s:grid[r+1][c]}];
+    if(q.some(p=>p.s==null))continue;
+    const hits=[];for(let e=0;e<4;e++){const a=q[e],b=q[(e+1)%4];if(cross(a.s,b.s))hits.push(lerp(a,b))}
+    if(hits.length===2)segs.push([hits[0],hits[1]]);else if(hits.length===4)segs.push([hits[0],hits[1]],[hits[2],hits[3]]);
+  }
+  return segs;
+}
+async function runContours(tok){
+  const title='Live risk contours';
+  const rows=[{c:LEVELS.green.color,t:'Chill: score under 35'},{c:LEVELS.amber.color,t:'Heads up: 35 to 64'},{c:LEVELS.red.color,t:'High signal: 65 and up'},{t:'Clear areas: not enough data, not safe. Lines mark scores 35 and 65.'}];
+  showLegend(title,rows,'Loading state outline…');
+  let mask;
+  try{mask=await loadMask()}
+  catch(e){if(tok===ovTok)showLegend(title,[],'Could not load '+MASK_URL+' ('+e.message+'). Put floodwatch-lite.html in the repo root, next to the data folder, and open it through the local server.');return}
+  if(tok!==ovTok)return;
+  const cells=gridCells(mask),batches=[],res=new Array(cells.length).fill(null);
+  for(let i=0;i<cells.length;i+=35)batches.push(cells.slice(i,i+35));
+  let cur=0,done=0,failed=0,lastErr='';
+  async function worker(){
+    while(cur<batches.length){
+      if(tok!==ovTok)return;
+      const bi=cur++,bt=batches[bi];
+      for(let attempt=0;attempt<2;attempt++){
+        try{const bs=await fetchBundle(bt.map(c=>[c.lat,c.lon]));bs.forEach((b,j)=>{res[bi*35+j]=score(b).score});break}
+        catch(e){lastErr=e.message;if(attempt===0)await new Promise(r=>setTimeout(r,2500));else failed++}
+      }
+      done++;if(tok===ovTok)$('ovNote').textContent='Reading rain and river data… '+done+'/'+batches.length;
+    }
+  }
+  await Promise.all([worker(),worker(),worker()]);
+  if(tok!==ovTok)return;
+  contourState={cells,base:res,mask,failed,lastErr,batches:batches.length};
+  drawContours(tok);
+}
+function drawContours(tok){
+  const {cells,mask}=contourState,scores=adjustedScores(),f=buildField(cells,scores,mask);
+  addOv(L.imageOverlay(f.url,[[GRID.s,GRID.w],[GRID.n,GRID.e]],{interactive:false,opacity:1}));
+  addOv(L.geoJSON(mask,{style:{color:'#10294a',weight:1,opacity:.45,fillOpacity:0},interactive:false}));
+  addOv(L.polyline(contourSegs(f.grid,35,f.st,f.minLat,f.minLon),{color:'#b45309',weight:2,opacity:.9,interactive:false}));
+  addOv(L.polyline(contourSegs(f.grid,65,f.st,f.minLat,f.minLon),{color:'#b91c1c',weight:2.5,opacity:.95,interactive:false}));
+  const known=scores.filter(v=>v!=null),used=infraRecords.filter(r=>humanRule(r,Date.now())).length;
+  $('ovNote').textContent='Smooth blend of the same rain and river score, sampled at '+cells.length+' points ('+known.length+' with data).'+(used?' '+used+' infrastructure record(s) add points near their location.':'')+' Experimental, not a probability or an official warning.'+
+    (contourState.failed?' '+contourState.failed+' of '+contourState.batches+' data batches failed ('+contourState.lastErr+'). Open-Meteo may be rate-limiting or blocked; wait a minute and pick the layer again. Clear areas mean no data, not safe.':'');
+}
+function addHistorical(){
+  let warned=false;
+  NRSC_LAYERS.forEach(n=>{
+    const l=L.tileLayer.wms(NRSC_WMS,{layers:n,styles:'',format:'image/png',transparent:true,version:'1.1.1',opacity:.66,attribution:'Flood evidence © NRSC/ISRO Bhuvan'});
+    l.on('tileerror',()=>{if(warned)return;warned=true;$('ovNote').textContent+=' Some NRSC tiles failed to load; blank means unknown, not safe.'});
+    addOv(l);
+  });
+}
+async function addCyclone(tok,prefix){
+  const pre=prefix||'';
+  try{
+    const now=new Date(),to=now.toISOString().slice(0,10),fr=new Date(now-14*864e5).toISOString().slice(0,10);
+    const r=await fetch('https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=TC&fromdate='+fr+'&todate='+to+'&alertlevel=red;orange;green',{cache:'no-store',headers:{Accept:'application/json'}});
+    if(!r.ok)throw Error('HTTP '+r.status);
+    const d=await r.json();if(tok!==ovTok)return;
+    if(!Array.isArray(d.features))throw Error('unexpected response');
+    const fs=d.features.filter(f=>f&&f.geometry&&f.properties);
+    const col=p=>{const l=String(p&&p.alertlevel||'').toLowerCase();return l==='red'?'#ff4b55':l==='orange'?'#ff9f43':'#f4d35e'};
+    addOv(L.geoJSON({type:'FeatureCollection',features:fs},{
+      style:f=>({color:col(f.properties),weight:2.5,fillColor:col(f.properties),fillOpacity:.2}),
+      pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:9,color:'#10294a',weight:2.5,fillColor:col(f.properties),fillOpacity:.95}),
+      onEachFeature:(f,l)=>{const p=f.properties,b=document.createElement('div');b.textContent=[p.name||p.eventname||'Tropical cyclone',p.alertlevel?'alert: '+p.alertlevel:'',p.fromdate?'from '+p.fromdate:'',p.todate?'to '+p.todate:''].filter(Boolean).join(' · ');l.bindPopup(b)}
+    }));
+    $('ovNote').textContent=pre+(fs.length?fs.length+' cyclone event(s) in the last 14 days; some may be over. Check IMD for the live bulletin.':'No cyclone events in the last 14 days. That does not prove there is no threat; check IMD.');
+  }catch(e){if(tok===ovTok)$('ovNote').textContent=pre+'Cyclone feed unavailable ('+e.message+'). Check IMD cyclone bulletins.'}
+}
+async function setMode(mode){
+  clearOverlay();showLegend(null);
+  const tok=ovTok;
+  if(mode==='off')return;
+  if(mode==='contours'){await runContours(tok);return}
+  if(mode==='historical'){
+    showLegend('Historical flood evidence',HIST_ROWS,'Past floods seen by satellite, not a forecast. Colours are NRSC’s own; open the atlas for the key.',HIST_SRC);
+    addHistorical();return;
+  }
+  if(mode==='cyclone'){
+    showLegend('Cyclone alerts',CY_ROWS,'Loading GDACS events…',['https://www.gdacs.org/','Open GDACS ↗']);
+    await addCyclone(tok);return;
+  }
+  if(mode==='combined'){
+    showLegend('Historical floods + cyclone alerts',HIST_ROWS.concat(CY_ROWS),'Loading GDACS events…',HIST_SRC);
+    addHistorical();
+    await addCyclone(tok,'Flood layer shows past events only. ');
+  }
+}
+$('riskMode').addEventListener('change',e=>setMode(e.target.value));
+
+// ---------- Infrastructure & human-factor evidence (kept in this browser only) ----------
+const INFRA_KEY='floodwatch.infrastructureEvidence.v1',infraLayer=L.layerGroup().addTo(map);
+function kmBetween(a,b,c,d){const t=x=>x*Math.PI/180,dl=t(c-a),dn=t(d-b),h=Math.sin(dl/2)**2+Math.cos(t(a))*Math.cos(t(c))*Math.sin(dn/2)**2;return 12742*Math.asin(Math.min(1,Math.sqrt(h)))}
+function httpsUrl(v){try{const u=new URL(String(v||''));return u.protocol==='https:'?u.href:''}catch(e){return ''}}
+// Returns scoring rule for an entry, or null when it is record-only / too old / not properly sourced
+function humanRule(r,now){
+  if(!['Official public record','Corroborated'].includes(r.status))return null;
+  let u;try{u=new URL(String(r.sourceUrl||''))}catch(e){return null}
+  if(u.protocol!=='https:')return null;
+  const h=u.hostname.toLowerCase();
+  if(r.status==='Official public record'&&!(h==='gov.in'||h.endsWith('.gov.in')||h.endsWith('.nic.in')||h.endsWith('.gov')))return null;
+  if(r.status==='Corroborated'){let v;try{v=new URL(String(r.corroboratingSourceUrl||''))}catch(e){return null}if(v.protocol!=='https:'||v.hostname.toLowerCase()===h)return null}
+  const t=Date.parse(String(r.date||'')+'T00:00:00Z');
+  if(!Number.isFinite(t)||t>now+864e5)return null;
+  const age=Math.max(0,(now-t)/864e5),c=r.category;let R=null;
+  if(c==='Dam/gate malfunction or abnormal release')R={base:38,radius:35,max:3.5,hyd:1,inc:1};
+  else if(c==='Dam release / gate operation'){if(/abnormal|unusual|high release|emergency release|rapid release/i.test(r.notes||''))R={base:26,radius:35,max:2,hyd:1,inc:1}}
+  else if(c==='Embankment breach or erosion')R={base:45,radius:15,max:30,inc:1};
+  else if(c==='Drainage/culvert blockage')R={base:25,radius:10,max:14,inc:1};
+  else if(c==='Floodplain obstruction / documented land-use change')R={base:14,radius:8,max:90};
+  if(!R||age>R.max||(R.hyd&&r.hydrologyLinked!==true))return null;
+  return R;
+}
+function humanPoints(cell,records,now){
+  let pts=0,inc=false;
+  for(const r of records){
+    const R=humanRule(r,now);if(!R)continue;
+    const d=kmBetween(cell.lat,cell.lon,+r.latitude,+r.longitude);
+    if(!Number.isFinite(d)||d>=R.radius)continue;
+    pts+=R.base*(1-d/R.radius)*(r.status==='Corroborated'?1:.85);if(R.inc)inc=true;
+  }
+  return {pts:Math.min(55,pts),inc};
+}
+function adjustedScores(){
+  const now=Date.now();
+  return contourState.cells.map((c,i)=>{
+    const base=contourState.base[i],h=humanPoints(c,infraRecords,now);
+    if(h.pts<=0)return base;
+    return base==null?(h.inc?Math.max(35,h.pts):h.pts):Math.min(100,base+h.pts);
+  });
+}
+const infraMsg=t=>{$('infraMsg').textContent=t};
+function renderInfra(){
+  $('infraCount').textContent=infraRecords.length;
+  const now=Date.now();
+  $('infraList').innerHTML=infraRecords.length?infraRecords.map((r,i)=>{
+    const u=httpsUrl(r.sourceUrl),on=!!humanRule(r,now);
+    return '<div class="infra-entry"><b>'+esc(r.category)+'</b> · '+esc(r.place)+
+      '<div class="note">'+esc(r.agency)+' · '+esc(r.date)+' · '+esc(r.status)+'</div>'+
+      (r.notes?'<div>'+esc(r.notes)+'</div>':'')+
+      (u?'<a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer" style="color:var(--blue);font-weight:600">Source ↗</a> ':'')+
+      '<span class="badge'+(on?' on':'')+'">'+(on?'Adds to contours':'Record only')+'</span> <button type="button" data-del="'+i+'">Delete</button></div>';
+  }).join(''):'<div class="note" style="margin-top:8px">No entries yet. Add a source-linked record above.</div>';
+  infraLayer.clearLayers();
+  infraRecords.forEach(r=>{
+    const la=+r.latitude,lo=+r.longitude;if(!Number.isFinite(la)||!Number.isFinite(lo))return;
+    const m=L.marker([la,lo],{icon:L.divIcon({className:'',html:'<div class="pin infra-pin">🏗️</div>',iconSize:[28,28],iconAnchor:[14,14]})}).addTo(infraLayer);
+    const b=document.createElement('div');
+    b.textContent=[r.category,r.place,r.agency,r.date,r.status].join(' · ')+'. A record, not a safety rating.';
+    m.bindPopup(b);
+  });
+}
+function infraChanged(){
+  try{localStorage.setItem(INFRA_KEY,JSON.stringify(infraRecords))}catch(e){infraMsg('Browser storage failed. Export your entries before leaving this page.')}
+  renderInfra();
+  if($('riskMode').value==='contours'&&contourState){clearOverlay();drawContours(ovTok)}
+}
+try{const saved=JSON.parse(localStorage.getItem(INFRA_KEY)||'[]');if(Array.isArray(saved))infraRecords=saved.filter(r=>r&&typeof r==='object').slice(0,100)}catch(e){}
+renderInfra();
+$('ifUse').addEventListener('click',()=>{
+  if(!pin){infraMsg('Pick a spot on the map first.');return}
+  const p=pin.getLatLng();$('ifLat').value=p.lat.toFixed(4);$('ifLon').value=p.lng.toFixed(4);infraMsg('Filled from your selected spot.');
+});
+$('infraForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const src=httpsUrl($('ifSource').value),co=httpsUrl($('ifCo').value),status=$('ifStatus').value;
+  const la=parseFloat($('ifLat').value),lo=parseFloat($('ifLon').value);
+  if(!src){infraMsg('Add a valid public HTTPS source link.');return}
+  if(!(la>=-90&&la<=90&&lo>=-180&&lo<=180)){infraMsg('Add the affected spot’s latitude and longitude.');return}
+  if(status==='Corroborated'){
+    let h1='',h2='';try{h1=new URL(src).hostname.toLowerCase();h2=new URL(co).hostname.toLowerCase()}catch(x){}
+    if(!co||!h1||!h2||h1===h2){infraMsg('Corroborated needs a second source on a different website.');return}
+  }
+  if(infraRecords.length>=100){infraMsg('This notebook holds 100 entries. Export and clear some first.');return}
+  infraRecords.unshift({category:$('ifType').value,place:$('ifPlace').value.trim(),latitude:la,longitude:lo,hydrologyLinked:$('ifHyd').checked,agency:$('ifAgency').value.trim(),date:$('ifDate').value,status,sourceUrl:src,corroboratingSourceUrl:status==='Corroborated'?co:'',notes:$('ifNotes').value.trim(),savedAt:new Date().toISOString()});
+  e.target.reset();infraChanged();infraMsg('Saved in this browser only. Nothing was uploaded.');
+});
+$('infraList').addEventListener('click',e=>{
+  const b=e.target.closest('[data-del]');if(!b)return;
+  const i=+b.dataset.del;if(Number.isInteger(i)&&i>=0&&i<infraRecords.length){infraRecords.splice(i,1);infraChanged()}
+});
+$('infraExport').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),scope:'browser-local research notes, not an official safety register',records:infraRecords},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='floodwatch-infrastructure-evidence.json';a.click();URL.revokeObjectURL(url);
+});
+$('infraClear').addEventListener('click',()=>{
+  if(!infraRecords.length||!confirm('Delete all saved entries in this browser? Export first if you need a copy.'))return;
+  infraRecords=[];infraChanged();
+});
+
+// Colour-coded city pins from one batched request
+(async()=>{
+  try{
+    const bundles=await fetchBundle(CITIES.map(c=>[c[1],c[2]]));
+    bundles.forEach((b,i)=>{
+      const r=score(b),c=CITIES[i],col=LEVELS[r.level].color;
+      const icon=L.divIcon({className:'',html:'<div class="pin" style="background:'+col+'"></div>',iconSize:[26,26],iconAnchor:[13,13]});
+      L.marker([c[1],c[2]],{icon}).addTo(map).on('click',()=>selectLocation(c[1],c[2],c[0]));
+    });
+  }catch(e){}
+})();
+setMode('contours');
+}
+</script>
+</body>
+</html>
