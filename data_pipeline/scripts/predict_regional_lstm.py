@@ -68,8 +68,10 @@ def main() -> int:
         raise SystemExit("No valid regional discharge observations.")
 
     frame["date"] = frame["observed_at"].dt.normalize()
-    frame["latitude"] = frame["latitude"].fillna(0).clip(-90, 90) / float(scalers.get("latitude_scaling_divisor", 90))
-    frame["longitude"] = frame["longitude"].fillna(0).clip(-180, 180) / float(scalers.get("longitude_scaling_divisor", 180))
+    # The trainer feeds raw latitude/longitude degrees into the last two features.
+    # Keep inference exactly aligned with those trained features (no /90 or /180 here).
+    frame["latitude"] = frame["latitude"].clip(-90, 90)
+    frame["longitude"] = frame["longitude"].clip(-180, 180)
     candidates = []
     for station_id, group in frame.groupby("station_id", sort=True):
         if args.station_id and str(station_id) != str(args.station_id):
