@@ -37,28 +37,32 @@ fi
 
 case "$MODE" in
   setup)
-    if [[ "$ARCH" == "s390x" ]]; then
-      cat >&2 <<'MSG'
-SETUP STOPPED SAFELY: this host reports s390x. The normal requirements file
-pins the pipeline to PyTorch >=2.2, while IBM's publicly documented prebuilt
-PyTorch-on-Z wheel page currently lists a much older CPU-only 1.10 wheel for
-Python 3.6–3.9. That older build has not been qualified against this regional
-pipeline. This script will not silently install a mismatched wheel.
-
-Keep the model run reproducible using the repository's "Train FloodWatch
-regional discharge LSTM" GitHub Actions workflow, or install a verified
-s390x-compatible PyTorch >=2.2 build first and set FLOODWATCH_ML_PYTHON.
-IBM reference: https://ibm.github.io/pytorch-on-z/
-MSG
-      exit 2
-    fi
     if ! command -v python3 >/dev/null 2>&1; then
       echo "ERROR: python3 is required." >&2
       exit 1
     fi
+    # Ubuntu 24.04's default CPython 3.12 is supported by the official CPU wheel
+    # index for x86_64 and s390x. Install only dependencies this pipeline uses;
+    # avoid GeoPandas, which is unrelated to model training and adds build risk.
+    mkdir -p "$(dirname "$DEFAULT_VENV")"
     python3 -m venv "$DEFAULT_VENV"
     "$DEFAULT_VENV/bin/python" -m pip install --upgrade pip
-    "$DEFAULT_VENV/bin/python" -m pip install -r "$ROOT_DIR/data_pipeline/requirements-ml.txt"
+    "$DEFAULT_VENV/bin/python" -m pip install \
+      "numpy>=1.26,<3" "pandas>=2.1,<3" requests beautifulsoup4
+    "$DEFAULT_VENV/bin/python" -m pip install \
+      --index-url https://download.pytorch.org/whl/cpu \
+      --extra-index-url https://pypi.org/simple \
+      "torch==2.10.0+cpu"
+    "$DEFAULT_VENV/bin/python" - <<'PY'
+import platform, sys, torch, numpy, pandas
+print("Architecture:", platform.machine())
+print("Python:", sys.version.split()[0])
+print("NumPy:", numpy.__version__)
+print("pandas:", pandas.__version__)
+print("PyTorch:", torch.__version__)
+assert torch.__version__.split("+")[0] >= "2.2.0"
+assert hasattr(torch, "inference_mode")
+PY
     echo "ML environment ready at: $DEFAULT_VENV"
     echo "Next: FLOODWATCH_ML_PYTHON='$DEFAULT_VENV/bin/python' bash deploy/ibm-linuxone/run-regional-lstm.sh preflight"
     exit 0
