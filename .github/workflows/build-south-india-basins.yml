@@ -1,0 +1,64 @@
+name: Build South India basin geometry
+
+on:
+  workflow_dispatch: {}
+  push:
+    paths:
+      - '.github/workflows/build-south-india-basins.yml'
+      - 'data_pipeline/scripts/build_south_india_basins.py'
+
+permissions:
+  contents: write
+
+jobs:
+  build-basin-layer:
+    # Keep generated data writes confined to the specifically approved feature branch.
+    if: github.ref == 'refs/heads/feature/continuous-risk-contours-data-basin-20261018'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v7
+        with:
+          ref: feature/continuous-risk-contours-data-basin-20261018
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install vector geometry dependencies
+        run: python -m pip install --upgrade pip geopandas
+      - name: Download official HydroBASINS Asia level-6 geometry
+        run: |
+          curl --fail --location --retry 3 --retry-delay 2 --max-time 240 \
+            'https://data.hydrosheds.org/file/hydrobasins/standard/hybas_as_lev06_v1c.zip' \
+            --output /tmp/hybas_as_lev06_v1c.zip
+          test -s /tmp/hybas_as_lev06_v1c.zip
+      - name: Clip and validate basin polygons for the five-state mask
+        run: |
+          python data_pipeline/scripts/build_south_india_basins.py \
+            --basins-zip /tmp/hybas_as_lev06_v1c.zip \
+            --states data/south-india-states.geojson \
+            --output data/south-india-basins.geojson \
+            --metadata data/south-india-basins.metadata.json
+      - name: Commit generated public basin geometry on feature branch only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp data/south-india-basins.geojson /tmp/south-india-basins.geojson
+          cp data/south-india-basins.metadata.json /tmp/south-india-basins.metadata.json
+          git fetch origin feature/continuous-risk-contours-data-basin-20261018
+          git checkout -B feature/continuous-risk-contours-data-basin-20261018 origin/feature/continuous-risk-contours-data-basin-20261018
+          cp /tmp/south-india-basins.geojson data/south-india-basins.geojson
+          cp /tmp/south-india-basins.metadata.json data/south-india-basins.metadata.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/south-india-basins.geojson data/south-india-basins.metadata.json
+          if git diff --cached --quiet; then
+            echo 'Generated basin geometry is already current; no commit needed.'
+          else
+            git commit -m 'Add clipped HydroBASINS level-6 geometry for South India'
+            git push origin HEAD:feature/continuous-risk-contours-data-basin-20261018
+          fi
+
+# This workflow never targets main, merges a pull request, or deploys the site.
