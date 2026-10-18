@@ -169,3 +169,20 @@ Next gates, in order:
 4. Build a station-specific daily feature table only after the above checks.
 5. Train a research-only baseline and LSTM using chronological splits; keep
    flood-event labels and independent evaluation separate from discharge prediction.
+
+
+## Common observations schema adapter
+
+The workflow now also exports `data_pipeline/processed/cwc_discharge_observations.csv`
+and a small conversion report. The adapter maps the source's daily discharge
+field to `kind=river_discharge`, `value`, and `unit=m3/s`, preserving the
+station ID, timestamp, source URL/file and the source's unspecified timezone.
+This makes the discharge table compatible with the observation-table interface
+used by `build_event_features.py`.
+
+This is only a schema conversion. It does not verify source measurements,
+coordinates, station identity, or timezone. Do not build model features until
+station coordinates are reviewed and a weather table exists for those verified
+stations. The current catalogue intentionally marks all stations unverified,
+so the historical weather fetcher should continue to refuse them until a
+human reviewer records a reliable coordinate source URL.
