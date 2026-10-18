@@ -100,7 +100,7 @@ def api_status():
         "model_readiness_endpoint": "/api/v1/models/status",
         "regional_discharge_forecast_endpoint": "/api/v1/models/regional-discharge/forecast",
         "water_observations": "Published GitHub Pages JSON snapshot; collector runs every six hours when scheduled execution succeeds; observation freshness varies by source",
-        "flood_forecast_model": "External Open-Meteo Flood API/GloFAS proxy available; a five-state regional discharge LSTM has completed a historical holdout evaluation, but model inference is not served by this API and no flood-probability model is deployed.",
+        "flood_forecast_model": "External Open-Meteo Flood API/GloFAS proxy available; the regional discharge LSTM can be invoked on demand at /api/v1/models/regional-discharge/forecast when local ML assets are installed. Outputs are discharge research forecasts, not flood probabilities or official warnings.",
         "last_checked": datetime.now(timezone.utc).isoformat(),
     }
 
