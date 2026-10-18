@@ -169,6 +169,20 @@ jobs:
                   for tag, asset in parser.assets:
                       if any(word in asset.lower() for word in ("js", "map", "flood", "hazard", "arcgis", "geoserver", "api")):
                           print(f"  ASSET {tag}: {asset}")
+                      if tag == "script" and asset.lower().split("?")[0].endswith(".js"):
+                          from urllib.parse import urljoin
+                          script_url = urljoin(page_url, asset)
+                          try:
+                              script_req = urllib.request.Request(script_url, headers={"User-Agent": "FloodWatch-source-discovery/1.0"})
+                              with urllib.request.urlopen(script_req, timeout=18) as script_response:
+                                  js = script_response.read().decode("utf-8", errors="replace")
+                              print(f"  SCRIPT {script_url}: {len(js)} chars")
+                              hints = [line.strip() for line in js.splitlines()
+                                       if any(word in line.lower() for word in ("wms", "arcgis", "mapserver", "geoserver", "flood_hz", "hazard", "tilelayer", "featurelayer", "map.addlayer", "rest/services", "ajax", ".php", ".json", "layername"))]
+                              for hint in hints[:45]:
+                                  print("    JS-HINT: " + hint[:800])
+                          except Exception as js_exc:
+                              print(f"  WARN script fetch {script_url}: {js_exc}")
                   matches = [line.strip() for line in html.splitlines()
                              if any(word in line.lower() for word in ("wms", "geoserver", "mapserver", "arcgis", "rest/services", "tilelayer", "featurelayer", "flood_hz", "hazard"))]
                   for line in matches[:30]:
