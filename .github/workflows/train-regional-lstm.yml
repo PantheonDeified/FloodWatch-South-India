@@ -15,7 +15,8 @@ permissions:
 
 concurrency:
   group: floodwatch-regional-discharge-lstm-${{ github.ref }}
-  cancel-in-progress: false
+  # Newer feature-branch training code supersedes stuck/obsolete jobs.
+  cancel-in-progress: true
 
 jobs:
   regional-train:
