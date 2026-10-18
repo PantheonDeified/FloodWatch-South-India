@@ -48,6 +48,17 @@ Google's open-source hydrology framework is a research starting point, not a rea
 
 This is an independent project, not affiliated with or endorsed by Google Flood Hub. It must not be used as the sole basis for emergency decisions. Follow official IMD, CWC and state disaster-management warnings. External data and map providers retain their own licensing/attribution requirements.
 
+## Optional IBM LinuxONE backend connection
+
+The basic FastAPI service can expose `/health` and `/api/v1/status`. The website's **FloodWatch backend connection** panel lets you paste the current HTTPS API URL and test both endpoints.
+
+1. Start the API on the IBM LinuxONE server.
+2. Start Cloudflare Quick Tunnel to the API and keep both processes running.
+3. Open the published website, paste the `https://…trycloudflare.com` URL into the backend connection panel, and select **Test API**.
+4. Check that both endpoints return JSON. This is only a backend connectivity check; the API does not yet aggregate live flood data or serve a validated flood forecast.
+
+The Quick Tunnel URL is temporary and may change whenever the tunnel is restarted. The website stores the URL in the current browser's local storage, not in the public repository. Never treat a Quick Tunnel as a production hosting setup; do not expose secrets or private data through this demo API.
+
 ## Publish with GitHub Pages
 
 1. Open the repository **Settings → Pages**.
