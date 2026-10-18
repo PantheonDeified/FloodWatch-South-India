@@ -6,6 +6,14 @@ An independent, browser-based flood situational-awareness research prototype for
 
 Expected GitHub Pages URL: https://pantheondeified.github.io/FloodWatch-South-India/
 
+## Backend and ML status
+
+The FastAPI backend is in `backend/`. It includes health/status endpoints, the Open-Meteo weather proxy, a paginated `/api/v1/water-observations` endpoint, and `/api/v1/models/status`. The water endpoint can read a local snapshot or fetch the public repository snapshot. Updating files in GitHub does **not** automatically update the separately running Linux API service; follow [backend deployment notes](backend/README.md).
+
+Research ML scripts are in `data_pipeline/scripts/`: `train_streamflow_lstm.py` (PyTorch single-gauge LSTM) and `train_event_ml.py` (scikit-learn event baseline). The LSTM report now compares out-of-time results against a persistence baseline. These are training implementations, not a deployed trained model. There is currently no verified local South India flood-forecast model artifact; the model-status endpoint states this explicitly. The current operational forecast context comes from separately labelled external model products.
+
+Before training, provide verified gauge discharge with units and station IDs, aligned weather data, reviewed basin mapping and sufficient continuous history. River water level must not be relabelled as discharge, and days without an event record must not be assumed flood-free. Model evaluation must remain chronological and be compared against a simple baseline.
+
 ## Current frontend capabilities
 
 - Interactive Leaflet map with street, terrain and satellite basemaps.
