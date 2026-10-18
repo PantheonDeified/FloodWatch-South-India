@@ -1,0 +1,35 @@
+name: Validate water-data pipeline
+
+on:
+  push:
+    paths:
+      - 'data_pipeline/**/*.py'
+      - 'data_pipeline/**/*.json'
+      - '.github/workflows/validate-water-pipeline.yml'
+  pull_request:
+    paths:
+      - 'data_pipeline/**/*.py'
+      - 'data_pipeline/**/*.json'
+      - '.github/workflows/validate-water-pipeline.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run water-pipeline unit tests
+        run: python -m unittest discover -s data_pipeline/tests -p "test_*.py"
+      - name: Validate committed snapshot
+        run: python data_pipeline/scripts/validate_water_snapshot.py --snapshot data/water-observations.json
+      - name: Generate audit report and ensure report generation works
+        run: python data_pipeline/scripts/audit_water_snapshot.py --snapshot data/water-observations.json --out /tmp/water-pipeline-report.md
