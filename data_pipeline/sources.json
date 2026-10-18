@@ -161,7 +161,9 @@
   ],
   "historical_reference_pages": [
     "https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-central-water-commission-cwc",
-    "https://nwdp.nwic.gov.in/en/dataset/reservoir-water-level-manual-daily-centre-water-commission_cwc",
+    "https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-central-water-commission-cwc",
+    "https://nwdp.nwic.gov.in/dataset/river-velocity-discharge-manual-daily-central-water-commission-cwc",
+    "https://nwdp.nwic.gov.in/en/dataset/rainfall-manual-daily-central-water-commission-cwc",
     "https://www.nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-andhra-pradesh-surface-water-department"
   ]
 }
