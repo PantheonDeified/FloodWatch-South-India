@@ -19,6 +19,26 @@ This folder is the first reproducible data-ingestion and basin-mapping step for 
 3. A GIS assignment from station coordinates to HydroBASINS polygons and candidate upstream basin relationships for selected sites via assign_gauges_to_basins.py. All proposed matches require channel/river and station metadata review.
 4. A source manifest and a data-quality report so missing intervals, duplicate timestamps, coordinates and provenance are visible.
 
+## Research LSTM training and inference
+
+Only train a single-gauge LSTM after the input tables have been verified and contain enough continuous **observed discharge** history. Do not use the public 407-record snapshot as a substitute for a curated historical daily discharge table; it mixes measurement types and timestamp quality.
+
+Install the optional ML dependencies:
+
+    python -m pip install -r data_pipeline/requirements-ml.txt
+
+Create a normalized daily feature table with `build_event_features.py` using source-reviewed station data and weather. The exact input schema is documented in that script. Then train a gauge-specific model:
+
+    python data_pipeline/scripts/train_streamflow_lstm.py --features path/to/features.csv --station-id VERIFIED_STATION_ID --output-dir data_pipeline/output/models
+
+The training report includes chronological train/validation/test periods, MAE/RMSE/NSE, and an out-of-time persistence baseline. If the LSTM does not beat the persistence baseline, do not promote it as a forecast model. A saved weight file alone is not evidence of skill.
+
+For a model that has already been trained and reviewed, generate a research-only seven-day discharge output (the lead horizon and lookback must match the trained model):
+
+    python data_pipeline/scripts/predict_streamflow_lstm.py --features path/to/features.csv --station-id VERIFIED_STATION_ID --model data_pipeline/output/models/streamflow_lstm_VERIFIED_STATION_ID.pt --scalers data_pipeline/output/models/streamflow_lstm_VERIFIED_STATION_ID.scalers.npz --output data_pipeline/output/pilot_discharge_forecast.csv
+
+The inference script refuses incomplete recent history instead of silently filling missing observations. It writes a CSV and a metadata JSON that explicitly state the output is not validated for public warnings, does not include future weather forecasts, and is not a flood probability or inundation map. Model artifacts and raw station data are intentionally not committed to Git.
+
 ## Downloading historical river records
 
 The official CWC telemetry portal currently lists historical archive resources for some South Indian river groups, including 1961–1990, 1991–2020, 2021–2025 and new 2026–2030 resources. The public portal's dataset metadata may be updated even when individual rows are missing or incomplete. Use the archive downloader to make a checksum-tracked local copy of the raw CSVs before analysis:
