@@ -8,6 +8,23 @@
 :root{color-scheme:dark;--bg:#0b1220;--panel:#111c2d;--line:#26364c;--muted:#a8b6c9;--text:#edf5ff;--accent:#56b4ff}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Inter,system-ui,Segoe UI,Arial,sans-serif}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 20px;border-bottom:1px solid var(--line);background:#0d1727} .brand{display:flex;gap:12px;align-items:center}.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(145deg,#2b8ce5,#22c6b4);display:grid;place-items:center;font-size:22px}h1{font-size:19px;margin:0}small,.muted{color:var(--muted)}.tag{font-size:11px;border:1px solid #31526f;border-radius:99px;padding:4px 8px;color:#b7ddff}main{display:grid;grid-template-columns:minmax(0,1fr) 340px;min-height:calc(100vh - 71px)}.map-area{min-width:0;display:flex;flex-direction:column}.toolbar{padding:12px;display:flex;gap:8px;flex-wrap:wrap;background:#101b2b;border-bottom:1px solid var(--line)}input,select,button{font:inherit;border-radius:9px;border:1px solid #30445e;background:#0b1524;color:var(--text);padding:10px 12px}input{flex:1;min-width:190px}button{cursor:pointer}button.primary{background:#176fba;border-color:#2588d7}button:hover{filter:brightness(1.15)}#mapWrap{position:relative}#map{height:calc(100vh - 136px);min-height:490px;background:#172436}#zoomStatus{position:absolute;z-index:1000;top:12px;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 24px);padding:9px 13px;border:1px solid #76552e;border-radius:10px;background:rgba(57,43,29,.96);color:#ffdda8;font-size:12px;line-height:1.4;box-shadow:0 4px 16px rgba(0,0,0,.3);pointer-events:none}#zoomStatus[hidden]{display:none}.side{padding:15px;background:var(--panel);border-left:1px solid var(--line);overflow:auto}.section{padding:14px 0;border-bottom:1px solid var(--line)}.section:first-child{padding-top:0}h2{font-size:14px;margin:0 0 10px}.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.metric{background:#0b1626;border:1px solid var(--line);border-radius:11px;padding:12px}.metric strong{display:block;font-size:22px;margin:3px 0}.metric span{font-size:12px;color:var(--muted)}.status{font-size:12px;color:var(--muted);min-height:18px;margin-top:7px}.layers{display:grid;grid-template-columns:1fr 1fr;gap:7px}.layers button{font-size:12px;text-align:left}.layers button.active{background:#17476c;border-color:#2f9ce8}.warning{font-size:11px;line-height:1.5;color:#c4d0df;background:#172538;border-radius:9px;padding:11px;margin-top:12px}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#101b2b;color:#edf5ff}.leaflet-control-layers{background:#111c2d;color:#edf5ff;border-color:#26364c}.leaflet-control-zoom a{background:#111c2d!important;color:#edf5ff!important;border-color:#26364c!important}.history-chart{display:block;width:100%;height:230px;background:#0b1626;border:1px solid var(--line);border-radius:10px;margin-top:9px}.history-note{font-size:11px;line-height:1.5;color:var(--muted);margin-top:8px}.history-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.history-metrics .metric strong{font-size:18px}.history-label{font-size:12px;color:var(--muted);margin:7px 0 0}.history-busy{color:#9fd5ff}.history-error{color:#ffcc9a}.water-controls{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.water-controls input{min-width:130px}.water-controls select{max-width:100%}.water-table-wrap{max-height:390px;overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:9px}.water-table{width:100%;border-collapse:collapse;font-size:11px;min-width:680px}.water-table th{position:sticky;top:0;background:#1a2a3e;color:#cfe7ff;text-align:left;z-index:1}.water-table th,.water-table td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}.water-table tr:hover td{background:#15263a}.water-table button{padding:4px 6px;font-size:11px}.water-table a{color:#7fc8ff}.water-kind{display:inline-block;border:1px solid #31526f;border-radius:99px;padding:2px 6px;font-size:10px}.chain-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}.chain-node{position:relative;border:1px solid var(--line);background:#0b1626;border-radius:11px;padding:12px;min-height:112px}.chain-node strong{display:block;font-size:15px;margin:6px 0}.chain-node p{margin:5px 0 0;font-size:11px;color:var(--muted);line-height:1.5}.chain-node .chain-dot{display:inline-grid;place-items:center;border:1px solid #3b8ac4;border-radius:50%;width:24px;height:24px;color:#9ed8ff;margin-right:6px}.chain-node.chain-caution{border-color:#795f35}.chain-node.chain-good{border-color:#2b6f61}.chain-node.chain-bad{border-color:#80504f}.chain-connector{text-align:center;color:#56b4ff;font-size:16px;margin:0}.water-freshness{color:var(--muted);font-size:11px;line-height:1.5}.freshness-badge{display:inline-block;border:1px solid #526176;border-radius:99px;padding:2px 6px;margin:3px 0;font-size:10px;font-weight:600}.freshness-recent{color:#9be2bd;border-color:#2b7959;background:#102b25}.freshness-delayed{color:#ffdda8;border-color:#896a36;background:#332919}.freshness-stale{color:#ffaaa5;border-color:#874a4a;background:#351e24}.freshness-unknown{color:#c4d0df;border-color:#526176;background:#172538}.@media(max-width:900px){main{grid-template-columns:1fr}.side{border-left:0;border-top:1px solid var(--line)}#map{height:60vh;min-height:400px}header{padding:12px}.tag{display:none}}
 #apiStatusDetails{color:var(--text)}#checkApiButton:disabled{opacity:.55;cursor:wait}#backendApiSection{display:none}
+
+.evidence-notebook{margin-top:12px;padding:13px;border:1px solid #354a63;background:#0d1929;border-radius:12px}
+.evidence-notebook h3{font-size:13px;margin:0 0 8px}
+.infra-form{display:grid;gap:7px;margin-top:10px}
+.infra-form label{font-size:11px;color:#c4d0df;margin-top:3px}
+.infra-form input,.infra-form select,.infra-form textarea{width:100%;min-width:0;box-sizing:border-box;background:#081321}
+.infra-form textarea{resize:vertical;line-height:1.5}
+.infra-tools{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:12px 0 8px;font-size:11px}
+.infra-tools button{padding:6px 8px;font-size:11px}
+.infra-list{display:grid;gap:8px}
+.infra-entry{padding:10px;border:1px solid var(--line);border-radius:9px;background:#101f31;font-size:11px}
+.infra-entry strong{display:block;font-size:12px;margin-bottom:4px}
+.infra-entry p{margin:5px 0;overflow-wrap:anywhere}
+.infra-entry a{color:#7fc8ff;overflow-wrap:anywhere}
+.infra-entry .infra-meta{color:var(--muted);font-size:10px}
+.infra-entry button{padding:4px 7px;font-size:10px;margin-top:4px}
+
 </style>
 </head>
 <body>
@@ -115,6 +132,45 @@
 <li><b>Land use & response:</b> dated floodplain/land-cover evidence and public warning, closure and evacuation timelines.</li>
 </ul>
 <div class="warning"><b>Dam-safety safeguard:</b> FloodWatch must not guess “dam strength” from reservoir level or rainfall. Structural safety requires qualified engineering inspections and authorized instrumentation. If records are missing, show “not verified”; do not label a dam safe/unsafe or blame an operator without competent evidence.</div>
+<div class="evidence-notebook">
+  <h3>Infrastructure evidence notebook · browser-only demo</h3>
+  <p class="muted">Record source-linked facts about inspections, reservoir releases, embankments, drainage maintenance and official response timelines. No safety score is inferred. Entries stay in this browser unless you export and share them yourself.</p>
+  <form id="infraEvidenceForm" class="infra-form">
+    <label for="infraType">Evidence category</label>
+    <select id="infraType" required>
+      <option value="Dam/reservoir inspection or safety report">Dam/reservoir inspection or safety report</option>
+      <option value="Reservoir level, inflow, outflow or release bulletin">Reservoir level, inflow, outflow or release bulletin</option>
+      <option value="Embankment, levee or flood defence">Embankment, levee or flood defence</option>
+      <option value="Drainage, culvert blockage or maintenance">Drainage, culvert blockage or maintenance</option>
+      <option value="Floodplain, land-use or development record">Floodplain, land-use or development record</option>
+      <option value="Official warning or response timeline">Official warning or response timeline</option>
+      <option value="Other public infrastructure record">Other public infrastructure record</option>
+    </select>
+    <label for="infraPlace">Facility / place / river (no sensitive security details)</label>
+    <input id="infraPlace" maxlength="140" required placeholder="e.g., named reservoir, district or river reach">
+    <label for="infraAgency">Issuing agency / source organization</label>
+    <input id="infraAgency" maxlength="140" required placeholder="Agency named in the document">
+    <label for="infraDate">Document or observation date</label>
+    <input id="infraDate" type="date" required>
+    <label for="infraStatus">Evidence review status</label>
+    <select id="infraStatus" required>
+      <option value="Official public record">Official public record</option>
+      <option value="Corroborated">Corroborated by independent public evidence</option>
+      <option value="Unverified report">Unverified report</option>
+      <option value="Disputed">Disputed; needs review</option>
+      <option value="Needs follow-up">Needs follow-up / newer inspection requested</option>
+    </select>
+    <label for="infraSource">Public source URL (HTTPS required)</label>
+    <input id="infraSource" type="url" required maxlength="1200" placeholder="https://...">
+    <label for="infraNotes">What the source actually says (max 600 characters)</label>
+    <textarea id="infraNotes" rows="3" maxlength="600" placeholder="Record dates, published condition/status, release figures and units exactly as sourced. Separate facts from hypotheses."></textarea>
+    <button class="primary" type="submit">Save evidence entry in this browser</button>
+    <div class="status" id="infraFormStatus" aria-live="polite">No evidence submitted to any server.</div>
+  </form>
+  <div class="infra-tools"><b>Saved entries: <span id="infraEvidenceCount">0</span></b><button type="button" id="infraExport">Export JSON</button><button type="button" id="infraClear">Clear local entries</button></div>
+  <div id="infraEvidenceList" class="infra-list"><div class="muted">No local evidence entries yet.</div></div>
+  <div class="warning"><b>Use responsibly:</b> use public records only; don't publish personal details or security-sensitive dam information. “Official public record” means the source is official, not that every claim has been independently verified. Missing or old inspection information means <b>“safety status not verified”</b>—not safe or unsafe. This notebook is local to this browser, not a shared public database.</div>
+</div>
 <div class="history-note">Design, future alert workflow and accountability safeguards: <a href="https://github.com/PantheonDeified/FloodWatch-South-India/blob/main/docs/EARLY_WARNING_AND_ACCOUNTABILITY.md" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">Read the implementation plan ↗</a> · <a href="https://github.com/PantheonDeified/FloodWatch-South-India/blob/main/docs/FEATURES_AND_CAPABILITIES.md" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">Full capability matrix ↗</a></div>
 </section>
 <section class="section"><h2>Next 24 hours</h2><div id="hourly" class="muted">Loading forecast when a location is selected.</div></section>
@@ -760,5 +816,50 @@ loadWaterObservations();
 setInterval(loadWaterObservations,6*60*60*1000);
 setInterval(()=>{if(selected)loadWeather()},600000);
 setOverlay('rain');
+initInfrastructureRegister();
 }
+
+function initInfrastructureRegister(){
+ const form=$('infraEvidenceForm');if(!form||form.dataset.initialized)return;form.dataset.initialized='1';
+ const KEY='floodwatch.infrastructureEvidence.v1';let records=[];
+ function sourceUrl(value){try{const u=new URL(String(value||''));return u.protocol==='https:'?u.href:''}catch(e){return ''}}
+ function persist(){try{localStorage.setItem(KEY,JSON.stringify(records));$('infraFormStatus').textContent='Saved locally in this browser only; no data was uploaded.';return true}catch(e){$('infraFormStatus').textContent='Browser storage failed. Export the entries before leaving this page.';return false}}
+ function render(){
+  const list=$('infraEvidenceList');$('infraEvidenceCount').textContent=String(records.length);
+  if(!records.length){list.innerHTML='<div class="muted">No local evidence entries yet. Add a source-linked record above.</div>';return}
+  list.innerHTML=records.map((r,i)=>{
+   const url=sourceUrl(r.sourceUrl);
+   return '<article class="infra-entry"><strong>'+escapeHtml(r.category)+' — '+escapeHtml(r.place)+'</strong>'+
+    '<div class="infra-meta">Agency: '+escapeHtml(r.agency)+' · Evidence date: '+escapeHtml(r.date)+' · Review status: '+escapeHtml(r.status)+'</div>'+
+    (r.notes?'<p>'+escapeHtml(r.notes)+'</p>':'')+
+    (url?'<p>Public source: <a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(url)+'</a></p>':'<p class="infra-meta">Source URL is invalid; entry needs correction.</p>')+
+    '<div class="infra-meta">Saved in this browser: '+escapeHtml(r.savedAt||'date unknown')+'</div>'+
+    '<button type="button" data-infra-delete="'+i+'">Delete local entry</button></article>';
+  }).join('');
+ }
+ try{const saved=JSON.parse(localStorage.getItem(KEY)||'[]');if(Array.isArray(saved))records=saved.filter(r=>r&&typeof r==='object').slice(0,100)}catch(e){records=[]}
+ form.addEventListener('submit',e=>{
+  e.preventDefault();
+  const src=sourceUrl($('infraSource').value);
+  if(!src){$('infraFormStatus').textContent='Please provide a valid public HTTPS source URL.';return}
+  if(records.length>=100){$('infraFormStatus').textContent='This local notebook holds up to 100 entries. Export and clear some first.';return}
+  records.unshift({category:$('infraType').value,place:$('infraPlace').value.trim(),agency:$('infraAgency').value.trim(),date:$('infraDate').value,status:$('infraStatus').value,sourceUrl:src,notes:$('infraNotes').value.trim(),savedAt:new Date().toISOString()});
+  persist();render();form.reset();
+ });
+ $('infraEvidenceList').addEventListener('click',e=>{
+  const btn=e.target.closest('[data-infra-delete]');if(!btn)return;
+  const idx=Number(btn.dataset.infraDelete);if(!Number.isInteger(idx)||idx<0||idx>=records.length)return;
+  records.splice(idx,1);persist();render();
+ });
+ $('infraExport').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),scope:'browser-local research notes; not an official safety register',records},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='floodwatch-infrastructure-evidence.json';a.click();URL.revokeObjectURL(url);
+ });
+ $('infraClear').addEventListener('click',()=>{
+  if(!confirm('Delete all infrastructure evidence entries saved in this browser? Export first if you need a copy.'))return;
+  records=[];persist();render();
+ });
+ render();
+}
+
 </script></body></html>
