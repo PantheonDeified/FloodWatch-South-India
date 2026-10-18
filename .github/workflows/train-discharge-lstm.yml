@@ -81,6 +81,20 @@ jobs:
             --lead-days "${{ inputs.lead_days || '7' }}" \
             --epochs "${{ inputs.epochs || '80' }}"
 
+      - name: Smoke-test saved weights with the prediction script
+        run: |
+          MODEL_PATH="$(find data_pipeline/output/models -maxdepth 1 -type f -name '*.pt' -print -quit)"
+          SCALER_PATH="$(find data_pipeline/output/models -maxdepth 1 -type f -name '*.scalers.npz' -print -quit)"
+          test -n "$MODEL_PATH"
+          test -n "$SCALER_PATH"
+          python data_pipeline/scripts/predict_discharge_lstm.py \
+            --observations data_pipeline/output/cwc_discharge_normalized.csv \
+            --station-id "${{ inputs.station_id || 'karnataka|yadgir|16.73750000|77.12527778' }}" \
+            --model "$MODEL_PATH" \
+            --scalers "$SCALER_PATH" \
+            --output data_pipeline/output/models/inference_smoke_test.csv \
+            --lookback-days 90 --lead-days 7
+
       - name: Upload model, metrics, and source-quality report
         if: always()
         uses: actions/upload-artifact@v4
