@@ -49,6 +49,5 @@ jobs:
           path: |
             data_pipeline/output/regional_models/
             data_pipeline/output/cwc_discharge_quality_report.json
-            data_pipeline/output/cwc_discharge_normalized.csv
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 90
