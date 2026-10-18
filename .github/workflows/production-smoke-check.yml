@@ -47,11 +47,11 @@ jobs:
           expected_markers = (
               "FloodWatch", "leaflet", "water-observations.json",
               'data-overlay="rain"', 'data-overlay="cloud"',
-              'data-overlay="wind"', 'data-overlay="cyclone"',
+              'data-overlay="wind"', 'data-overlay="nasa-imerg"', 'data-overlay="cyclone"',
               "ERA5-Land", "waterRows", "dischargeInterpretation", "hourly",
-              "riskLayer", "riskMapLegend", "setRiskMapLayer", "setComputedRiskGrid", "FLOODWATCH_RISK_GRID", "fw-risk-grid-20261018-stable-v4", "flood-api.open-meteo.com", "NRSC_HAZARD_WMS",
+              "riskLayer", "riskMapLegend", "setRiskMapLayer", "setComputedRiskGrid", "FLOODWATCH_RISK_GRID", "fw-risk-contours-20261018-v1", "flood-api.open-meteo.com", "NRSC_HAZARD_WMS",
               "agg_karnataka", "agg_kerala", "agg_tamilnadu", "loadCyclones",
-              "addRiskCycloneThreat", "infraEvidenceForm", "initInfrastructureRegister",
+              "addRiskCycloneThreat", "buildRiskContourField", "buildRiskContourPolylines", "basinRoutingRelation", "loadSouthIndiaBasins", "checkOfficialFeeds", 'id="regionalMlStatus"', 'id="ibmZDatathonBanner"', "infraEvidenceForm", "initInfrastructureRegister",
               "floodwatch.infrastructureEvidence.v1", "cwc.gov.in/national-register-large-dams",
               "sachet.ndma.gov.in",
           )
