@@ -29,9 +29,9 @@ class BuildEventFeaturesUnitTests(unittest.TestCase):
                 {"station_id": "G1", "date": "2024-01-02", "precipitation_sum": 3.0},
             ], ["station_id", "date", "precipitation_sum"])
             write_csv(observations, [
-                {"station_id": "G1", "observed_at": "2024-01-01T12:00:00+00:00", "kind": "river_level", "value": 2.5, "unit": "m"},
+                {"station_id": "G1", "observed_at": "2024-01-01T12:00:00+00:00", "kind": "river_level", "value": 2.5, "unit": "m", "source_url": "https://example.gov/gauge.csv", "source_timezone": "Asia/Kolkata"},
                 {"station_id": "G1", "observed_at": "2024-01-02T12:00:00+00:00", "kind": "river_level", "value": 2.7, "unit": "m"},
-            ], ["station_id", "observed_at", "kind", "value", "unit"])
+            ], ["station_id", "observed_at", "kind", "value", "unit", "source_url", "source_timezone"])
             run = subprocess.run([
                 sys.executable, str(SCRIPT), "--weather", str(weather),
                 "--observations", str(observations), "--out", str(output),
@@ -51,7 +51,7 @@ class BuildEventFeaturesUnitTests(unittest.TestCase):
             write_csv(weather, [{"station_id": "G1", "date": "2024-01-01", "precipitation_sum": 2.0}],
                       ["station_id", "date", "precipitation_sum"])
             write_csv(observations, [
-                {"station_id": "G1", "observed_at": "2024-01-01T12:00:00+00:00", "kind": "discharge", "value": 2.5, "unit": "m"}
+                {"station_id": "G1", "observed_at": "2024-01-01T12:00:00+00:00", "kind": "discharge", "value": 2.5, "unit": "m", "source_url": "https://example.gov/gauge.csv", "source_timezone": "Asia/Kolkata"}
             ], ["station_id", "observed_at", "kind", "value", "unit"])
             run = subprocess.run([
                 sys.executable, str(SCRIPT), "--weather", str(weather),
