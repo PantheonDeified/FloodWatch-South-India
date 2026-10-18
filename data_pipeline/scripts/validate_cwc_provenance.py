@@ -75,7 +75,7 @@ def validate(
         nonlocal mismatch_count
         mismatch_count += 1
         if len(mismatches) < MAX_MISMATCH_SAMPLES:
-            record_mismatch(item)
+            mismatches.append(item)
 
     report = json.loads(quality_report_path.read_text(encoding="utf-8"))
     per_file = report.get("source_provenance_by_file")
