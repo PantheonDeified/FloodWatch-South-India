@@ -27,6 +27,10 @@ jobs:
           python - <<'PY'
           import datetime as dt
           import json
+          import pathlib
+          import re
+          import subprocess
+          import tempfile
           import urllib.request
 
           checks = [
@@ -48,10 +52,30 @@ jobs:
               print(f"PASS {name}: HTTP {status}, {len(body)} bytes, {content_type}")
 
           html = responses["site"][0].decode("utf-8", errors="replace")
-          for marker in ("FloodWatch", "leaflet", "water-observations.json"):
+          for marker in ("FloodWatch", "leaflet", "water-observations.json",
+                         "infraEvidenceForm", "initInfrastructureRegister",
+                         "floodwatch.infrastructureEvidence.v1"):
               if marker.casefold() not in html.casefold():
                   raise SystemExit(f"Deployed page is missing expected marker: {marker}")
-          print("PASS deployed page contains expected app/map/data markers")
+          print("PASS deployed page contains expected app/map/data/infrastructure-evidence markers")
+
+          # Parse every inline JavaScript block with the runner's Node.js parser.
+          scripts = re.findall(r"<script\\b(?![^>]*\\bsrc=)[^>]*>(.*?)</script\\s*>", html, flags=re.I | re.S)
+          if not scripts:
+              raise SystemExit("No inline JavaScript blocks found to validate.")
+          for index, script in enumerate(scripts, start=1):
+              temp_path = None
+              try:
+                  with tempfile.NamedTemporaryFile(mode="w", suffix=".js", encoding="utf-8", delete=False) as temp:
+                      temp.write(script)
+                      temp_path = pathlib.Path(temp.name)
+                  check = subprocess.run(["node", "--check", str(temp_path)], capture_output=True, text=True)
+                  if check.returncode:
+                      raise SystemExit(f"Inline JavaScript block {index} failed syntax check:\\n{check.stderr}")
+              finally:
+                  if temp_path is not None:
+                      temp_path.unlink(missing_ok=True)
+          print(f"PASS Node.js syntax check for {len(scripts)} inline JavaScript block(s)")
 
           payload = json.loads(responses["water_snapshot"][0].decode("utf-8"))
           if not isinstance(payload, dict) or not isinstance(payload.get("observations"), list):
