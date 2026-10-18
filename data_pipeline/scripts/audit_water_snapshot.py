@@ -151,6 +151,13 @@ def render_report(data: dict[str, Any]) -> str:
                     f"\n- **Resource error — {md_cell(report.get('source_name'))} / "
                     f"{md_cell(error.get('resource_title'))}:** {md_cell(error.get('error'))}"
                 )
+        for resource in resources:
+            if isinstance(resource, dict) and resource.get("status") == "no_usable_records":
+                lines.append(
+                    f"\n- **No usable records — {md_cell(report.get('source_name'))} / "
+                    f"{md_cell(resource.get('resource_title'))}:** scanned "
+                    f"{md_cell(resource.get('rows_scanned', 0))} rows without a usable timestamped numeric record"
+                )
     lines += [
         "",
         "## Units reported by the collector",
