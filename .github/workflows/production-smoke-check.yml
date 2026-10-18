@@ -1,6 +1,9 @@
 name: FloodWatch deployed-site smoke checks
 
 on:
+  push:
+    paths:
+      - '.github/workflows/production-smoke-check.yml'
   workflow_dispatch:
     inputs:
       backend_base_url:
