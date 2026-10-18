@@ -32,6 +32,7 @@
 <select id="obsKindFilter" aria-label="Filter observation type">
 <option value="all">All data types</option><option value="river_level">River levels</option><option value="river_discharge">River discharge</option><option value="reservoir_level">Reservoir / dam levels</option><option value="reservoir_storage">Reservoir storage</option><option value="reservoir_discharge">Dam / regulator release</option>
 </select>
+<select id="obsFreshnessFilter" aria-label="Filter station readings by freshness"><option value="all">All freshness levels</option><option value="recent">Recent (&lt;24h)</option><option value="delayed">Delayed (1–3 days)</option><option value="stale">Stale (&gt;3 days)</option><option value="unknown">Unknown timestamp</option></select>
 <button id="toggleWaterMap" type="button">Show stations on map</button>
 </div>
 <div id="waterMapStatus" class="status">Map station overlay is off. Only coordinate-located public source records can be plotted; markers are not flood alerts.</div>
@@ -388,9 +389,11 @@ function renderWaterObservations(){
  const body=$('waterRows');if(!body)return;
  const all=Array.isArray(waterSnapshot?.observations)?waterSnapshot.observations:[];
  const kind=$('obsKindFilter')?.value||'all';
+ const freshnessFilter=$('obsFreshnessFilter')?.value||'all';
  const q=($('obsSearch')?.value||'').trim().toLowerCase();
  const filtered=all.filter(r=>{
   if(kind!=='all'&&r.kind!==kind)return false;
+  if(freshnessFilter!=='all'&&observationFreshness(r).key!==freshnessFilter)return false;
   const hay=[r.station_name,r.station_id,r.state,r.district,r.river,r.source_name,r.source_resource_title].join(' ').toLowerCase();
   return !q||hay.includes(q);
  }).sort((a,b)=>String(b.observed_at||'').localeCompare(String(a.observed_at||'')));
@@ -590,6 +593,7 @@ $('placeName').textContent='Choose a location';$('coords').textContent='Click th
 $('toggleWaterMap').addEventListener('click',()=>{waterStationsEnabled=!waterStationsEnabled;renderWaterStations()});
 $('obsSearch').addEventListener('input',renderWaterObservations);
 $('obsKindFilter').addEventListener('change',renderWaterObservations);
+$('obsFreshnessFilter').addEventListener('change',renderWaterObservations);
 $('waterRows').addEventListener('click',e=>{
  const btn=e.target.closest('[data-observation-index]');
  if(!btn)return;
