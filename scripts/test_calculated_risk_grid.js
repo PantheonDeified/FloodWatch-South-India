@@ -113,7 +113,7 @@ assert(html.includes('function basinRoutingRelation('),'Basin routing helper sho
 const routingStart=html.indexOf('function basinRoutingRelation(');
 const routingEnd=html.indexOf('async function loadSouthIndiaBasins',routingStart);
 assert(routingStart>=0&&routingEnd>routingStart,'Basin routing helper boundaries should be valid.');
-const routing=new Function(html.slice(routingStart,routingEnd)+'\\nreturn basinRoutingRelation;')();
+const routing=new Function(html.slice(routingStart,routingEnd)+'\nreturn basinRoutingRelation;')();
 const testNetwork={features:[
  {type:'Feature',geometry:{type:'Polygon',coordinates:[]},properties:{HYBAS_ID:101,NEXT_DOWN:102}},
  {type:'Feature',geometry:{type:'Polygon',coordinates:[]},properties:{HYBAS_ID:102,NEXT_DOWN:103}},
