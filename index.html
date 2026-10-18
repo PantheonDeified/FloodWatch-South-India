@@ -503,7 +503,7 @@ function renderNearbyWaterStations(){
   item.appendChild(title);
   if(/^https?:\/\//i.test(String(record.source_url||''))){
    item.appendChild(document.createTextNode(' '));
-   const link=document.createElement('a');link.href=record.source_url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='source';item.appendChild(link);
+   const link=document.createElement('a');link.href=sourceUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='source';item.appendChild(link);
   }
   list.appendChild(item);
  });
