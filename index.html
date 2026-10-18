@@ -838,14 +838,9 @@ function riskLegend(mode,title,rows,note,sourceUrl){
  $('riskLegendSource').textContent=(mode==='cyclone-threat'?'Open official GDACS event map ↗':'Open official NRSC flood-hazard atlas ↗');
 }
 function addNRSCOfficialLegendImage(){
- NRSC_HAZARD_LAYER_SPECS.forEach(spec=>{
-  const item=document.createElement('div');item.className='risk-official-legend';
-  const label=document.createElement('div');label.textContent=spec.area+' · official NRSC legend';item.appendChild(label);
-  const imgUrl=NRSC_HAZARD_WMS+'SERVICE=WMS&VERSION=1.1.1&REQUEST=GetLegendGraphic&LAYER='+encodeURIComponent(spec.name)+'&FORMAT=image/png';
-  const img=document.createElement('img');img.alt='Official NRSC hazard-map colour legend for '+spec.area;img.loading='lazy';img.src=imgUrl;
-  img.onerror=()=>{item.textContent=spec.area+': source legend unavailable. Use official atlas legend; FloodWatch does not substitute its own classes.'};
-  item.appendChild(img);$('riskLegendContent').appendChild(item);
- });
+ const item=document.createElement('div');item.className='risk-official-legend';
+ item.textContent='Colour classes are drawn from the official NRSC/ISRO map layers. The MapCache legend endpoint did not return a legend during service validation, so FloodWatch will not invent red/amber/green thresholds. Open the official state hazard atlas to interpret the source colours.';
+ $('riskLegendContent').appendChild(item);
 }
 function addHistoricalFloodHazard(){
  const failed=[];
@@ -854,7 +849,7 @@ function addHistoricalFloodHazard(){
    layers:spec.name,styles:'',format:'image/png',transparent:true,version:'1.1.1',
    opacity:.66,tileSize:256,attribution:'Historical flood hazard © NRSC/ISRO Bhuvan'
   });
-  layer.on('tileerror',()=>{if(!failed.includes(spec.area))failed.push(spec.area)});
+  layer.on('tileerror',()=>{if(!failed.includes(spec.area))failed.push(spec.area);$('riskLegendNote').textContent='NRSC map tile error for '+failed.join(', ')+'. This layer may be unavailable at this extent; blank/unloaded tiles mean unknown, not safe.';});
   layer.addTo(map);
   riskFloodLayers.push(layer);
  });
