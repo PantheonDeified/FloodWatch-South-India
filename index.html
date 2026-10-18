@@ -98,10 +98,10 @@ if (typeof window.L === 'undefined') {
   document.getElementById('map').innerHTML='<div style="display:grid;place-items:center;height:100%;padding:24px;text-align:center;color:#c4d0df">Interactive map unavailable. Check whether unpkg.com is reachable, then refresh. No readings are being simulated.</div>';
 } else {
 const southBounds=L.latLngBounds([[7.5,73.5],[21.5,86.5]]);
-const nativeZoomLimits={street:19,terrain:16,satellite:18};
+const nativeZoomLimits={street:18,terrain:16,satellite:18};
 const map=L.map('map',{zoomControl:true,minZoom:4,maxZoom:nativeZoomLimits.street}).setView([13.5,78.5],5);
 const tiles={
- street:L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxNativeZoom:19,maxZoom:19,attribution:'© OpenStreetMap contributors'}),
+ street:L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxNativeZoom:18,maxZoom:18,attribution:'© OpenStreetMap contributors'}),
  terrain:L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxNativeZoom:16,maxZoom:16,attribution:'© OpenTopoMap contributors'}),
  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:18,maxZoom:18,attribution:'Tiles © Esri'})
 };tiles.street.addTo(map);
