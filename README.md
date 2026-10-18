@@ -89,3 +89,7 @@ The Quick Tunnel URL may change and has no uptime guarantee; do not treat it as 
 
 See [ML / neural-network model card](data_pipeline/SUBMISSION_MODEL_CARD.md) for exact status, training requirements and scientific guardrails. See the [historical-data pipeline guide](data_pipeline/README.md), [Flood Hub gap analysis](FLOOD_HUB_GAP_ANALYSIS.md), and [manual historical CWC discharge/rainfall download workflow](.github/workflows/download-historical-hydrology.yml) for the next data-ingestion steps.
 
+
+## Project completion status
+
+See [Project readiness and 100% acceptance gates](docs/project-readiness.md) for the six workstreams, current evidence, remaining blockers, and workflow runbooks. Scheduled deployed-site smoke checks are defined in `.github/workflows/production-smoke-check.yml` and monitor the published page and water-data snapshot. A successful check validates availability/schema/freshness only; it does not validate a flood forecast.
