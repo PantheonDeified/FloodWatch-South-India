@@ -3,7 +3,7 @@
 
 The script records source URLs, checksums and byte counts. It does not assume
 that the resource title's date range means every station has complete data.
-By default it selects South India-relevant CWC river groups across all periods
+By default it selects South India-relevant CWC water-level, discharge and rainfall resources across all periods
 listed on the official CWC telemetry page.
 """
 from __future__ import annotations
@@ -20,12 +20,14 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
 
-DEFAULT_PAGE = (
-    "https://nwdp.nwic.gov.in/en/dataset/"
-    "river-water-level-telemetry-hourly-central-water-commission-cwc"
-)
+DEFAULT_PAGES = [
+    "https://nwdp.nwic.gov.in/en/dataset/river-water-level-telemetry-hourly-central-water-commission-cwc",
+    "https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-central-water-commission-cwc",
+    "https://nwdp.nwic.gov.in/en/dataset/rainfall-manual-daily-central-water-commission-cwc",
+]
 DEFAULT_KEYWORDS = [
-    "godavari", "krishna", "pennar", "cauvery",
+    "andhra pradesh", "karnataka", "kerala", "tamil nadu", "telangana",
+    "puducherry", "godavari", "krishna", "pennar", "cauvery",
     "east flowing rivers between pennar and kanyakumari",
     "west flowing rivers from tapi to tadri",
     "east flowing rivers between mahanadi and pennar",
@@ -105,7 +107,7 @@ def main() -> int:
     ap.add_argument("--delay-seconds", type=float, default=0.5)
     args = ap.parse_args()
 
-    pages = args.source_url or [DEFAULT_PAGE]
+    pages = args.source_url or DEFAULT_PAGES
     keywords = [x.strip().lower() for x in args.keywords.split(",") if x.strip()]
     session = requests.Session()
     session.headers.update({"User-Agent": "FloodWatch-South-India/0.1 (source-linked hydrology research)"})
