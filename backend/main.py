@@ -62,7 +62,7 @@ def api_status():
         "version": APP_VERSION,
         "weather_provider": "Open-Meteo",
         "weather_endpoint": "/api/v1/weather?latitude=<lat>&longitude=<lon>",
-        "water_observations": "Static repository snapshot; readings may be delayed or empty",
+        "water_observations": "Published GitHub Pages JSON snapshot; collector runs every six hours when scheduled execution succeeds; observation freshness varies by source",
         "flood_forecast_model": "Not yet deployed or locally validated",
         "last_checked": datetime.now(timezone.utc).isoformat(),
     }
