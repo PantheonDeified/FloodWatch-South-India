@@ -4,7 +4,9 @@ on:
   push:
     paths:
       - 'data_pipeline/scripts/train_regional_lstm.py'
+      - 'data_pipeline/scripts/predict_regional_lstm.py'
       - 'data_pipeline/tests/test_regional_lstm.py'
+      - 'data_pipeline/tests/test_predict_regional_lstm.py'
       - '.github/workflows/test-regional-lstm.yml'
   pull_request:
     paths:
@@ -30,7 +32,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install "numpy>=1.26,<3" "pandas>=2.1,<3"
           python -m pip install --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple "torch==2.10.0+cpu"
-      - name: Run regional LSTM smoke tests
+      - name: Run regional LSTM unit tests
         run: python -m unittest discover -s data_pipeline/tests -p "test_regional_lstm.py" -v
-      - name: Compile regional LSTM script
-        run: python -m py_compile data_pipeline/scripts/train_regional_lstm.py
+      - name: Run regional LSTM inference integration test
+        run: python -m unittest data_pipeline.tests.test_predict_regional_lstm -v
+      - name: Compile regional LSTM scripts
+        run: python -m py_compile data_pipeline/scripts/train_regional_lstm.py data_pipeline/scripts/predict_regional_lstm.py
