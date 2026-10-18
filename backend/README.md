@@ -92,7 +92,11 @@ On the Linux server, in a second SSH session:
 
 ```bash
 curl --max-time 10 http://127.0.0.1:8000/health
+curl --max-time 15 http://127.0.0.1:8000/api/v1/status
 curl --max-time 15 "http://127.0.0.1:8000/api/v1/weather?latitude=19.15&longitude=77.30"
+curl --max-time 20 "http://127.0.0.1:8000/api/v1/river-flow?latitude=19.15&longitude=77.30"
+curl --max-time 15 "http://127.0.0.1:8000/api/v1/water-observations?latitude=19.15&longitude=77.30&radius_km=100&limit=5"
+curl --max-time 10 http://127.0.0.1:8000/api/v1/models/status
 ```
 
 From Windows PowerShell, test via the current HTTPS Quick Tunnel:
