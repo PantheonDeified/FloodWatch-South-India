@@ -53,6 +53,8 @@ jobs:
         run: python -m unittest discover -s data_pipeline/tests -p 'test_audit_cwc_discharge.py' -v
       - name: Test CWC observation schema adapter
         run: python -m unittest discover -s data_pipeline/tests -p 'test_adapt_cwc_discharge_observations.py' -v
+      - name: Test CWC source provenance validator
+        run: python -m unittest discover -s data_pipeline/tests -p 'test_validate_cwc_provenance.py' -v
       - name: Test research-readiness review gates
         run: python -m unittest discover -s data_pipeline/tests -p 'test_build_cwc_research_readiness.py' -v
       - name: Normalize CWC discharge and produce quality report
