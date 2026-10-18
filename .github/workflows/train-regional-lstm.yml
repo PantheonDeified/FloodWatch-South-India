@@ -40,7 +40,7 @@ jobs:
           python data_pipeline/scripts/normalize_cwc_discharge.py --input-dir data_pipeline/raw/nwdp_history --output data_pipeline/output/cwc_discharge_normalized.csv --report data_pipeline/output/cwc_discharge_quality_report.json
       - name: Train regional multi-station LSTM
         run: |
-          python data_pipeline/scripts/train_regional_lstm.py --observations data_pipeline/output/cwc_discharge_normalized.csv --output-dir data_pipeline/output/regional_models --lookback-days 90 --lead-days 7 --epochs 80
+          python data_pipeline/scripts/train_regional_lstm.py --observations data_pipeline/output/cwc_discharge_normalized.csv --output-dir data_pipeline/output/regional_models --lookback-days 90 --lead-days 7 --window-stride 7 --epochs 40
       - name: Upload data, model, and evaluation report
         if: always()
         uses: actions/upload-artifact@v4
