@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Experimental regional LSTM baseline for South-India daily discharge.
-
-Pools observed discharge across stations and represents missing history explicitly.
-It is research-only: no weather forecast forcing or inundation model is included.
-"""
+"""Experimental regional discharge LSTM; no weather forcing or inundation model."""
 from __future__ import annotations
 import argparse, datetime as dt, json, pathlib, random
 import numpy as np
@@ -11,7 +7,6 @@ import pandas as pd
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
-
 STATES = ["Andhra Pradesh", "Karnataka", "Kerala", "Tamil Nadu",
           "Telangana", "Puducherry", "Goa"]
 
@@ -81,27 +76,28 @@ def main():
     if sd < 1e-6: raise SystemExit("Near-constant training discharge.")
     data = {"train":[],"validation":[],"test":[]}; used=set()
     for sid,s in series_by_station.items():
-        raw = s.reindex(dates).to_numpy(float)
-        log = np.full(n,np.nan); ok=np.isfinite(raw); log[ok]=np.log1p(raw[ok])
+        station_dates=pd.date_range(s.index.min(),s.index.max(),freq="D")
+        offset=int((station_dates[0]-dates[0]).days)
+        raw=s.reindex(station_dates).to_numpy(float)
+        log=np.full(len(station_dates),np.nan); ok=np.isfinite(raw); log[ok]=np.log1p(raw[ok])
         lat,lon=map(float,meta.loc[sid].tolist())
-        for end_idx in range(args.lookback_days-1,n-args.lead_days):
-            a=end_idx-args.lookback_days+1; hist=log[a:end_idx+1]; mask=np.isfinite(hist)
+        for local_end in range(args.lookback_days-1,len(station_dates)-args.lead_days):
+            global_end=offset+local_end
+            a=local_end-args.lookback_days+1; hist=log[a:local_end+1]; mask=np.isfinite(hist)
             if mask.mean() < 1-args.max_missing_fraction: continue
-            target=log[end_idx+1:end_idx+args.lead_days+1]
+            target=log[local_end+1:local_end+args.lead_days+1]
             if not np.isfinite(target).all(): continue
-            last_target=end_idx+args.lead_days
+            last_target=global_end+args.lead_days
             if last_target < tr: split="train"
-            elif end_idx >= tr and last_target < va: split="validation"
-            elif end_idx >= va: split="test"
+            elif global_end >= tr and last_target < va: split="validation"
+            elif global_end >= va: split="test"
             else: continue
-            # Six channels: scaled log discharge, mask, seasonal sin/cos, latitude, longitude.
             scaled=(hist-mu)/sd; scaled[~mask]=0
-            doy=dates[a:end_idx+1].dayofyear.to_numpy(float)
-            ang=2*np.pi*doy/365.25
+            doy=station_dates[a:local_end+1].dayofyear.to_numpy(float); ang=2*np.pi*doy/365.25
             x=np.column_stack([scaled,mask.astype(float),np.sin(ang),np.cos(ang),
                                np.full(len(hist),lat),np.full(len(hist),lon)]).astype("float32")
             y=((target-mu)/sd).astype("float32")
-            last=float(raw[a:end_idx+1][mask][-1])
+            last=float(raw[a:local_end+1][mask][-1])
             data[split].append((x,y,np.expm1(target).astype("float32"),
                                 np.repeat(last,args.lead_days).astype("float32"),sid))
             used.add(sid)
