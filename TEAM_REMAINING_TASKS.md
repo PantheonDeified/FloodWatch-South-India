@@ -36,10 +36,10 @@ These features still need end-to-end testing. A feature in the code does not aut
 1. Read `docs/water-pipeline-run-report.md` and inspect the latest `data/water-observations.json` snapshot.
 2. Audit missing station coordinates, missing state/district fields, source timestamps, units and rows with suspicious jumps or implausible values. Do not guess coordinates or silently delete source values; record each issue and its rationale.
 3. Confirm source timezone semantics for each dataset, or leave them explicitly unspecified. Distinguish hourly telemetry from manual/daily observations.
-4. Test the collector and GitHub Actions workflow after the new non-empty-snapshot guard. Verify the workflow does not trigger itself solely from its generated output file.
+4. Review and extend `data_pipeline/scripts/validate_water_snapshot.py` and its unit tests. The water workflow now runs these tests and checks the snapshot before publishing. Test the collector and confirm it does not trigger itself solely from its generated output file.
 5. Document source/resource errors, coverage gaps, and safe fixes. Never fabricate readings.
 
-**Deliver:** `docs/water-pipeline-report.md` with a repeatable quality audit and tests/checks where feasible. Use `docs/water-pipeline-run-report.md` as the first run summary.
+**Deliver:** `docs/water-pipeline-report.md` with a repeatable quality audit and tests/checks where feasible. The reusable structural validator and unit tests are in `data_pipeline/scripts/validate_water_snapshot.py` and `data_pipeline/tests/test_validate_water_snapshot.py`. Use `docs/water-pipeline-run-report.md` as the first run summary.
 
 **Simple AI prompt:**  
 “Review the existing FloodWatch South India water snapshot (407 records generated from 37 resources), collector and report. Audit source timestamps/timezones, units, missing coordinates/state fields, out-of-core-area records, and suspicious values. Do not fabricate or silently alter source readings. Add safe validation/tests for issues that can be reliably checked, preserve source provenance, and document unresolved issues in docs/water-pipeline-report.md. Do not edit index.html.”
