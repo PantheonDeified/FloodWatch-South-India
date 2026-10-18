@@ -17,8 +17,9 @@ IDENTITY_FLAGS = {
     "multiple_station_names",
     "multiple_rivers",
     "multiple_basins",
-    "multiple_source_urls",
 }
+# A station may legitimately be split across several historical archive resources.
+# Multiple source URLs are provenance to retain, not an identity conflict by themselves.
 DATA_FLAGS = {
     "invalid_timestamps",
     "invalid_discharge_values",
@@ -129,6 +130,7 @@ def build_queue(
             "first_date": a.get("first_date") or c.get("first_observed_at", ""),
             "last_date": a.get("last_date") or c.get("last_observed_at", ""),
             "review_flags": ";".join(flags),
+            "source_resource_count": len(a.get("source_urls") or []),
             "coordinate_verified": str(coord_gate_pass).lower(),
             "coordinate_source_url": coordinate_source,
             "downstream_weather_join_allowed": str(coord_gate_pass and enough_history and coverage >= min_coverage and not identity_flags).lower(),
