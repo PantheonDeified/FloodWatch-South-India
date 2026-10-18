@@ -19,11 +19,16 @@ Expected GitHub Pages URL: https://pantheondeified.github.io/FloodWatch-South-In
 
 ## Important live-data status
 
-A collector and a GitHub Actions workflow have been added for selected public NWDP/NWIC river-level, discharge and reservoir resources. **The current committed snapshot remains empty until a workflow run successfully downloads and validates records.** Therefore, this repository should not yet be described as providing a verified live river/dam network. The collector can only cover resources found on its configured public source pages; some station records are manual/daily, some lack usable coordinates, and public records do not cover every physical river or dam.
+The public NWDP/NWIC collector has completed a successful run. Its snapshot generated at `2026-10-17T23:12:45Z` contained **407 station/measurement records from 37 resource files**: 201 river-discharge, 145 river-level, 44 reservoir-level, 9 reservoir-storage and 8 reservoir/regulator-discharge records. This is evidence that the pipeline can produce real source-linked records; it is **not** proof of a complete or fully real-time river/dam network.
+
+Known limitations: 34 records have no coordinates; 15 records are labelled Maharashtra, Chhattisgarh or Madhya Pradesh rather than the five core states; and some public resources have no usable rows or older reported timestamps. The collector preserves source timestamps but source timezone semantics are not specified, and hourly telemetry differs from manual/daily resources. Check each record's source, observation timestamp, unit and freshness before interpreting it.
+
+See [Water pipeline run report](docs/water-pipeline-run-report.md) for the observed counts, workflow evidence and remaining quality checks.
 
 Workflow: `.github/workflows/refresh-water-observations.yml`
 
-To run it manually, open the repository's **Actions** tab, choose **Refresh official water observations**, and select **Run workflow**. Inspect the run logs and the generated `data/water-observations.json`. A successful job is not enough by itself: verify that station counts, source timestamps and data-quality reports are plausible before relying on the values. Scheduled runs are configured every six hours, but an empty snapshot or a failed source is never replaced with guessed readings.
+To run it manually, open the repository's **Actions** tab, choose **Refresh official water observations**, and select **Run workflow**. Scheduled runs are configured every six hours. The workflow now refuses to publish an empty or inconsistent observation snapshot and no longer triggers itself solely because it committed the generated snapshot. A successful job still requires checking source timestamps, units, coordinates and resource-level errors.
+
 
 ## Historical data and model research
 
@@ -67,7 +72,7 @@ The temporary connection panel is a developer tool, not part of the intended fin
 ## ML and neural-network status — important for demos
 
 - **Model code exists:** a PyTorch LSTM research training script for a verified discharge gauge and a scikit-learn flood-event classifier with chronological evaluation.
-- **Not yet operational:** no published trained South India model weights or validated local forecasts; the public water-observation snapshot has to populate and historical data must be cleaned first.
+- **Not yet operational:** no published trained South India model weights or validated local forecasts; the water-observation data exists, but source freshness, station coverage and historical inputs still require quality checks.
 - **Current river-flow outlook:** the website can request modelled GloFAS flow estimates via Open-Meteo. This is an external forecast, not a FloodWatch-trained neural network or a live CWC gauge reading.
 - **No validated local flood probabilities or depth maps are currently claimed.**
 
