@@ -7,7 +7,11 @@ This folder contains the versioned FastAPI service source.
 - `GET /` — basic service information.
 - `GET /health` — health check.
 - `GET /api/v1/status` — provider and capability status.
+- `GET /api/v1/water-observations?state=Kerala&limit=100` — paginated published NWDP/NWIC snapshot with optional state, measurement kind, freshness and search filters. If the repo data file is absent on the server, it fetches the public snapshot from GitHub and caches it for five minutes.
+- `GET /api/v1/models/status` — model readiness report; confirms whether a locally trained forecast is available and lists prerequisites.
 - `GET /api/v1/weather?latitude=19.15&longitude=77.30` — current Open-Meteo model conditions and two days of hourly forecast for coordinates within the prototype's South India coverage (latitude 7–21.8, longitude 73–87).
+
+The water endpoint returns source-reported measurements and labels freshness unknown if a naive timestamp has no reliable timezone. A snapshot's generation time is not the same as the time of every measurement.
 
 The weather response preserves Open-Meteo's normal response fields (`current`, `hourly`, `timezone`) and adds a `_floodwatch` metadata object. The values are gridded model estimates and forecasts, not direct measurements from a local station. This API does not issue a flood probability or official warning.
 
