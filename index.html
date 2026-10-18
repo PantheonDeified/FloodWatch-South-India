@@ -539,7 +539,9 @@ async function loadCyclones(){
  if(cycloneLayer){map.removeLayer(cycloneLayer);cycloneLayer=null}
  try{
   $('overlayStatus').textContent='Loading tropical-cyclone events from GDACS…';
-  const url='https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventtype=TC&alertlevel=Green;Orange;Red';
+  const today=new Date(),from=new Date(today.getTime()-14*24*60*60*1000);
+  const toDay= today.toISOString().slice(0,10),fromDay=from.toISOString().slice(0,10);
+  const url='https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=TC&fromdate='+fromDay+'&todate='+toDay+'&alertlevel=red;orange;green';
   const r=await fetch(url,{cache:'no-store',headers:{Accept:'application/json'}});
   if(!r.ok)throw Error('GDACS returned HTTP '+r.status);
   const data=await r.json();
@@ -563,8 +565,8 @@ async function loadCyclones(){
   });
   cycloneLayer=layer.addTo(map);
   $('overlayStatus').textContent=features.length
-   ?'GDACS cyclone-event layer loaded: '+features.length+' event features. Colours reflect GDACS alert level where supplied. This global event feed is not a substitute for official IMD alerts.'
-   :'GDACS responded successfully; no tropical-cyclone event features were returned for this query. Check official IMD bulletins as well.';
+   ?'GDACS returned '+features.length+' tropical-cyclone event features for '+fromDay+' to '+toDay+'. The 14-day search can include recent events that are no longer active; check official IMD alerts.'
+   :'GDACS returned no tropical-cyclone event features for '+fromDay+' to '+toDay+'. This does not prove there is no cyclone threat; check official IMD bulletins.';
  }catch(e){
   if(requestId!==cycloneRequestId||activeOverlay!=='cyclone')return;
   if(cycloneLayer){map.removeLayer(cycloneLayer);cycloneLayer=null}
