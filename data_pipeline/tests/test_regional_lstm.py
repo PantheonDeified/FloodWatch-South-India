@@ -48,6 +48,15 @@ class RegionalLSTMTests(unittest.TestCase):
         result = MODULE.metrics(np.array([4.0, 4.0]), np.array([4.0, 5.0]))
         self.assertIsNone(result["nse"])
 
+    def test_inference_keeps_training_feature_scale_and_marks_stale_history(self):
+        predictor = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "predict_regional_lstm.py"
+        source = predictor.read_text(encoding="utf-8")
+        self.assertIn('frame["latitude"] = frame["latitude"].clip(-90, 90) / 90.0', source)
+        self.assertIn('frame["longitude"] = frame["longitude"].clip(-180, 180) / 180.0', source)
+        self.assertIn('"forecast_is_live": bool(history_age_days <= 3)', source)
+        self.assertIn('"history_freshness": history_freshness', source)
+        self.assertIn('model.load_state_dict(weights, strict=True)', source)
+
 
 if __name__ == "__main__":
     unittest.main()
