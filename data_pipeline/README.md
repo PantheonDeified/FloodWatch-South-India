@@ -40,6 +40,12 @@ Before training, audit all stations in a feature table to see which ones meet mi
 
 This is a go/no-go screen for data continuity and chronological sample counts, not evidence that a station's units/provenance are correct or that a model will perform well.
 
+Before inference, run the review gate against the training report and the saved artifacts:
+
+    python data_pipeline/scripts/review_streamflow_model.py --report data_pipeline/output/models/streamflow_lstm_VERIFIED_STATION_ID.report.json --model data_pipeline/output/models/streamflow_lstm_VERIFIED_STATION_ID.pt --scalers data_pipeline/output/models/streamflow_lstm_VERIFIED_STATION_ID.scalers.npz --out data_pipeline/output/models/review-gate.json
+
+The gate rejects a model that fails the persistence benchmark or lacks artifacts/test metrics. Passing only makes the candidate **eligible for human review**; it never auto-deploys the model.
+
 For a model that has already been trained and reviewed, generate a research-only seven-day discharge output (the lead horizon and lookback must match the trained model):
 
     python data_pipeline/scripts/predict_streamflow_lstm.py --features path/to/features.csv --station-id VERIFIED_STATION_ID --model data_pipeline/output/models/streamflow_lstm_VERIFIED_STATION_ID.pt --scalers data_pipeline/output/models/streamflow_lstm_VERIFIED_STATION_ID.scalers.npz --output data_pipeline/output/pilot_discharge_forecast.csv
