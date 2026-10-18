@@ -11,7 +11,9 @@ on:
   pull_request:
     paths:
       - 'data_pipeline/scripts/train_regional_lstm.py'
+      - 'data_pipeline/scripts/predict_regional_lstm.py'
       - 'data_pipeline/tests/test_regional_lstm.py'
+      - 'data_pipeline/tests/test_predict_regional_lstm.py'
       - '.github/workflows/test-regional-lstm.yml'
   workflow_dispatch:
 
