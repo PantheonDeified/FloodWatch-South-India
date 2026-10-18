@@ -48,6 +48,13 @@ class RegionalLSTMTests(unittest.TestCase):
         result = MODULE.metrics(np.array([4.0, 4.0]), np.array([4.0, 5.0]))
         self.assertIsNone(result["nse"])
 
+    def test_regional_training_scope_is_exactly_the_five_target_states(self):
+        source = (pathlib.Path(__file__).resolve().parents[1] / "scripts" / "train_regional_lstm.py").read_text(encoding="utf-8")
+        for state in ("Andhra Pradesh", "Karnataka", "Kerala", "Tamil Nadu", "Telangana"):
+            self.assertIn(state, source)
+        self.assertNotIn('"Puducherry"', source)
+        self.assertNotIn('"Goa"', source)
+
     def test_inference_keeps_training_feature_scale_and_marks_stale_history(self):
         predictor = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "predict_regional_lstm.py"
         source = predictor.read_text(encoding="utf-8")
