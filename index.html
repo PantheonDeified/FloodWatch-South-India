@@ -501,7 +501,8 @@ function renderNearbyWaterStations(){
   const title=document.createElement('span');
   title.textContent=(record.station_name||record.station_id||'Unnamed station')+' · '+distance.toFixed(1)+' km · '+(record.kind||'measurement type unknown')+' · '+(record.value??'value unavailable')+' '+(record.unit||'unit unspecified')+' · '+(record.observed_at||record.observed_at_raw||'timestamp unavailable');
   item.appendChild(title);
-  if(/^https?:\/\//i.test(String(record.source_url||''))){
+  const sourceUrl=record.source_url||record.source_dataset_url||record.source_resource_url||'';
+  if(/^https?:\/\//i.test(String(sourceUrl))){
    item.appendChild(document.createTextNode(' '));
    const link=document.createElement('a');link.href=sourceUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='source';item.appendChild(link);
   }
