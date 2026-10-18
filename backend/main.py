@@ -289,7 +289,7 @@ def model_status():
             "artifact_url": "https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39126986154/artifacts/12136079681",
             "artifact_note": "GitHub Actions artifact is temporary and may expire; run the regional training workflow to reproduce it."
         },
-        "single_station_pilot": {
+        "single_station_test_metrics": {
             "station": "Yadgir, Karnataka",
             "target": "daily maximum river discharge in m3/s",
             "lstm_rmse_m3s": 1043.61,
