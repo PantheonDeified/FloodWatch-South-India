@@ -19,9 +19,9 @@ Expected GitHub Pages URL: https://pantheondeified.github.io/FloodWatch-South-In
 
 ## Important live-data status
 
-The public NWDP/NWIC collector has completed a successful run. Its snapshot generated at `2026-10-17T23:12:45Z` contained **407 station/measurement records from 37 resource files**: 201 river-discharge, 145 river-level, 44 reservoir-level, 9 reservoir-storage and 8 reservoir/regulator-discharge records. This is evidence that the pipeline can produce real source-linked records; it is **not** proof of a complete or fully real-time river/dam network.
+The public NWDP/NWIC collector completed a successful GitHub Actions run on 2026-10-18. Its snapshot generated at `2026-10-18T02:32:25Z` contained **407 station/measurement records from 37 resource files**: 201 river-discharge, 145 river-level, 44 reservoir-level, 9 reservoir-storage and 8 reservoir/regulator-discharge records. This is evidence that the pipeline can produce real source-linked records; it is **not** proof of a complete or fully real-time river/dam network.
 
-Known limitations: 34 records have no coordinates; 15 records are labelled Maharashtra, Chhattisgarh or Madhya Pradesh rather than the five core states; and some public resources have no usable rows or older reported timestamps. The collector preserves source timestamps but source timezone semantics are not specified, and hourly telemetry differs from manual/daily resources. Check each record's source, observation timestamp, unit and freshness before interpreting it.
+Known limitations: 34 records have no coordinates; 15 records are labelled Maharashtra, Chhattisgarh or Madhya Pradesh rather than the five core states; and some public resources have no usable rows or older reported timestamps. The newest timestamp string currently reported is `2026-10-18T12:10:00` for Hemavathy Dam, which the page may label as a future timestamp depending on source timezone. The collector preserves source timestamps but timezone semantics are not specified, and hourly telemetry differs from manual/daily resources. Check each record's source, observation timestamp, unit and freshness before interpreting it.
 
 See [Water pipeline run report](docs/water-pipeline-run-report.md) for the observed counts, workflow evidence and remaining quality checks.
 
