@@ -2,6 +2,12 @@ name: FloodWatch deployed-site smoke checks
 
 on:
   workflow_dispatch:
+    inputs:
+      backend_base_url:
+        description: "Optional current HTTPS Cloudflare Quick Tunnel URL for backend API checks"
+        required: false
+        type: string
+        default: ""
   schedule:
     - cron: "17 */6 * * *"
 
@@ -61,4 +67,70 @@ jobs:
               raise SystemExit(f"Water snapshot is too old ({age_hours:.1f}h > 36h)")
           if age_hours < -1:
               raise SystemExit(f"Water snapshot generation time is unexpectedly in the future ({age_hours:.1f}h)")
+          PY
+
+      - name: Check optional live backend API
+        env:
+          BACKEND_BASE_URL: ${{ inputs.backend_base_url }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from urllib.parse import urlsplit
+          from urllib.request import Request, urlopen
+
+          base = os.environ.get("BACKEND_BASE_URL", "").strip().rstrip("/")
+          if not base:
+              print("SKIP backend API checks: no manual backend_base_url input was supplied.")
+              raise SystemExit(0)
+
+          parsed = urlsplit(base)
+          if (
+              parsed.scheme != "https"
+              or not parsed.hostname
+              or not parsed.hostname.endswith(".trycloudflare.com")
+              or parsed.username
+              or parsed.password
+              or parsed.port
+              or parsed.path not in ("", "/")
+              or parsed.query
+              or parsed.fragment
+          ):
+              raise SystemExit(
+                  "Invalid backend_base_url. Supply only the current HTTPS Cloudflare Quick Tunnel "
+                  "origin, such as https://example.trycloudflare.com (no path, credentials, port, "
+                  "query, or fragment)."
+              )
+
+          endpoints = {
+              "health": "/health",
+              "status": "/api/v1/status",
+              "weather": "/api/v1/weather?latitude=19.15&longitude=77.30",
+              "river_flow": "/api/v1/river-flow?latitude=19.15&longitude=77.30",
+              "water_observations": "/api/v1/water-observations?limit=5",
+              "model_status": "/api/v1/models/status",
+          }
+          for name, path in endpoints.items():
+              url = base + path
+              request = Request(
+                  url,
+                  headers={"Accept": "application/json", "User-Agent": "FloodWatch-smoke-check/1.0"},
+              )
+              try:
+                  with urlopen(request, timeout=18) as response:
+                      status = response.status
+                      payload = json.loads(response.read().decode("utf-8"))
+              except Exception as exc:
+                  raise SystemExit(f"FAIL backend {name}: {exc}") from exc
+              if status != 200:
+                  raise SystemExit(f"FAIL backend {name}: expected HTTP 200, got {status}")
+              if not isinstance(payload, dict):
+                  raise SystemExit(f"FAIL backend {name}: expected a JSON object")
+              if name == "health" and payload.get("status") != "healthy":
+                  raise SystemExit(f"FAIL backend health: unexpected body {payload}")
+              if name == "weather" and not isinstance(payload.get("current"), dict):
+                  raise SystemExit("FAIL backend weather: current conditions are missing")
+              if name == "water_observations" and not isinstance(payload.get("observations"), list):
+                  raise SystemExit("FAIL backend water-observations: observations array is missing")
+              print(f"PASS backend {name}: HTTP {status}")
           PY
