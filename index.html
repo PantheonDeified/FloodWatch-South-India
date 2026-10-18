@@ -954,12 +954,13 @@ function computeRiskScore(cell,bundle){
  const rain72=first72.filter(i=>Number.isFinite(precip[i])).map(i=>precip[i]);
  const p24=first24.filter(i=>Number.isFinite(prob[i])).map(i=>prob[i]);
  const current=weather?.current?.precipitation==null?NaN:Number(weather.current.precipitation),components=[];
- if(first24.length>=24&&rain24.length>=23)components.push({weight:40,value:40*clamp01(rain24.reduce((a,b)=>a+b,0)/100)});
- if(first72.length>=72&&rain72.length>=68)components.push({weight:30,value:30*clamp01(rain72.reduce((a,b)=>a+b,0)/150)});
- if(first24.length>=24&&p24.length>=23)components.push({weight:15,value:15*clamp01(Math.max(...p24)/100)});
- if(Number.isFinite(current)&&current>=0)components.push({weight:15,value:15*clamp01(current/20)});
+ if(first24.length>=24&&rain24.length>=23)components.push({name:'24h forecast rainfall',weight:FLOODWATCH_RISK_GRID.weights.rain24h,value:FLOODWATCH_RISK_GRID.weights.rain24h*clamp01(rain24.reduce((a,b)=>a+b,0)/100)});
+ if(first72.length>=72&&rain72.length>=68)components.push({name:'72h forecast rainfall',weight:FLOODWATCH_RISK_GRID.weights.rain72h,value:FLOODWATCH_RISK_GRID.weights.rain72h*clamp01(rain72.reduce((a,b)=>a+b,0)/150)});
+ if(first24.length>=24&&p24.length>=23)components.push({name:'24h rain probability',weight:FLOODWATCH_RISK_GRID.weights.chance24h,value:FLOODWATCH_RISK_GRID.weights.chance24h*clamp01(Math.max(...p24)/100)});
+ if(Number.isFinite(current)&&current>=0)components.push({name:'Current precipitation',weight:FLOODWATCH_RISK_GRID.weights.currentPrecipitation,value:FLOODWATCH_RISK_GRID.weights.currentPrecipitation*clamp01(current/20)});
  const rainWeight=components.reduce((s,x)=>s+x.weight,0);
- const rainScore=rainWeight?components.reduce((s,x)=>s+x.value,0)/rainWeight*100:null;
+ // One isolated rainfall field is too little evidence to paint a cell green/red.
+ const rainScore=components.length>=2&&rainWeight?components.reduce((s,x)=>s+x.value,0)/rainWeight*100:null;
 
  // Compare the raw 7-day GloFAS flow outlook with the last ~90 available days
  // at this coordinate. This percentile is calculated here, not copied from any risk map.
@@ -974,8 +975,8 @@ function computeRiskScore(cell,bundle){
   flowScore=100*clamp01((flowPercentile-50)/50);
  }
  let score=null,componentsUsed=[];
- if(rainScore!=null&&flowScore!=null){score=.75*rainScore+.25*flowScore;componentsUsed=['rainfall','rain probability','GloFAS 7-day flow vs recent history']}
- else if(rainScore!=null){score=rainScore;componentsUsed=['rainfall','rain probability']}
+ if(rainScore!=null&&flowScore!=null){score=.75*rainScore+.25*flowScore;componentsUsed=components.map(x=>x.name).concat('GloFAS 7-day flow vs recent history')}
+ else if(rainScore!=null){score=rainScore;componentsUsed=components.map(x=>x.name)}
  else if(flowScore!=null){score=flowScore;componentsUsed=['GloFAS 7-day flow vs recent history']}
  if(score==null)return {score:null,level:'unknown',reason:'No adequate forecast fields or flow history'};
  const gauge=gaugeSignalForCell(cell);
@@ -986,10 +987,10 @@ function computeRiskScore(cell,bundle){
   if(gauge.rising)score+=12;
  }
  score=Math.max(0,Math.min(100,score));
- const level=score>=65?'red':score>=35?'amber':'green';
- return {score,level,components:componentsUsed,rain24:rain24.length>=12?rain24.reduce((a,b)=>a+b,0):null,
-  rain72:rain72.length>=36?rain72.reduce((a,b)=>a+b,0):null,
-  probability24:p24.length>=12?Math.max(...p24):null,current:Number.isFinite(current)?current:null,
+ const level=score>=FLOODWATCH_RISK_GRID.cutoffs.red?'red':score>=FLOODWATCH_RISK_GRID.cutoffs.amber?'amber':'green';
+ return {score,level,components:componentsUsed,rain24:rain24.length>=23&&first24.length>=24?rain24.reduce((a,b)=>a+b,0):null,
+  rain72:rain72.length>=68&&first72.length>=72?rain72.reduce((a,b)=>a+b,0):null,
+  probability24:p24.length>=23&&first24.length>=24?Math.max(...p24):null,current:Number.isFinite(current)?current:null,
   flowPercentile,flowForecastMax,flowHistoryCount,gauge,weatherTime:weather?.current?.time||null};
 }
 function riskLevelColor(level){return level==='red'?'#ef4444':level==='amber'?'#f59e0b':level==='green'?'#22c55e':'#64748b'}
