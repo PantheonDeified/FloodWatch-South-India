@@ -313,7 +313,8 @@ function renderWaterObservations(){
    else if(r.unit==='m'&&Number.isFinite(Number(r.warning_level))&&Number(r.value)>=Number(r.warning_level))threshold='<div class="history-busy">At/above provided warning level</div>';
    const sourceUrl=String(r.source_dataset_url||'');
    const sourceLink=sourceUrl.startsWith('https://')?'<a href="'+escapeHtml(sourceUrl)+'" target="_blank" rel="noopener noreferrer">Open source</a>':'Source page';
-   const freshness=observationFreshness(r);\n   return '<tr><td><b>'+escapeHtml(name)+'</b><div>'+action+'</div></td><td><span class="water-kind">'+escapeHtml(readableKind(r.kind))+'</span></td><td>'+escapeHtml(area)+'</td><td><b>'+escapeHtml(value+unit)+'</b>'+threshold+'</td><td>'+escapeHtml(time)+'<div><span class="freshness-badge freshness-'+freshness.key+'">'+escapeHtml(freshness.label)+'</span></div><div class="water-freshness">'+escapeHtml(freshness.detail)+' Timezone may be unspecified by source.</div></td><td>'+sourceLink+'<div class="water-freshness">'+escapeHtml(r.source_name||r.agency||'Public water dataset')+'</div></td></tr>';
+   const freshness=observationFreshness(r);
+   return '<tr><td><b>'+escapeHtml(name)+'</b><div>'+action+'</div></td><td><span class="water-kind">'+escapeHtml(readableKind(r.kind))+'</span></td><td>'+escapeHtml(area)+'</td><td><b>'+escapeHtml(value+unit)+'</b>'+threshold+'</td><td>'+escapeHtml(time)+'<div><span class="freshness-badge freshness-'+freshness.key+'">'+escapeHtml(freshness.label)+'</span></div><div class="water-freshness">'+escapeHtml(freshness.detail)+' Timezone may be unspecified by source.</div></td><td>'+sourceLink+'<div class="water-freshness">'+escapeHtml(r.source_name||r.agency||'Public water dataset')+'</div></td></tr>';
   }).join('');
  }
  $('waterCount').textContent='Showing '+waterDisplayedRecords.length+' of '+filtered.length+' matching station records'+(filtered.length>250?' (first 250 shown)':'')+'.';
