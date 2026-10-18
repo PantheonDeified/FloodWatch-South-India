@@ -15,7 +15,7 @@
 <main><section class="map-area"><div class="toolbar"><form id="searchForm" style="display:flex;gap:8px;flex:1;min-width:260px"><input id="search" placeholder="Search a town, village or district in South India…" autocomplete="off"><button class="primary">Find</button></form><button id="locate">◎ My location</button><input id="latInput" aria-label="Latitude" placeholder="Latitude" inputmode="decimal" style="flex:0 1 112px;min-width:90px"><input id="lonInput" aria-label="Longitude" placeholder="Longitude" inputmode="decimal" style="flex:0 1 112px;min-width:90px"><button id="goCoords">Go to coordinates</button><select id="layer" aria-label="Map layer"><option value="street">Street map</option><option value="terrain">Terrain</option><option value="satellite">Satellite</option></select></div><div style="padding:8px 12px;background:#13253a;color:#cfe7ff;border-bottom:1px solid #26364c">📍 <b>Select any point:</b> click directly on the map, search for a place, or enter latitude and longitude. The selected point updates the weather panel.</div><div id="mapWrap" style="position:relative"><div id="map" aria-label="Interactive map. Click any point to select its location."></div><div id="zoomStatus" role="status" aria-live="polite" hidden></div></div></section>
 <aside class="side"><section class="section"><h2>Selected location</h2><div id="placeName">South India overview</div><div class="status" id="coords">Click anywhere on the map to inspect conditions.</div><div class="status" id="updated">No location selected — choose a point to load location-specific data.</div></section>
 <section class="section" id="backendApiSection"><h2>Developer test only · backend connection</h2>
-<div class="history-note">Temporary developer-only tool; remove this section before the final public release. It checks API health/status, weather proxy, water-observation endpoint, and model readiness. The map's public weather layers work independently. Paste your current HTTPS tunnel URL below; temporary Quick Tunnel links work only while the tunnel is running.</div>
+<div class="history-note">Temporary developer-only tool; remove this section before the final public release. It checks API health/status, weather and river-flow proxies, water-observation endpoint, and model readiness. The map's public weather layers work independently. Paste your current HTTPS tunnel URL below; temporary Quick Tunnel links work only while the tunnel is running.</div>
 <label for="apiBaseUrl" style="display:block;margin:8px 0 5px;color:var(--muted);font-size:12px">HTTPS API base URL</label>
 <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="apiBaseUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://your-tunnel.trycloudflare.com" aria-label="HTTPS API base URL" style="min-width:0;flex:1"><button class="primary" type="button" id="checkApiButton">Test API</button><button type="button" id="clearApiButton">Clear</button></div>
 <div class="status" id="apiConnectionStatus" role="status" aria-live="polite">Not checked yet. Paste an HTTPS API URL and select Test API.</div>
@@ -159,7 +159,7 @@ async function checkBackendApi(){
   if(parsed.username||parsed.password||parsed.search||parsed.hash||parsed.pathname!=='/')throw Error('Enter only the HTTPS origin, for example https://your-tunnel.trycloudflare.com');
   base=parsed.origin;
  }catch(e){statusBox.textContent=e.message||'Enter a valid HTTPS URL.';details.hidden=true;return}
- apiCheckButton.disabled=true;apiCheckButton.textContent='Testing…';statusBox.textContent='Checking health, weather, water observations and model readiness…';details.hidden=true;
+ apiCheckButton.disabled=true;apiCheckButton.textContent='Testing…';statusBox.textContent='Checking health, weather, river-flow, water observations and model readiness…';details.hidden=true;
  try{
   const readJson=async path=>{
    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
@@ -177,6 +177,11 @@ async function checkBackendApi(){
    const weather=await readJson('/api/v1/weather?latitude=19.15&longitude=77.30');
    weatherProxy={available:true,provider:weather._floodwatch?.provider||'Provider metadata unavailable',fetched_at_utc:weather._floodwatch?.fetched_at_utc||null,model_time:weather.current?.time||null,timezone:weather.timezone||null,hourly_points:Array.isArray(weather.hourly?.time)?weather.hourly.time.length:0};
   }catch(weatherError){weatherProxy={available:false,detail:weatherError.message||'Weather proxy request failed'};}
+  let riverFlowProxy={available:false,detail:'River-flow proxy not checked.'};
+  try{
+   const river=await readJson('/api/v1/river-flow?latitude=19.15&longitude=77.30');
+   riverFlowProxy={available:true,provider:river._floodwatch?.provider||'Provider metadata unavailable',fetched_at_utc:river._floodwatch?.fetched_at_utc||null,daily_points:Array.isArray(river.daily?.time)?river.daily.time.length:0,forecast_horizon_days:river._floodwatch?.forecast_horizon_days||null};
+  }catch(riverError){riverFlowProxy={available:false,detail:riverError.message||'River-flow proxy request failed'};}
   let waterApi={available:false,detail:'Water endpoint not checked.'};
   try{
    const water=await readJson('/api/v1/water-observations?limit=1');
@@ -186,8 +191,8 @@ async function checkBackendApi(){
   try{modelReadiness=await readJson('/api/v1/models/status');modelReadiness.endpoint_available=true}
   catch(modelError){modelReadiness={available:false,detail:modelError.message||'Model status endpoint request failed'};}
   try{localStorage.setItem('floodwatchApiBaseUrl',base)}catch(e){}
-  statusBox.textContent='API health/status connected · checked '+new Date().toLocaleString()+'. Weather: '+(weatherProxy.available?'available':'unavailable')+' · water API: '+(waterApi.available?'available':'unavailable')+' · trained local flood model: '+(modelReadiness.validated_south_india_flood_forecast?'reported validated':'not available / not validated')+'.';
-  details.textContent=JSON.stringify({health,api_status:apiStatus,weather_proxy:weatherProxy,water_observations_api:waterApi,model_readiness:modelReadiness},null,2);details.hidden=false;
+  statusBox.textContent='API health/status connected · checked '+new Date().toLocaleString()+'. Weather: '+(weatherProxy.available?'available':'unavailable')+' · river-flow proxy: '+(riverFlowProxy.available?'available':'unavailable')+' · water API: '+(waterApi.available?'available':'unavailable')+' · trained local flood model: '+(modelReadiness.validated_south_india_flood_forecast?'reported validated':'not available / not validated')+'.';
+  details.textContent=JSON.stringify({health,api_status:apiStatus,weather_proxy:weatherProxy,river_flow_proxy:riverFlowProxy,water_observations_api:waterApi,model_readiness:modelReadiness},null,2);details.hidden=false;
  }catch(e){
   const message=e.name==='AbortError'?'Timed out after 10 seconds. Check that Linux Uvicorn and the Cloudflare tunnel are both running.':(e.message||'Request failed.');
   statusBox.textContent='Connection failed: '+message+' If the browser reports a CORS error, the backend settings may need updating.';
