@@ -143,7 +143,7 @@ async function checkBackendApi(){
   if(parsed.username||parsed.password||parsed.search||parsed.hash||parsed.pathname!=='/')throw Error('Enter only the HTTPS origin, for example https://your-tunnel.trycloudflare.com');
   base=parsed.origin;
  }catch(e){statusBox.textContent=e.message||'Enter a valid HTTPS URL.';details.hidden=true;return}
- apiCheckButton.disabled=true;apiCheckButton.textContent='Testing…';statusBox.textContent='Checking /health and /api/v1/status…';details.hidden=true;
+ apiCheckButton.disabled=true;apiCheckButton.textContent='Testing…';statusBox.textContent='Checking /health, /api/v1/status, and /api/v1/weather…';details.hidden=true;
  try{
   const readJson=async path=>{
    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
@@ -156,9 +156,14 @@ async function checkBackendApi(){
    }finally{clearTimeout(timer)}
   };
   const [health,apiStatus]=await Promise.all([readJson('/health'),readJson('/api/v1/status')]);
+  let weatherProxy={available:false,detail:'Weather proxy has not been tested.'};
+  try{
+   const weather=await readJson('/api/v1/weather?latitude=19.15&longitude=77.30');
+   weatherProxy={available:true,provider:weather._floodwatch?.provider||'Provider metadata unavailable',fetched_at_utc:weather._floodwatch?.fetched_at_utc||null,model_time:weather.current?.time||null,timezone:weather.timezone||null,hourly_points:Array.isArray(weather.hourly?.time)?weather.hourly.time.length:0};
+  }catch(weatherError){weatherProxy={available:false,detail:weatherError.message||'Weather proxy request failed'};}
   try{localStorage.setItem('floodwatchApiBaseUrl',base)}catch(e){}
-  statusBox.textContent='Connected successfully · checked '+new Date().toLocaleString()+'. This verifies the API status endpoints only; flood data are not served by this endpoint yet.';
-  details.textContent=JSON.stringify({health,api_status:apiStatus},null,2);details.hidden=false;
+  statusBox.textContent='API health/status connected · checked '+new Date().toLocaleString()+'. '+(weatherProxy.available?'The backend weather proxy is responding.':'The backend weather proxy is not available yet; the map will use direct Open-Meteo fallback until it is deployed.');
+  details.textContent=JSON.stringify({health,api_status:apiStatus,weather_proxy:weatherProxy},null,2);details.hidden=false;
  }catch(e){
   const message=e.name==='AbortError'?'Timed out after 10 seconds. Check that Linux Uvicorn and the Cloudflare tunnel are both running.':(e.message||'Request failed.');
   statusBox.textContent='Connection failed: '+message+' If the browser reports a CORS error, the backend settings may need updating.';
