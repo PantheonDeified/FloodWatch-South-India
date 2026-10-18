@@ -873,13 +873,13 @@ function addHistoricalFloodHazard(){
 
 // FloodWatch's own gridded triage score. It uses raw forecasts and station history,
 // never upstream websites' red/amber/green labels. It is not a calibrated probability.
-const FLOODWATCH_RISK_GRID_BUILD = 'fw-risk-grid-20261018-stable-v3';
+const FLOODWATCH_RISK_GRID_BUILD = 'fw-risk-grid-20261018-stable-v4';
 const FLOODWATCH_RISK_GRID = {
   gridDegrees: 0.5,
   statesFile: 'data/south-india-states.geojson',
   forecastSource: 'Open-Meteo raw gridded forecast values',
   gaugeSource: 'Published NWDP/NWIC/CWC-derived source observations in the local snapshot',
-  weights: { rain24h: 40, rain72h: 30, chance24h: 15, currentRain: 15 },
+  weights: { rain24h: 40, rain72h: 30, chance24h: 15, currentPrecipitation: 15 }, 
   cutoffs: { amber: 35, red: 65 },
   description: 'Own index: 24h/72h forecast rain, rain chance and current rain; nearby fresh gauge history can raise the score.'
 };
@@ -954,9 +954,9 @@ function computeRiskScore(cell,bundle){
  const rain72=first72.filter(i=>Number.isFinite(precip[i])).map(i=>precip[i]);
  const p24=first24.filter(i=>Number.isFinite(prob[i])).map(i=>prob[i]);
  const current=weather?.current?.precipitation==null?NaN:Number(weather.current.precipitation),components=[];
- if(first24.length>=18&&rain24.length>=18)components.push({weight:40,value:40*clamp01(rain24.reduce((a,b)=>a+b,0)/100)});
- if(first72.length>=54&&rain72.length>=54)components.push({weight:30,value:30*clamp01(rain72.reduce((a,b)=>a+b,0)/150)});
- if(first24.length>=18&&p24.length>=18)components.push({weight:15,value:15*clamp01(Math.max(...p24)/100)});
+ if(first24.length>=24&&rain24.length>=23)components.push({weight:40,value:40*clamp01(rain24.reduce((a,b)=>a+b,0)/100)});
+ if(first72.length>=72&&rain72.length>=68)components.push({weight:30,value:30*clamp01(rain72.reduce((a,b)=>a+b,0)/150)});
+ if(first24.length>=24&&p24.length>=23)components.push({weight:15,value:15*clamp01(Math.max(...p24)/100)});
  if(Number.isFinite(current)&&current>=0)components.push({weight:15,value:15*clamp01(current/20)});
  const rainWeight=components.reduce((s,x)=>s+x.weight,0);
  const rainScore=rainWeight?components.reduce((s,x)=>s+x.value,0)/rainWeight*100:null;
@@ -969,7 +969,8 @@ function computeRiskScore(cell,bundle){
  let flowPercentile=null,flowForecastMax=null,flowHistoryCount=history.length,flowScore=null;
  if(history.length>=20&&future.length>=1){
   flowForecastMax=Math.max(...future.slice(0,7));
-  flowPercentile=100*history.filter(v=>v<=flowForecastMax).length/history.length;
+  const lower=history.filter(v=>v<flowForecastMax).length,equal=history.filter(v=>v===flowForecastMax).length;
+  flowPercentile=100*(lower+0.5*equal)/history.length;
   flowScore=100*clamp01((flowPercentile-50)/50);
  }
  let score=null,componentsUsed=[];
@@ -1000,7 +1001,7 @@ function riskCellPopup(cell,result){
  if(result.rain24!=null)lines.push('Rain next 24h: '+result.rain24.toFixed(1)+' mm');
  if(result.rain72!=null)lines.push('Rain next 72h: '+result.rain72.toFixed(1)+' mm');
  if(result.probability24!=null)lines.push('Rain chance (24h): '+Math.round(result.probability24)+'%');
- if(result.current!=null)lines.push('Current model rain: '+result.current.toFixed(1)+' mm/h');
+ if(result.current!=null)lines.push('Current model precipitation: '+result.current.toFixed(1)+' mm');
  if(result.flowPercentile!=null)lines.push('GloFAS 7-day flow peak: '+Math.round(result.flowPercentile)+'th percentile of '+result.flowHistoryCount+' recent days');
  if(result.gauge)lines.push('Nearby fresh gauge: '+Math.round(result.gauge.distanceKm)+' km · own-history percentile '+Math.round(result.gauge.percentile)+'%'+(result.gauge.rising?' · rising':''));
  if(result.weatherTime)lines.push('Weather model time: '+result.weatherTime+' UTC');
