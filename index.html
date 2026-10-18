@@ -818,6 +818,7 @@ const NRSC_HAZARD_LAYER_SPECS=[
  {name:'agg_tamilnadu',area:'Tamil Nadu'}
 ];
 function clearRiskLayers(){
+ riskCycloneRequest++;
  riskFloodLayers.forEach(layer=>{try{map.removeLayer(layer)}catch(e){}});
  riskFloodLayers=[];
  if(riskCycloneLayer){try{map.removeLayer(riskCycloneLayer)}catch(e){}riskCycloneLayer=null}
@@ -831,6 +832,12 @@ function riskLegend(mode,title,rows,note,sourceUrl){
  $('riskLegendNote').textContent=note;
  $('riskLegendSource').href=sourceUrl;
  $('riskLegendSource').textContent=(mode==='cyclone-threat'?'Open official GDACS event map ↗':'Open official NRSC flood-hazard atlas ↗');
+}
+function addNRSCOfficialLegendImage(){
+ const imgUrl=NRSC_HAZARD_WMS+'SERVICE=WMS&VERSION=1.1.1&REQUEST=GetLegendGraphic&LAYER=ap_hz&FORMAT=image/png';
+ const img=document.createElement('img');img.alt='Official NRSC hazard-map legend for Andhra Pradesh layer';img.loading='lazy';img.src=imgUrl;
+ img.onerror=()=>{img.remove()};
+ $('riskLegendContent').appendChild(img);
 }
 function addHistoricalFloodHazard(){
  const failed=[];
@@ -851,11 +858,8 @@ function addHistoricalFloodHazard(){
  riskLegend('historical-flood','Historical flood hazard · NRSC/ISRO',legendRows,
   'Historical inundation-derived hazard zonation (NRSC portal describes layers integrated from 1998–2019). This is background hazard, not a live flood forecast. Green/lower source classes do not guarantee safety. Current rain radar, river observations and cyclone alerts remain separately selectable.',
   'https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty');
- // Render the service's own legend. The image preserves its published colours/classes.
- const imgUrl=NRSC_HAZARD_WMS+'SERVICE=WMS&VERSION=1.1.1&REQUEST=GetLegendGraphic&LAYER=ap_hz&FORMAT=image/png';
- const img=document.createElement('img');img.alt='Official NRSC hazard-map legend for Andhra Pradesh layer';img.loading='lazy';img.src=imgUrl;
- img.onerror=()=>{img.remove()};
- $('riskLegendContent').appendChild(img);
+ // Use the official service legend rather than hand-assigning hazard colours.
+ addNRSCOfficialLegendImage();
 }
 async function addRiskCycloneThreat(){
  const requestId=++riskCycloneRequest;
@@ -919,6 +923,7 @@ async function setRiskMapLayer(mode){
    {color:'#facc15',text:'GDACS Green alert class (not a safety label)'},
    {text:'Historical WMS coverage verified for Andhra Pradesh, Karnataka, Kerala and Tamil Nadu. Uncovered areas, including Telangana in this service catalogue, remain unknown.'}
   ],'Loading source layers…','https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty');
+  addNRSCOfficialLegendImage();
   await addRiskCycloneThreat();
  }
 }
