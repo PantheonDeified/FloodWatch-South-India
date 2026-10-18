@@ -1,50 +1,117 @@
-# Water data quality audit — initial status
+# Water-observation snapshot — automated quality audit
 
-Checked 2026-10-18 from repository source and the successful collector run report. This is an initial audit; I could not independently download and inspect all 407 raw records in this execution environment, so no individual reading is silently corrected.
+- Snapshot generation timestamp: **2026-10-18T07:00:04.812375+00:00**
+- Records in snapshot: **407**
+- Resource files checked: **37**
+- Report generated from this snapshot by the GitHub Actions pipeline; source records are not modified.
 
-## Known snapshot facts
+## Measurement types
 
-The documented successful run on 2026-10-18 created a snapshot generated at 2026-10-18T02:32:25Z, with 407 records from 37 resource files across 20 configured source pages.
-
-| Measurement type | Count |
+| Measurement | Records |
 |---|---:|
-| River discharge | 201 |
-| River level | 145 |
+| Reservoir/regulator discharge | 8 |
 | Reservoir level | 44 |
 | Reservoir storage | 9 |
-| Reservoir/regulator discharge | 8 |
-| **Total** | **407** |
+| River discharge | 201 |
+| River level | 145 |
 
-## Known quality issues from the run report
+## Quality indicators
 
-- 34 records have no coordinates; list them in the table but do not place them on the map.
-- 15 records are labelled Maharashtra, Chhattisgarh or Madhya Pradesh rather than the five core states. Keep out-of-area records from being presented as South India stations without a clear geographic reason.
-- Some resources return no usable rows or much older reported timestamps.
-- A reported Hemavathy Dam timestamp 2026-10-18T12:10:00 is later than the documented snapshot generation time 2026-10-18T02:32:25Z if both are interpreted on the same clock. Since the source timezone is not specified, do not rewrite or call it fresh; mark it unknown/future pending source-specific verification.
-- River level, discharge, reservoir level, storage and release are different quantities with distinct units. Never relabel one as another.
-- Hourly telemetry and manually reported daily observations have different expected refresh schedules.
+| Check | Count | Meaning |
+|---|---:|---|
+| Missing both coordinates | 34 | Do not plot these records as station points |
+| Missing state | 34 | State coverage cannot be assigned from the record |
+| Labelled outside five core states | 15 | Review geography; do not present as an in-area station by default |
+| Missing district | 34 | District-level filtering may be incomplete |
+| Source timezone unspecified | 407 | Preserve the reported timestamp; do not assume UTC or local time |
+| Duplicate station/type/timestamp groups | 0 | Review possible overlap; records are retained in this report |
 
-## Validation already in code
+## Records by state label
 
-The GitHub Actions collector workflow runs validator unit tests, checks JSON structure, and calls data_pipeline/scripts/validate_water_snapshot.py before publishing. Its documented checks include non-empty snapshot/count consistency, record IDs, supported measurement types, numeric values, units, coordinate pairs, source HTTPS links and timestamp parsing. It warns on unknown time zones, missing coordinates/state, out-of-core-area labels and future-looking timestamps.
+| State label | Records |
+|---|---:|
+| Andhra Pradesh | 102 |
+| Tamil Nadu | 81 |
+| Karnataka | 70 |
+| Telangana | 64 |
+| Kerala | 41 |
+| Unspecified | 34 |
+| Maharashtra | 10 |
+| Chhattisgarh | 4 |
+| Madhya Pradesh | 1 |
 
-## Required next steps
+## Records by configured source
 
-1. Run the validator on the latest file and retain its output in the report.
-2. Produce a repeatable audit export of missing coordinates, missing state/district, unknown source timezone, future timestamps, duplicate station/time/type records and per-source last-observed timestamp.
-3. Check resource-specific unit conventions and station identifiers against source metadata. Do not convert units unless the source's original units are known.
-4. Verify coordinate/state coverage against station metadata; never guess coordinates.
-5. Test the browser station table and map overlay against the published snapshot after Pages deploys.
-6. Keep a source-specific freshness policy: do not apply one universal age threshold to hourly telemetry and manual/daily resources.
-7. Only after these checks, use vetted historical discharge records and aligned weather inputs for baseline or machine-learning experiments.
+| Configured source | Records | Resources represented | Latest timestamp string in snapshot |
+|---|---:|---:|---|
+| Andhra Pradesh reservoir storage and level | 19 | 2 | 2026-08-31T06:00:00 |
+| Andhra Pradesh river discharge | 1 | 1 | 2026-02-28T08:00:00 |
+| Andhra Pradesh river telemetry | 41 | 4 | 2026-10-16T23:00:00 |
+| Central Water Commission river discharge | 200 | 5 | 2026-10-17T09:15:00 |
+| Central Water Commission river telemetry | 74 | 5 | 2026-10-16T03:30:00 |
+| Flood Flow Canal Head Regulator discharge | 1 | 1 | 2026-08-20T14:00:00 |
+| Kaddam head regulator release/discharge | 1 | 1 | 2026-08-20T14:00:00 |
+| Kakatiya Canal Head Regulator discharge | 1 | 1 | 2026-08-20T15:00:00 |
+| Karnataka reservoir data | 34 | 1 | 2026-10-18T12:10:00 |
+| Lakshmi Canal Head Regulator discharge | 1 | 1 | 2026-08-20T14:00:00 |
+| Lower Manair Canal Head Regulator discharge | 1 | 1 | 2026-08-20T14:00:00 |
+| Lower Manair Dam 2 discharge | 1 | 1 | 2026-08-20T14:00:00 |
+| Saraswati Canal Head Regulator discharge | 1 | 1 | 2026-08-20T14:00:00 |
+| Sri Ram Sagar Dam release/discharge | 1 | 1 | 2026-08-20T15:00:00 |
+| Tamil Nadu river telemetry | 4 | 1 | 2026-10-16T23:00:00 |
+| Telangana river telemetry | 26 | 2 | 2026-10-16T23:00:00 |
 
-## References
+## Collection outcomes
 
-- [Run report](water-pipeline-run-report.md)
-- [Snapshot](../data/water-observations.json)
-- [Source registry](../data_pipeline/sources.json)
-- [Collector](../data_pipeline/scripts/refresh_water_observations.py)
-- [Validator](../data_pipeline/scripts/validate_water_snapshot.py)
-- [Validator tests](../data_pipeline/tests/test_validate_water_snapshot.py)
+These statuses describe what the collector could retrieve during this run; they do not prove that a source's latest observation is current.
 
-The public snapshot is not a complete, uniformly real-time South India water network. Do not interpret the table as an official flood warning.
+| Configured source page | Status | Resources discovered | Successful resource scans | Resource errors |
+|---|---|---:|---:|---:|
+| Central Water Commission river telemetry | checked | 6 | 6 | 0 |
+| Andhra Pradesh river telemetry | checked | 4 | 4 | 0 |
+| Telangana river telemetry | checked | 2 | 2 | 0 |
+| Kerala river telemetry | checked | 4 | 4 | 0 |
+| Tamil Nadu river telemetry | checked | 1 | 1 | 0 |
+| Andhra Pradesh reservoir storage and level | checked | 2 | 2 | 0 |
+| Karnataka reservoir data | checked | 1 | 1 | 0 |
+| Sri Ram Sagar Dam release/discharge | checked | 1 | 1 | 0 |
+| Kaddam head regulator release/discharge | checked | 1 | 1 | 0 |
+| Central Water Commission river discharge | checked | 5 | 5 | 0 |
+| Andhra Pradesh river discharge | checked | 1 | 1 | 0 |
+| Telangana river discharge | checked | 1 | 1 | 0 |
+| Kerala river discharge | checked | 1 | 1 | 0 |
+| Tamil Nadu river discharge | checked | 1 | 1 | 0 |
+| Flood Flow Canal Head Regulator discharge | checked | 1 | 1 | 0 |
+| Lower Manair Dam 2 discharge | checked | 1 | 1 | 0 |
+| Saraswati Canal Head Regulator discharge | checked | 1 | 1 | 0 |
+| Lower Manair Canal Head Regulator discharge | checked | 1 | 1 | 0 |
+| Lakshmi Canal Head Regulator discharge | checked | 1 | 1 | 0 |
+| Kakatiya Canal Head Regulator discharge | checked | 1 | 1 | 0 |
+
+## Units reported by the collector
+
+| Measurement type | Source unit label | Records |
+|---|---|---:|
+| Reservoir/regulator discharge | cusec | 8 |
+| Reservoir level | m | 10 |
+| Reservoir level | source-defined | 34 |
+| Reservoir storage | source-defined | 9 |
+| River discharge | m3/s | 201 |
+| River level | m | 145 |
+
+Unit labels such as `source-defined` are intentionally not converted or assumed equivalent. Verify them against the original resource metadata before comparing values across stations.
+
+## Limits and review actions
+
+- A successful collection does not mean every river, dam or state is covered or updated in real time.
+- The latest timestamp above is the lexicographically greatest normalized timestamp string. Where source timezone semantics are unknown, it is not a definitive cross-source freshness ranking.
+- Check units and measurement types against source metadata; river level is not interchangeable with river discharge.
+- Do not infer danger thresholds unless the authoritative source supplies a compatible threshold and unit.
+- Do not invent coordinates, force missing readings to zero, silently rewrite timestamps, or delete suspicious values. Investigate source metadata and document any correction.
+- This snapshot is contextual source-reported data, not an official warning and not by itself a validated flood prediction.
+
+## Provenance
+
+- Source registry: [data_pipeline/sources.json](../data_pipeline/sources.json)
+- Collector: [refresh_water_observations.py](../data_pipeline/scripts/refresh_water_observations.py)
+- Structural validator: [validate_water_snapshot.py](../data_pipeline/scripts/validate_water_snapshot.py)
