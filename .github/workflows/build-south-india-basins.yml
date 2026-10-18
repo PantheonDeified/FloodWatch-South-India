@@ -28,35 +28,74 @@ jobs:
           python-version: '3.12'
       - name: Install vector geometry dependencies
         run: python -m pip install --upgrade pip geopandas
-      - name: Query HydroBASINS Asia level-6 features for South India
+      - name: Query all HydroBASINS Asia level-6 features for South India
         env:
           BASIN_QUERY_URL: https://services2.arcgis.com/PYn6bWCjT6bhw1z3/ArcGIS/rest/services/Global_Loaches_2022_WFL1/FeatureServer/2/query
         run: |
-          # The data provider ZIP endpoint returned HTTP 403 to GitHub Actions.
-          # This public feature service documents the same HydroBASINS Asia level-6 data.
-          curl --fail --location --retry 3 --retry-delay 2 --max-time 240 --get "$BASIN_QUERY_URL" \
-            --data-urlencode 'where=1=1' \
-            --data-urlencode 'geometry=73.5,7.5,86.5,21.5' \
-            --data-urlencode 'geometryType=esriGeometryEnvelope' \
-            --data-urlencode 'inSR=4326' \
-            --data-urlencode 'spatialRel=esriSpatialRelIntersects' \
-            --data-urlencode 'outFields=HYBAS_ID,NEXT_DOWN,NEXT_SINK,MAIN_BAS,SUB_AREA,UP_AREA,PFAF_ID' \
-            --data-urlencode 'returnGeometry=true' \
-            --data-urlencode 'outSR=4326' \
-            --data-urlencode 'f=geojson' \
-            --data-urlencode 'resultRecordCount=2000' \
-            --output /tmp/hydrobasins_south_india.geojson
+          # ZIP distribution returns HTTP 403 from hosted runners; use its public feature-service equivalent.
           python - <<'PY'
           import json
+          import os
+          import time
+          import urllib.parse
+          import urllib.request
           from pathlib import Path
-          path = Path('/tmp/hydrobasins_south_india.geojson')
-          payload = json.loads(path.read_text(encoding='utf-8'))
-          features = payload.get('features')
-          if not isinstance(features, list) or len(features) < 10:
-              raise SystemExit(f'Invalid/insufficient HydroBASINS GeoJSON feature count: {len(features) if isinstance(features, list) else "missing"}')
-          if not all(f.get('geometry') and f.get('properties', {}).get('HYBAS_ID') is not None and 'NEXT_DOWN' in f.get('properties', {}) for f in features):
-              raise SystemExit('HydroBASINS query response lacks polygon geometry or routing ID attributes.')
-          print(f'Validated {len(features)} regional HydroBASINS features from the public feature service.')
+
+          endpoint = os.environ["BASIN_QUERY_URL"]
+          common = {
+              "where": "1=1",
+              "geometry": "73.5,7.5,86.5,21.5",
+              "geometryType": "esriGeometryEnvelope",
+              "inSR": "4326",
+              "spatialRel": "esriSpatialRelIntersects",
+              "returnGeometry": "true",
+              "outFields": "HYBAS_ID,NEXT_DOWN,NEXT_SINK,MAIN_BAS,SUB_AREA,UP_AREA,PFAF_ID",
+              "outSR": "4326",
+              "f": "geojson",
+          }
+          def get_json(params):
+              url = endpoint + "?" + urllib.parse.urlencode(params)
+              req = urllib.request.Request(url, headers={"User-Agent": "FloodWatch-South-India/0.1 (watershed geometry build)"})
+              with urllib.request.urlopen(req, timeout=90) as response:
+                  return json.load(response)
+          id_response = get_json({**common, "returnIdsOnly": "true", "returnGeometry": "false", "f": "json"})
+          if "error" in id_response:
+              raise SystemExit(f"HydroBASINS object-ID query error: {id_response['error']}")
+          object_ids = id_response.get("objectIds")
+          if not isinstance(object_ids, list) or not object_ids:
+              raise SystemExit(f"HydroBASINS query returned no object IDs: {id_response}")
+          object_ids = sorted(set(object_ids))
+          features = []
+          batch_size = 100
+          for start in range(0, len(object_ids), batch_size):
+              ids = object_ids[start:start + batch_size]
+              payload = get_json({
+                  **common,
+                  "objectIds": ",".join(str(x) for x in ids),
+                  "resultRecordCount": str(batch_size),
+              })
+              if "error" in payload:
+                  raise SystemExit(f"HydroBASINS feature batch failed at offset {start}: {payload['error']}")
+              batch = payload.get("features")
+              if not isinstance(batch, list):
+                  raise SystemExit(f"Invalid feature payload at offset {start}")
+              features.extend(batch)
+              print(f"Fetched basin features {min(start + len(batch), len(object_ids))}/{len(object_ids)}")
+              if start + batch_size < len(object_ids):
+                  time.sleep(0.15)
+          unique = {}
+          for feature in features:
+              props = feature.get("properties") or {}
+              basin_id = props.get("HYBAS_ID")
+              if basin_id is None or feature.get("geometry") is None:
+                  raise SystemExit("HydroBASINS response is missing a required ID or polygon geometry.")
+              unique[str(basin_id)] = feature
+          if len(unique) != len(object_ids):
+              raise SystemExit(f"Expected {len(object_ids)} distinct basin IDs, received {len(unique)} features.")
+          geojson = {"type": "FeatureCollection", "features": list(unique.values())}
+          out = Path("/tmp/hydrobasins_south_india.geojson")
+          out.write_text(json.dumps(geojson, separators=(",", ":")), encoding="utf-8")
+          print(f"Saved {len(unique)} HydroBASINS polygons to {out}.")
           PY
       - name: Clip and validate basin polygons for the five-state mask
         run: |
