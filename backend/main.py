@@ -5,6 +5,8 @@ This service proxies Open-Meteo weather for South India and labels model data
 as estimates. It does not calculate or issue flood warnings.
 """
 from datetime import datetime, timezone
+import os
+from pathlib import Path
 import json
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -13,7 +15,11 @@ from urllib.request import Request, urlopen
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-APP_VERSION = "0.2.0"
+APP_VERSION = "0.3.0"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_SNAPSHOT = REPO_ROOT / "data" / "water-observations.json"
+SNAPSHOT_URL = "https://raw.githubusercontent.com/PantheonDeified/FloodWatch-South-India/main/data/water-observations.json"
+_snapshot_cache = {"loaded_at": 0.0, "payload": None}
 WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
 
 app = FastAPI(
@@ -65,6 +71,131 @@ def api_status():
         "water_observations": "Published GitHub Pages JSON snapshot; collector runs every six hours when scheduled execution succeeds; observation freshness varies by source",
         "flood_forecast_model": "Not yet deployed or locally validated",
         "last_checked": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+
+def load_water_snapshot() -> dict:
+    """Load a committed snapshot when deployed with the repo; otherwise fetch the public snapshot."""
+    import time
+
+    configured = os.environ.get("FLOODWATCH_WATER_SNAPSHOT")
+    path = Path(configured).expanduser() if configured else DEFAULT_SNAPSHOT
+    if path.is_file():
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise HTTPException(status_code=503, detail="The configured water snapshot could not be read.") from exc
+    else:
+        if _snapshot_cache["payload"] is not None and time.time() - _snapshot_cache["loaded_at"] < 300:
+            return _snapshot_cache["payload"]
+        request = Request(SNAPSHOT_URL, headers={"Accept": "application/json", "User-Agent": "FloodWatch-South-India/0.3"}, method="GET")
+        try:
+            with urlopen(request, timeout=12) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+        except (HTTPError, URLError, TimeoutError, OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise HTTPException(status_code=503, detail="The published water-observation snapshot is temporarily unavailable.") from exc
+        _snapshot_cache.update({"loaded_at": time.time(), "payload": payload})
+    if not isinstance(payload, dict) or not isinstance(payload.get("observations"), list):
+        raise HTTPException(status_code=502, detail="The water snapshot has an unexpected data format.")
+    return payload
+
+
+def observation_age_hours(record: dict, now: datetime | None = None) -> float | None:
+    """Return age only when timestamp timezone is explicit; never guess browser/local time."""
+    raw = str(record.get("observed_at") or record.get("observed_at_raw") or "").strip()
+    if not raw:
+        return None
+    try:
+        stamp = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if stamp.tzinfo is None:
+        zone = str(record.get("source_timezone") or "").strip()
+        if not zone or zone.lower() in {"unknown", "unspecified", "not specified", "local", "n/a"}:
+            return None
+        try:
+            from zoneinfo import ZoneInfo
+            stamp = stamp.replace(tzinfo=ZoneInfo(zone))
+        except Exception:
+            return None
+    return ((now or datetime.now(timezone.utc)) - stamp.astimezone(timezone.utc)).total_seconds() / 3600
+
+
+@app.get("/api/v1/water-observations")
+def water_observations(
+    state: str | None = Query(None, max_length=80),
+    kind: str | None = Query(None, max_length=80),
+    freshness: str | None = Query(None, pattern="^(recent|delayed|stale|unknown)$"),
+    search: str | None = Query(None, max_length=120),
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0, le=100000),
+):
+    """Return paginated official-source records. Freshness is unknown if timezone is ambiguous."""
+    snapshot = load_water_snapshot()
+    records = snapshot["observations"]
+    now = datetime.now(timezone.utc)
+    filtered = []
+    for row in records:
+        if not isinstance(row, dict):
+            continue
+        if state and str(row.get("state") or "").casefold() != state.casefold():
+            continue
+        if kind and str(row.get("kind") or "").casefold() != kind.casefold():
+            continue
+        if search:
+            haystack = " ".join(str(row.get(key) or "") for key in (
+                "station_name", "station_id", "river", "basin", "district", "state", "source_name"
+            ))
+            if search.casefold() not in haystack.casefold():
+                continue
+        age = observation_age_hours(row, now)
+        if age is None or age < -1:
+            bucket = "unknown"
+        elif age < 24:
+            bucket = "recent"
+        elif age < 72:
+            bucket = "delayed"
+        else:
+            bucket = "stale"
+        if freshness and freshness != bucket:
+            continue
+        item = dict(row)
+        item["freshness"] = bucket
+        item["age_hours"] = round(max(0.0, age), 2) if age is not None and age >= 0 else None
+        filtered.append(item)
+    return {
+        "generated_at_utc": snapshot.get("generated_at_utc"),
+        "source_resource_count_checked": snapshot.get("resource_count_checked"),
+        "total_records": len(filtered),
+        "limit": limit,
+        "offset": offset,
+        "observations": filtered[offset:offset + limit],
+        "metadata": {
+            "source": "FloodWatch published NWDP/NWIC observation snapshot",
+            "snapshot_time_is_not_each_reading_time": True,
+            "timezone_ambiguous_records_are_freshness_unknown": True,
+            "not_a_flood_warning": True,
+        },
+    }
+
+
+@app.get("/api/v1/models/status")
+def model_status():
+    """Report model readiness honestly; a source-code architecture is not a trained model."""
+    return {
+        "status": "research_pipeline_only",
+        "streamflow_lstm_code": "available",
+        "event_classifier_code": "available",
+        "trained_model_artifact": "not_deployed",
+        "validated_south_india_flood_forecast": False,
+        "required_before_inference": [
+            "verified historical discharge series with units and station identifiers",
+            "weather features aligned to the same gauge and dates",
+            "chronological train/validation/test evaluation against persistence baseline",
+            "reviewed catchment mapping and published model card",
+        ],
+        "message": "No FloodWatch-trained flood prediction is available. External modelled products must remain separately labelled.",
     }
 
 
