@@ -151,7 +151,7 @@ def test_model_status_reports_regional_metrics_without_claiming_operational_fore
     assert metrics["selected_lstm_persistence_blend"]["rmse"] < metrics["persistence_baseline"]["rmse"]
     assert metrics["selected_blend_rmse_skill_vs_persistence"] > 0.07
     assert "available_as_temporary_github_actions_artifact" in data["trained_model_artifact"]
-    assert data["single_station_pilot"]["high_flow_nse"] < 0
+    assert data["single_station_test_metrics"]["high_flow_nse"] < 0
     assert "not a flood-probability" in data["message"]
 
 
