@@ -109,6 +109,21 @@ assert(html.includes('async function loadSouthIndiaBasins()'),'Basin loader shou
 const mapStartupIndex=html.indexOf('// Start with a regional overview; the user chooses the exact point.');
 assert(mapStartupIndex>=0&&html.indexOf('loadSouthIndiaBasins();',mapStartupIndex)>mapStartupIndex,'Basin data should load at startup without selecting the calculated-risk layer.');
 assert(html.includes('const basinGeo=await loadSouthIndiaBasins();'),'Calculated risk layer should reuse the shared basin loader.');
+assert(html.includes('function basinRoutingRelation('),'Basin routing helper should exist.');
+const routingStart=html.indexOf('function basinRoutingRelation(');
+const routingEnd=html.indexOf('async function loadSouthIndiaBasins',routingStart);
+assert(routingStart>=0&&routingEnd>routingStart,'Basin routing helper boundaries should be valid.');
+const routing=new Function(html.slice(routingStart,routingEnd)+'\\nreturn basinRoutingRelation;')();
+const testNetwork={features:[
+ {type:'Feature',geometry:{type:'Polygon',coordinates:[]},properties:{HYBAS_ID:101,NEXT_DOWN:102}},
+ {type:'Feature',geometry:{type:'Polygon',coordinates:[]},properties:{HYBAS_ID:102,NEXT_DOWN:103}},
+ {type:'Feature',geometry:{type:'Polygon',coordinates:[]},properties:{HYBAS_ID:103,NEXT_DOWN:0}}
+]};
+assert.equal(routing(101,101,testNetwork),'same_basin','Same basin should be identified.');
+assert.equal(routing(101,103,testNetwork),'upstream_candidate','NEXT_DOWN chain should identify an upstream candidate.');
+assert.equal(routing(103,101,testNetwork),'downstream_candidate','Reverse NEXT_DOWN chain should identify a downstream candidate.');
+assert.equal(routing(404,101,testNetwork),'unlinked','Disconnected basins should never be labelled upstream.');
+assert.equal(routing(null,101,testNetwork),'unknown','Missing basin IDs must remain unknown.');
 assert(Array.isArray(basins.features)&&basins.features.length>=50,'Regional basin GeoJSON should include a useful set of features.');
 assert(basins.features.every(f=>f.geometry&&Number.isFinite(Number(f.properties?.HYBAS_ID))&&f.properties?.NEXT_DOWN!==undefined),'Basin features should carry geometry, HYBAS_ID and NEXT_DOWN routing attributes.');
 assert(html.includes('id="infraLatitude"')&&html.includes('id="infraLongitude"'),'Infrastructure evidence must include coordinates.');
@@ -117,7 +132,7 @@ assert(!html.includes('L.rectangle([[cell.south,cell.west]'),'The active risk re
 console.log(JSON.stringify({
   status:'PASS',
   sample_cells:cells.length,
-  checks:33,
+  checks:38,
   examples:{
     green:green.score,amber:amber.score,red:red.score,
     flow_only:flowOnly.score,rising_only:risingOnly.score,
