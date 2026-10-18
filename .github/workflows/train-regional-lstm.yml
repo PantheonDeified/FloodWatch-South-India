@@ -50,16 +50,16 @@ jobs:
             data_pipeline/raw/nwdp_history/
             data_pipeline/output/cwc_discharge_normalized.csv
             data_pipeline/output/cwc_discharge_quality_report.json
-          key: floodwatch-nwdp-v2-${{ runner.os }}-${{ hashFiles('data_pipeline/scripts/download_nwdp_history.py', 'data_pipeline/scripts/normalize_cwc_discharge.py') }}-${{ steps.source-cache-day.outputs.day }}
+          key: floodwatch-nwdp-v3-${{ runner.os }}-${{ hashFiles('data_pipeline/scripts/download_nwdp_history.py', 'data_pipeline/scripts/normalize_cwc_discharge.py') }}-${{ steps.source-cache-day.outputs.day }}
           restore-keys: |
-            floodwatch-nwdp-v2-${{ runner.os }}-${{ hashFiles('data_pipeline/scripts/download_nwdp_history.py', 'data_pipeline/scripts/normalize_cwc_discharge.py') }}-
+            floodwatch-nwdp-v3-${{ runner.os }}-${{ hashFiles('data_pipeline/scripts/download_nwdp_history.py', 'data_pipeline/scripts/normalize_cwc_discharge.py') }}-
       - name: Download official CWC/NWDP discharge archives
         if: steps.nwdp-cache.outputs.cache-hit != 'true'
         run: |
           # A restored previous-day cache is a warm start only; do not mix it with today's downloads.
           rm -rf data_pipeline/raw/nwdp_history
           mkdir -p data_pipeline/raw/nwdp_history
-          python data_pipeline/scripts/download_nwdp_history.py --out-dir data_pipeline/raw/nwdp_history --keywords "river discharge" --start-year 1950 --end-year 2025 --max-resources 50
+          python data_pipeline/scripts/download_nwdp_history.py --out-dir data_pipeline/raw/nwdp_history --keywords "river discharge" --start-year 1950 --end-year "$(date -u +%Y)" --max-resources 50
       - name: Normalize source observations
         if: steps.nwdp-cache.outputs.cache-hit != 'true'
         run: |
