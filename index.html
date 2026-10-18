@@ -45,7 +45,7 @@
 </head>
 <body>
 <header><div class="brand"><div class="logo">🌧</div><div><h1>FloodWatch South India</h1><small>Regional weather & flood situational awareness</small></div></div><span class="tag">SOURCE-LABELLED DATA · PROTOTYPE</span></header>
-<main><section class="map-area"><div class="toolbar"><form id="searchForm" style="display:flex;gap:8px;flex:1;min-width:260px"><input id="search" placeholder="Search a town, village or district in South India…" autocomplete="off"><button class="primary">Find</button></form><button id="locate">◎ My location</button><input id="latInput" aria-label="Latitude" placeholder="Latitude" inputmode="decimal" style="flex:0 1 112px;min-width:90px"><input id="lonInput" aria-label="Longitude" placeholder="Longitude" inputmode="decimal" style="flex:0 1 112px;min-width:90px"><button id="goCoords">Go to coordinates</button><select id="layer" aria-label="Base map"><option value="street">Street map</option><option value="terrain">Terrain</option><option value="satellite">Satellite</option></select><select id="riskLayer" aria-label="Flood and cyclone risk overlay"><option value="off">Risk map: Off</option><option value="historical-flood">Historical flood evidence (NRSC/ISRO)</option><option value="cyclone-threat">Cyclone alerts / events (GDACS)</option><option value="combined">Historic flood evidence + cyclone alerts</option></select></div><div style="padding:8px 12px;background:#13253a;color:#cfe7ff;border-bottom:1px solid #26364c">📍 <b>Select any point:</b> click directly on the map, search for a place, or enter latitude and longitude. The selected point updates the weather panel.</div><div id="mapWrap" style="position:relative"><div id="map" aria-label="Interactive map. Click any point to select its location."></div><div id="zoomStatus" role="status" aria-live="polite" hidden></div><div id="riskMapLegend" class="risk-legend" role="status" aria-live="polite" hidden><strong id="riskLegendTitle">Risk overlay</strong><div id="riskLegendContent" class="risk-legend-content"></div><div id="riskLegendNote" class="muted">Only source-supported regions are classified. Missing coverage is unknown, not safe.</div><a id="riskLegendSource" href="https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty" target="_blank" rel="noopener noreferrer">Open official NRSC hazard atlas ↗</a></div></div></section>
+<main><section class="map-area"><div class="toolbar"><form id="searchForm" style="display:flex;gap:8px;flex:1;min-width:260px"><input id="search" placeholder="Search a town, village or district in South India…" autocomplete="off"><button class="primary">Find</button></form><button id="locate">◎ My location</button><input id="latInput" aria-label="Latitude" placeholder="Latitude" inputmode="decimal" style="flex:0 1 112px;min-width:90px"><input id="lonInput" aria-label="Longitude" placeholder="Longitude" inputmode="decimal" style="flex:0 1 112px;min-width:90px"><button id="goCoords">Go to coordinates</button><select id="layer" aria-label="Base map"><option value="street">Street map</option><option value="terrain">Terrain</option><option value="satellite">Satellite</option></select><select id="riskLayer" aria-label="Flood and cyclone risk overlay"><option value="computed-risk">Calculated risk grid · FloodWatch</option><option value="off">Risk map: Off</option><option value="historical-flood">Historical flood evidence (NRSC/ISRO)</option><option value="cyclone-threat">Cyclone alerts / events (GDACS)</option><option value="combined">Historic flood evidence + cyclone alerts</option></select></div><div style="padding:8px 12px;background:#13253a;color:#cfe7ff;border-bottom:1px solid #26364c">📍 <b>Select any point:</b> click directly on the map, search for a place, or enter latitude and longitude. The selected point updates the weather panel.</div><div id="mapWrap" style="position:relative"><div id="map" aria-label="Interactive map. Click any point to select its location."></div><div id="zoomStatus" role="status" aria-live="polite" hidden></div><div id="riskMapLegend" class="risk-legend" role="status" aria-live="polite" hidden><strong id="riskLegendTitle">Risk overlay</strong><div id="riskLegendContent" class="risk-legend-content"></div><div id="riskLegendNote" class="muted">Only source-supported regions are classified. Missing coverage is unknown, not safe.</div><a id="riskLegendSource" href="https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty" target="_blank" rel="noopener noreferrer">Open official NRSC hazard atlas ↗</a></div></div></section>
 <aside class="side"><section class="section"><h2>Selected location</h2><div id="placeName">South India overview</div><div class="status" id="coords">Click anywhere on the map to inspect conditions.</div><div class="status" id="updated">No location selected — choose a point to load location-specific data.</div></section>
 <section class="section" id="backendApiSection"><h2>Developer test only · backend connection</h2>
 <div class="history-note">Temporary developer-only tool; remove this section before the final public release. It checks API health/status, weather and river-flow proxies, water-observation endpoint, and model readiness. The map's public weather layers work independently. Paste your current HTTPS tunnel URL below; temporary Quick Tunnel links work only while the tunnel is running.</div>
@@ -217,7 +217,7 @@ const tiles={
  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:18,maxZoom:18,attribution:'Tiles © Esri'})
 };tiles.street.addTo(map);
 let marker=null,overlay=null,cycloneLayer=null,selected=null,activeOverlay='rain',currentBaseLayer='street',historyRequest=0,waterSnapshot=null,waterDisplayedRecords=[],waterStationsLayer=null,waterStationsEnabled=false;
-let riskFloodLayers=[],riskCycloneLayer=null,riskLayerRequest=0,riskCycloneRequest=0;
+let riskFloodLayers=[],riskCycloneLayer=null,riskGridLayer=null,riskLayerRequest=0,riskCycloneRequest=0;
 const $=id=>document.getElementById(id),fmt=(v,u='',d=0)=>v==null?'—':Number(v).toFixed(d)+u;
 function updateZoomStatus(){
  // Leaflet can upscale tiles beyond their native zoom. The old warning incorrectly
@@ -826,6 +826,7 @@ function clearRiskLayers(){
  riskFloodLayers.forEach(layer=>{try{map.removeLayer(layer)}catch(e){}});
  riskFloodLayers=[];
  if(riskCycloneLayer){try{map.removeLayer(riskCycloneLayer)}catch(e){}riskCycloneLayer=null}
+ if(riskGridLayer){try{map.removeLayer(riskGridLayer)}catch(e){}riskGridLayer=null}
 }
 function riskLegend(mode,title,rows,note,sourceUrl){
  $('riskMapLegend').hidden=mode==='off';
@@ -869,7 +870,198 @@ function addHistoricalFloodHazard(){
  // Use the official service legend rather than hand-assigning hazard colours.
  addNRSCOfficialLegendImage();
 }
-async function addRiskCycloneThreat(){
+async 
+// FloodWatch's own gridded triage score. It uses raw forecasts and station history,
+// never upstream websites' red/amber/green labels. It is not a calibrated probability.
+const FLOODWATCH_RISK_GRID = {
+  gridDegrees: 0.5,
+  statesFile: 'data/south-india-states.geojson',
+  forecastSource: 'Open-Meteo raw gridded forecast values',
+  gaugeSource: 'Published NWDP/NWIC/CWC-derived source observations in the local snapshot',
+  weights: { rain24h: 40, rain72h: 30, chance24h: 15, currentRain: 15 },
+  cutoffs: { amber: 35, red: 65 },
+  description: 'Own index: 24h/72h forecast rain, rain chance and current rain; nearby fresh gauge history can raise the score.'
+};
+function clamp01(v){return Math.max(0,Math.min(1,v))}
+function pointInRing(lon,lat,ring){
+ let inside=false;
+ for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+  const xi=Number(ring[i][0]),yi=Number(ring[i][1]),xj=Number(ring[j][0]),yj=Number(ring[j][1]);
+  const cross=((yi>lat)!==(yj>lat))&&(lon<(xj-xi)*(lat-yi)/(yj-yi||1e-12)+xi);
+  if(cross)inside=!inside;
+ }
+ return inside;
+}
+function pointInPolygonRings(lon,lat,rings){
+ if(!rings?.length||!pointInRing(lon,lat,rings[0]))return false;
+ for(let i=1;i<rings.length;i++)if(pointInRing(lon,lat,rings[i]))return false;
+ return true;
+}
+function pointInSouthMask(lon,lat,geo){
+ for(const feature of (geo.features||[])){
+  const geom=feature.geometry;if(!geom)continue;
+  const polygons=geom.type==='Polygon'?[geom.coordinates]:geom.type==='MultiPolygon'?geom.coordinates:[];
+  for(const rings of polygons)if(pointInPolygonRings(lon,lat,rings))return true;
+ }
+ return false;
+}
+function buildRiskGridCells(geo){
+ const step=FLOODWATCH_RISK_GRID.gridDegrees,cells=[];
+ // Cell centres are masked by state polygons; border cells are approximate grid bins.
+ for(let lat=7.5+step/2;lat<=21.5-step/2+1e-6;lat+=step){
+  for(let lon=73.5+step/2;lon<=86.5-step/2+1e-6;lon+=step){
+   if(pointInSouthMask(lon,lat,geo))cells.push({lat:Number(lat.toFixed(4)),lon:Number(lon.toFixed(4)),south:lat-step/2,north:lat+step/2,west:lon-step/2,east:lon+step/2});
+  }
+ }
+ return cells;
+}
+function gaugeSignalForCell(cell){
+ const records=Array.isArray(waterSnapshot?.observations)?waterSnapshot.observations:[];
+ let best=null;
+ for(const record of records){
+  if(!['river_level','river_discharge'].includes(record.kind))continue;
+  const lat=Number(record.latitude),lon=Number(record.longitude),value=Number(record.value);
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)||!Number.isFinite(value))continue;
+  const fresh=observationFreshness(record);
+  // Unknown source timezone or stale readings are not treated as live signals.
+  if(!['recent','delayed'].includes(fresh.key))continue;
+  const distanceKm=kmBetween(cell.lat,cell.lon,lat,lon);
+  if(distanceKm>35||best&&distanceKm>=best.distanceKm)continue;
+  const series=(waterSnapshot.series||[]).find(s=>String(s.id)===String(record.id))?.points||[];
+  const values=series.map(p=>Number(p?.value)).filter(Number.isFinite);
+  if(values.length<10)continue;
+  const sorted=[...values].sort((a,b)=>a-b);
+  const percentile=100*values.filter(v=>v<=value).length/values.length;
+  const q10=sorted[Math.floor(.10*(sorted.length-1))],q90=sorted[Math.floor(.90*(sorted.length-1))];
+  const ordered=series.filter(p=>p&&p.observed_at&&Number.isFinite(Number(p.value))).sort((a,b)=>String(a.observed_at).localeCompare(String(b.observed_at)));
+  const delta=ordered.length>=2?Number(ordered[ordered.length-1].value)-Number(ordered[ordered.length-2].value):null;
+  const span=Math.max(0,q90-q10);
+  const rising=delta!=null&&delta>Math.max(span*.25,Math.abs(value)*.005,1e-6);
+  best={record,distanceKm,percentile,delta,rising,historyCount:values.length};
+ }
+ return best;
+}
+function computeRiskScore(cell,weather){
+ if(!weather||weather.failed)return {score:null,level:'unknown',reason:'Forecast unavailable'};
+ const h=weather.hourly||{},precip=Array.isArray(h.precipitation)?h.precipitation.map(Number):[];
+ const prob=Array.isArray(h.precipitation_probability)?h.precipitation_probability.map(Number):[];
+ const rain24=precip.slice(0,24).filter(Number.isFinite);
+ const rain72=precip.slice(0,72).filter(Number.isFinite);
+ const p24=prob.slice(0,24).filter(Number.isFinite);
+ const current=Number(weather.current?.precipitation);
+ const components=[];
+ if(rain24.length>=12)components.push({weight:40,value:40*clamp01(rain24.reduce((a,b)=>a+b,0)/100)});
+ if(rain72.length>=36)components.push({weight:30,value:30*clamp01(rain72.reduce((a,b)=>a+b,0)/150)});
+ if(p24.length>=12)components.push({weight:15,value:15*clamp01(Math.max(...p24)/100)});
+ if(Number.isFinite(current)&&current>=0)components.push({weight:15,value:15*clamp01(current/20)});
+ if(components.length<2)return {score:null,level:'unknown',reason:'Insufficient forecast fields'};
+ const weight=components.reduce((s,x)=>s+x.weight,0);
+ let score=components.reduce((s,x)=>s+x.value,0)/weight*100;
+ const gauge=gaugeSignalForCell(cell);
+ if(gauge){
+  if(gauge.percentile>=95)score+=25;
+  else if(gauge.percentile>=90)score+=18;
+  else if(gauge.percentile>=80)score+=10;
+  if(gauge.rising)score+=12;
+ }
+ score=Math.max(0,Math.min(100,score));
+ const level=score>=65?'red':score>=35?'amber':'green';
+ return {score,level,components:components.length,weight,rain24:rain24.length>=12?rain24.reduce((a,b)=>a+b,0):null,
+  rain72:rain72.length>=36?rain72.reduce((a,b)=>a+b,0):null,
+  probability24:p24.length>=12?Math.max(...p24):null,current:Number.isFinite(current)?current:null,gauge,weatherTime:weather.current?.time||null};
+}
+function riskLevelColor(level){return level==='red'?'#ef4444':level==='amber'?'#f59e0b':level==='green'?'#22c55e':'#64748b'}
+function riskLevelShort(level){return level==='red'?'High signal':level==='amber'?'Elevated':level==='green'?'Lower signal':'Unknown'}
+function riskCellPopup(cell,result){
+ const wrap=document.createElement('div');
+ const title=document.createElement('strong');title.textContent=(result.level==='unknown'?'UNKNOWN':result.level.toUpperCase())+' · '+(result.score==null?'No reliable score':Math.round(result.score)+'/100');wrap.appendChild(title);
+ const lines=[];
+ if(result.rain24!=null)lines.push('Rain next 24h: '+result.rain24.toFixed(1)+' mm');
+ if(result.rain72!=null)lines.push('Rain next 72h: '+result.rain72.toFixed(1)+' mm');
+ if(result.probability24!=null)lines.push('Rain chance (24h): '+Math.round(result.probability24)+'%');
+ if(result.current!=null)lines.push('Current model rain: '+result.current.toFixed(1)+' mm/h');
+ if(result.gauge)lines.push('Nearest fresh river gauge: '+Math.round(result.gauge.distanceKm)+' km · own-history percentile '+Math.round(result.gauge.percentile)+'%'+(result.gauge.rising?' · rising':''));
+ if(result.weatherTime)lines.push('Model time: '+result.weatherTime+' UTC');
+ const detail=document.createElement('div');detail.textContent=lines.join(' · ')||result.reason||'No usable data';detail.style.maxWidth='260px';wrap.appendChild(detail);
+ const note=document.createElement('small');note.textContent='FloodWatch experimental index, not an official warning or calibrated flood probability.';wrap.appendChild(note);
+ return wrap;
+}
+function drawComputedRiskCells(cells,weatherRows,requestId){
+ if(requestId!==riskLayerRequest||$('riskLayer').value!=='computed-risk')return;
+ if(riskGridLayer){try{map.removeLayer(riskGridLayer)}catch(e){}riskGridLayer=null}
+ const layer=L.layerGroup();let counts={red:0,amber:0,green:0,unknown:0};
+ cells.forEach((cell,i)=>{
+  const result=computeRiskScore(cell,weatherRows[i]);counts[result.level]++;
+  const color=riskLevelColor(result.level);
+  const polygon=L.rectangle([[cell.south,cell.west],[cell.north,cell.east]],{
+   color,weight:.45,opacity:.82,fillColor:color,fillOpacity:result.level==='unknown'?.28:.52,
+   interactive:true
+  });
+  polygon.bindPopup(()=>riskCellPopup(cell,result));
+  layer.addLayer(polygon);
+ });
+ riskGridLayer=layer.addTo(map);
+ riskLegend('computed-risk','FloodWatch calculated grid',[
+  {color:'#ef4444',text:'RED · High signal (score ≥65)'},
+  {color:'#f59e0b',text:'AMBER · Elevated (35–64)'},
+  {color:'#22c55e',text:'GREEN · Lower signal (<35)'},
+  {color:'#64748b',text:'GREY · Missing / insufficient data'}
+ ],'Own score from raw forecast rain (24h/72h), 24h rain chance and current rain. A fresh nearby river gauge can raise it using its own history. Experimental, not a calibrated flood probability.','https://open-meteo.com/en/docs');
+ $('riskLegendNote').textContent+=' Grid cells: '+cells.length+' · red '+counts.red+' · amber '+counts.amber+' · green '+counts.green+' · unknown '+counts.unknown+'.';
+}
+async function setComputedRiskGrid(requestId){
+ $('riskMapLegend').hidden=false;
+ riskLegend('computed-risk','FloodWatch calculated grid',[
+  {color:'#ef4444',text:'RED · High signal'},
+  {color:'#f59e0b',text:'AMBER · Elevated'},
+  {color:'#22c55e',text:'GREEN · Lower signal'},
+  {color:'#64748b',text:'GREY · Unknown'}
+ ],'Calculating from raw forecast fields; no external risk colours are copied.','https://open-meteo.com/en/docs');
+ try{
+  const maskResponse=await fetch(FLOODWATCH_RISK_GRID.statesFile,{cache:'force-cache'});
+  if(!maskResponse.ok)throw Error('Regional state mask returned HTTP '+maskResponse.status);
+  const geo=await maskResponse.json(),cells=buildRiskGridCells(geo);
+  if(requestId!==riskLayerRequest||$('riskLayer').value!=='computed-risk')return;
+  if(!cells.length)throw Error('No South India grid cells matched the regional mask');
+  const batches=[];for(let i=0;i<cells.length;i+=35)batches.push(cells.slice(i,i+35));
+  const weatherRows=new Array(cells.length).fill(null);
+  let cursor=0,completed=0,failedBatches=0;
+  async function worker(){
+   while(cursor<batches.length){
+    if(requestId!==riskLayerRequest||$('riskLayer').value!=='computed-risk')return;
+    const bi=cursor++,batch=batches[bi],offset=bi*35;
+    const params=new URLSearchParams({
+     latitude:batch.map(x=>x.lat.toFixed(3)).join(','),
+     longitude:batch.map(x=>x.lon.toFixed(3)).join(','),
+     current:'precipitation',
+     hourly:'precipitation,precipitation_probability',
+     daily:'precipitation_sum,precipitation_probability_max',
+     forecast_days:'3',timezone:'UTC'
+    });
+    try{
+     const response=await fetch('https://api.open-meteo.com/v1/forecast?'+params.toString(),{cache:'no-store'});
+     if(!response.ok)throw Error('Open-Meteo HTTP '+response.status);
+     const payload=await response.json(),points=Array.isArray(payload)?payload:[payload];
+     if(points.length!==batch.length)throw Error('Forecast point count mismatch');
+     points.forEach((point,j)=>{weatherRows[offset+j]=point});
+    }catch(e){failedBatches++;batch.forEach((_,j)=>{weatherRows[offset+j]={failed:true,error:e.message}})}
+    completed++;
+    $('riskLegendNote').textContent='Analysing regional rainfall grid '+completed+'/'+batches.length+' batches…';
+   }
+  }
+  await Promise.all([worker(),worker(),worker()]);
+  if(requestId!==riskLayerRequest||$('riskLayer').value!=='computed-risk')return;
+  drawComputedRiskCells(cells,weatherRows,requestId);
+  if(failedBatches)$('riskLegendNote').textContent+=' Some forecast batches failed; grey cells indicate unavailable data, not safety.';
+ }catch(e){
+  if(requestId!==riskLayerRequest)return;
+  riskLegend('computed-risk','FloodWatch calculated grid',[
+   {color:'#64748b',text:'GREY · Unknown / unavailable'}
+  ],'Could not calculate the regional grid: '+e.message,'https://open-meteo.com/en/docs');
+ }
+}
+
+function addRiskCycloneThreat(){
  const requestId=++riskCycloneRequest;
  try{
   $('riskLegendNote').textContent='Loading current/recent GDACS tropical-cyclone event records. No storm buffer or future path is invented.';
@@ -911,6 +1103,7 @@ async function setRiskMapLayer(mode){
  clearRiskLayers();
  if(mode==='off'){$('riskMapLegend').hidden=true;return}
  $('riskMapLegend').hidden=false;
+ if(mode==='computed-risk'){await setComputedRiskGrid(requestId);return;}
  if(mode==='historical-flood'||mode==='combined'){
   addHistoricalFloodHazard();
  }
@@ -961,7 +1154,7 @@ $('waterRows').addEventListener('click',e=>{
  selectLocation(lat,lon,record.station_name||record.station_id||'Water observation station');
  $('overlayStatus').textContent='Station point selected from '+(record.source_name||'public source')+'. Value time: '+reportedTimeLabel(record)+'. Verify source timestamp and gauge datum before interpreting it.';
 });
-loadWaterObservations();
+loadWaterObservations().finally(()=>{if($('riskLayer').value==='computed-risk')setRiskMapLayer('computed-risk')});
 setInterval(loadWaterObservations,6*60*60*1000);
 setInterval(()=>{if(selected)loadWeather()},600000);
 setOverlay('rain');
