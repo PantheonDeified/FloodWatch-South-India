@@ -69,6 +69,19 @@ After downloading, inspect a specific file before deciding which columns and uni
 
 Do not use the source's advertised date-range title as a substitute for checking the actual first and last valid timestamps in its records. The downloader saves raw source files and provenance; it does not claim that all stations have 60 years of valid data.
 
+The normalizer reads `manifest.json` automatically when it is present in the
+input directory. For each downloaded CSV, it now preserves the exact NWDP
+resource page URL, direct download URL, parent dataset-page URL, resource title,
+and source-file SHA-256 in every normalized row and in the per-file quality
+report. Rows also carry `source_provenance_status`; `manifest_exact_resource`
+means an exact resource and download URL were found in the manifest, while
+`dataset_page_fallback` means the general dataset URL had to be used. Keep
+the raw manifest and the exact downloadable resources with the derived tables.
+The older archive artifact generated before this addition contains only the
+dataset-page URL; rerun the workflow to regenerate normalized outputs with the
+new provenance columns.
+
+
 ## Run locally
 
 Python 3.10+ is recommended.
