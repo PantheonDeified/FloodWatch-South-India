@@ -181,6 +181,10 @@ jobs:
                                        if any(word in line.lower() for word in ("wms", "arcgis", "mapserver", "geoserver", "flood_hz", "hazard", "tilelayer", "featurelayer", "map.addlayer", "rest/services", "ajax", ".php", ".json", "layername"))]
                               for hint in hints[:45]:
                                   print("    JS-HINT: " + hint[:800])
+                              for token in ("_hz_9815", "hazard.exe", "load_hz", "states_hzm", "Flood Hazard Atlas"):
+                                  pos = js.lower().find(token.lower())
+                                  if pos >= 0:
+                                      print(f"  CONTEXT {token}: " + js[max(0,pos-450):pos+900].replace("\\n", " ") )
                           except Exception as js_exc:
                               print(f"  WARN script fetch {script_url}: {js_exc}")
                   matches = [line.strip() for line in html.splitlines()
