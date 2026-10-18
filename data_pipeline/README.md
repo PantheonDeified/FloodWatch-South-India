@@ -186,3 +186,37 @@ station coordinates are reviewed and a weather table exists for those verified
 stations. The current catalogue intentionally marks all stations unverified,
 so the historical weather fetcher should continue to refuse them until a
 human reviewer records a reliable coordinate source URL.
+
+## Station research-readiness review queue
+
+The historical-hydrology workflow now joins the station catalogue to the per-station
+discharge audit and exports a sortable review queue:
+
+- `data_pipeline/processed/cwc_station_research_readiness.csv`
+- `data_pipeline/processed/cwc_station_research_readiness.json`
+
+Run it locally after building the catalogue and audit:
+
+```bash
+python data_pipeline/scripts/build_cwc_research_readiness.py \
+  --catalog data_pipeline/processed/cwc_station_catalog_review.csv \
+  --audit data_pipeline/processed/cwc_discharge_station_audit.json \
+  --out-csv data_pipeline/processed/cwc_station_research_readiness.csv \
+  --out-json data_pipeline/processed/cwc_station_research_readiness.json
+```
+
+The default triage thresholds are at least 365 calendar days of span, at least
+180 unique observation dates, and at least 75% calendar-date coverage. They are
+transparent screening defaults, not validated hydrological thresholds, and can
+be changed with `--min-span-days`, `--min-unique-dates`, and
+`--min-coverage`. Stations with metadata conflicts, quality flags, short
+history, or low coverage are not given the highest review priority.
+
+**A priority rank does not mean the station is verified or model-ready.**
+The pipeline only allows coordinate-based weather joins when
+`coordinate_verified=true` and `coordinate_source_url` is non-empty.
+Because the generated catalogue intentionally sets all stations to unverified,
+the current workflow should report zero stations allowed for weather joins.
+A reviewer must validate station identity and coordinates from a reliable source
+before updating a reviewed catalogue; passing this structural screen still does
+not establish data accuracy or forecast skill.
