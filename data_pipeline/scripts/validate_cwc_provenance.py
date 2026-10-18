@@ -56,9 +56,17 @@ def validate(
     raw_files = sorted(raw_dir.glob("*.csv"))
     if not raw_files:
         raise ValueError(f"No raw CSV files found in {raw_dir}")
-    missing_from_manifest = sorted(path.name for path in raw_files if path.name not in manifest)
-    if missing_from_manifest:
-        raise ValueError(f"Raw CSV files absent from successful manifest entries: {missing_from_manifest}")
+    raw_names = {path.name for path in raw_files}
+    missing_from_manifest = sorted(raw_names - set(manifest))
+    manifest_files_missing_on_disk = sorted(set(manifest) - raw_names)
+    mismatches = [
+        {"file": name, "problem": "raw CSV file is absent from successful manifest entries"}
+        for name in missing_from_manifest
+    ]
+    mismatches.extend(
+        {"file": name, "problem": "successful manifest entry has no raw CSV file on disk"}
+        for name in manifest_files_missing_on_disk
+    )
 
     report = json.loads(quality_report_path.read_text(encoding="utf-8"))
     per_file = report.get("source_provenance_by_file")
@@ -67,9 +75,10 @@ def validate(
     row_counts = Counter()
     exact_rows = 0
     total_rows = 0
-    mismatches = []
     for raw_path in raw_files:
-        item = manifest[raw_path.name]
+        item = manifest.get(raw_path.name)
+        if item is None:
+            continue
         expected_resource = str(item.get("resource_page_url") or "").strip()
         expected_download = str(item.get("download_url") or "").strip()
         expected_dataset = str(item.get("dataset_page_url") or "").strip()
