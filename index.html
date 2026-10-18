@@ -948,7 +948,7 @@ function computeRiskScore(cell,bundle){
  const h=weather?.hourly||{},precip=Array.isArray(h.precipitation)?h.precipitation.map(v=>v==null?NaN:Number(v)):[];
  const prob=Array.isArray(h.precipitation_probability)?h.precipitation_probability.map(v=>v==null?NaN:Number(v)):[];
  const hourlyTimes=Array.isArray(h.time)?h.time:[];
- const futureIndices=hourlyTimes.map((raw,i)=>({i,ms:Date.parse(/[zZ]|[+-]\\d{2}:?\\d{2}$/.test(String(raw))?String(raw):String(raw).replace(' ','T')+'Z')})).filter(x=>Number.isFinite(x.ms)&&x.ms>=Date.now()-30*60*1000).sort((a,b)=>a.ms-b.ms);
+ const futureIndices=hourlyTimes.map((raw,i)=>{const stamp=String(raw).replace(' ','T'),tail=stamp.split('T')[1]||'',hasOffset=stamp.endsWith('Z')||tail.slice(1).includes('+')||tail.slice(1).includes('-');return {i,ms:Date.parse(hasOffset?stamp:stamp+'Z')}}).filter(x=>Number.isFinite(x.ms)&&x.ms>=Date.now()-30*60*1000).sort((a,b)=>a.ms-b.ms);
  const first24=futureIndices.slice(0,24).map(x=>x.i),first72=futureIndices.slice(0,72).map(x=>x.i);
  const rain24=first24.filter(i=>Number.isFinite(precip[i])).map(i=>precip[i]);
  const rain72=first72.filter(i=>Number.isFinite(precip[i])).map(i=>precip[i]);
