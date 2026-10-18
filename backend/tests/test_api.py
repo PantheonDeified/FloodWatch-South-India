@@ -66,6 +66,8 @@ def test_status_lists_weather_proxy():
     assert data["river_flow_endpoint"].startswith("/api/v1/river-flow")
     assert data["water_observations_endpoint"].startswith("/api/v1/water-observations")
     assert data["model_readiness_endpoint"] == "/api/v1/models/status"
+    assert "GloFAS proxy available" in data["flood_forecast_model"]
+    assert "not yet trained" in data["flood_forecast_model"]
 
 
 def test_weather_returns_provider_payload_and_metadata(monkeypatch):
