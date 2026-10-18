@@ -475,6 +475,7 @@ function renderNearbyWaterStations(){
  const toRad=value=>value*Math.PI/180;
  const candidates=[];
  waterSnapshot.observations.forEach(record=>{
+  if(record.latitude===null||record.latitude===undefined||String(record.latitude).trim()===''||record.longitude===null||record.longitude===undefined||String(record.longitude).trim()==='')return;
   const lat=Number(record.latitude),lon=Number(record.longitude);
   if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat < -90||lat > 90||lon < -180||lon > 180)return;
   const dLat=toRad(lat-selected.lat),dLon=toRad(lon-selected.lon);
