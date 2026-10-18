@@ -1,0 +1,64 @@
+name: FloodWatch deployed-site smoke checks
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  deployed-smoke-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check deployed website and public data snapshot
+        run: |
+          python - <<'PY'
+          import datetime as dt
+          import json
+          import urllib.request
+
+          checks = [
+              ("site", "https://pantheondeified.github.io/FloodWatch-South-India/"),
+              ("water_snapshot", "https://raw.githubusercontent.com/PantheonDeified/FloodWatch-South-India/main/data/water-observations.json"),
+          ]
+          responses = {}
+          for name, url in checks:
+              request = urllib.request.Request(
+                  url, headers={"User-Agent": "FloodWatch-smoke-check/1.0", "Accept": "*/*"}
+              )
+              with urllib.request.urlopen(request, timeout=20) as response:
+                  body = response.read()
+                  status = response.status
+                  content_type = response.headers.get("Content-Type", "")
+              if status != 200:
+                  raise SystemExit(f"{name}: expected HTTP 200, got {status}")
+              responses[name] = (body, content_type)
+              print(f"PASS {name}: HTTP {status}, {len(body)} bytes, {content_type}")
+
+          html = responses["site"][0].decode("utf-8", errors="replace")
+          for marker in ("FloodWatch", "leaflet", "water-observations.json"):
+              if marker.casefold() not in html.casefold():
+                  raise SystemExit(f"Deployed page is missing expected marker: {marker}")
+          print("PASS deployed page contains expected app/map/data markers")
+
+          payload = json.loads(responses["water_snapshot"][0].decode("utf-8"))
+          if not isinstance(payload, dict) or not isinstance(payload.get("observations"), list):
+              raise SystemExit("Water snapshot schema invalid: expected object with observations array")
+          if not payload["observations"]:
+              raise SystemExit("Water snapshot has zero observations; refusing a silent empty-data pass")
+          generated = payload.get("generated_at_utc")
+          if not generated:
+              raise SystemExit("Water snapshot is missing generated_at_utc")
+          stamp = dt.datetime.fromisoformat(str(generated).replace("Z", "+00:00"))
+          if stamp.tzinfo is None:
+              raise SystemExit("generated_at_utc must include an explicit timezone")
+          age_hours = (dt.datetime.now(dt.timezone.utc) - stamp.astimezone(dt.timezone.utc)).total_seconds() / 3600
+          print(f"PASS water snapshot: {len(payload['observations'])} records, generated {generated}, age={age_hours:.1f}h")
+          if age_hours > 36:
+              raise SystemExit(f"Water snapshot is too old ({age_hours:.1f}h > 36h)")
+          if age_hours < -1:
+              raise SystemExit(f"Water snapshot generation time is unexpectedly in the future ({age_hours:.1f}h)")
+          PY
