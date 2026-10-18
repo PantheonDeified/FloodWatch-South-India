@@ -207,9 +207,9 @@
 <div class="history-note"><b>Latest run:</b> five-state regional LSTM training, saved-weight inference and artifact upload passed. Cached model fitting took 21.85 seconds; first-time data acquisition and normalization take longer.</div>
 <div class="metric-grid">
  <div class="metric"><span>Latest model-fit time</span><strong>21.85 s</strong><span>Training only; data preparation takes longer</span></div>
- <div class="metric"><span>Stations with usable windows</span><strong>231</strong><span>From the broader source-filter experiment, not the final five-state cohort</span></div>
- <div class="metric"><span>Raw LSTM test RMSE</span><strong>830.45</strong><span>m³/s; previous regional LSTM experiment</span></div>
- <div class="metric"><span>Persistence test RMSE</span><strong>700.88</strong><span>m³/s; previous experiment's baseline</span></div>
+ <div class="metric"><span>Stations with usable windows</span><strong>231</strong><span>Five-state cohort with usable forecast windows</span></div>
+ <div class="metric"><span>Raw LSTM test RMSE</span><strong>830.45</strong><span>m³/s; five-state chronological holdout</span></div>
+ <div class="metric"><span>Persistence test RMSE</span><strong>700.88</strong><span>m³/s; matched persistence baseline</span></div>
 </div>
 <div class="history-note">The latest five-state holdout has 89,824 targets: raw LSTM RMSE 830.45 m³/s versus persistence 700.88 m³/s (18.5% worse). The LSTM beat persistence at 99/218 stations and 60/116 comparable high-flow station subsets. The network predicts discharge from historical discharge plus seasonal and location features; it does not yet use future rainfall forcing and does <b>not</b> colour this map or issue alerts.</div>
 <div class="warning"><b>Input freshness:</b> the latest inference used source records through 17 October 2026, one day before the workflow run. Timestamp age is only a freshness heuristic; it does not independently verify sensor transmission or the provider's update cadence.</div>
