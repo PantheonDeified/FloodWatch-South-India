@@ -22,7 +22,7 @@ FloodWatch has **ML training code under development**, but does not yet have an 
 3. Train per-gauge or multi-gauge model only where enough continuous discharge history exists. A water-level series cannot be silently substituted for discharge.
 4. Keep training/validation/test periods chronological. Compare the LSTM against a simple persistence baseline; report MAE/RMSE/NSE, skill versus persistence, and quantify missing-data coverage. Do not promote the model if it fails to beat the baseline.
 5. Train a separate flood-event classifier only with reviewed positive and negative labels tied to cited event records. “No record found” is not automatically a negative flood label.
-6. Use `predict_streamflow_lstm.py` only with a matching trained model/scaler and complete recent feature window. Publish a model card and evaluation report before showing forecasts as locally modelled. Keep the GloFAS baseline separately labelled.
+6. Run `review_streamflow_model.py` to reject candidates that fail the persistence benchmark or lack evaluation artifacts; passing only allows human review, never automatic deployment. Use `predict_streamflow_lstm.py` only with a matching trained model/scaler and complete recent feature window. Publish a model card and evaluation report before showing forecasts as locally modelled. Keep the GloFAS baseline separately labelled.
 
 ## Research baseline / references
 
