@@ -15,21 +15,21 @@ The weather response preserves Open-Meteo's normal response fields (`current`, `
 
 The running service is separate from GitHub Pages. Updating this source file in GitHub does not automatically update the Linux server.
 
-1. Keep your SSH session to `linux1@148.100.98.93`.
-2. Stop the current foreground Uvicorn process with **Ctrl+C** in the Linux terminal where it is running.
+1. Open a Windows PowerShell session and connect to `linux1@148.100.98.93` with your existing SSH key.
+2. In the Linux shell, check whether Uvicorn is already running with `pgrep -af 'uvicorn main:app'`. If a process is running, stop that specific PID with `kill <PID>` before starting another one. Do not kill unrelated processes.
 3. Run these commands in the Linux shell, one at a time:
 
 ```bash
 cd ~/floodwatch-api
+source .venv/bin/activate
 cp main.py "main.py.backup.$(date +%Y%m%d-%H%M%S)"
 curl -fL "https://raw.githubusercontent.com/PantheonDeified/FloodWatch-South-India/main/backend/main.py" -o main.py.new
 python -m py_compile main.py.new
 mv main.py.new main.py
-source .venv/bin/activate
 python -m uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-4. Keep Uvicorn and the Cloudflare Quick Tunnel running while testing. If the Python compilation fails, do not replace the backup; share the error and restore the backup if needed.
+4. Keep the Linux terminal running Uvicorn while testing. Run the Cloudflare Quick Tunnel separately in the Windows PowerShell window where you launch `cloudflared`. If compilation fails, do not replace the running source; share the error and restore the backup if needed. Updating GitHub does not automatically update the Linux server.
 
 ## Install dependencies and run backend tests
 
