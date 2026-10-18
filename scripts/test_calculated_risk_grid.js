@@ -87,6 +87,13 @@ const incident={
 assert.equal(humanScorer(cell,[incident]).points,0,'Dam/gate incident without verified hydrology link must not affect a downstream cell.');
 incident.hydrologyLinked=true;
 assert(humanScorer(cell,[incident]).points>0,'Dated official incident with verified hydrology link should affect the nearby cell.');
+incident.status='Corroborated';
+incident.corroboratingSourceUrl='';
+assert.equal(humanScorer(cell,[incident]).points,0,'Corroborated status without a second source must not affect the risk score.');
+incident.corroboratingSourceUrl='https://cwc.gov.in/second-report';
+assert.equal(humanScorer(cell,[incident]).points,0,'Two source URLs from the same publisher host are not independent corroboration.');
+incident.corroboratingSourceUrl='https://independent-public-source.example/record';
+assert(humanScorer(cell,[incident]).points>0,'Corroborated evidence with separate HTTPS publisher hosts may contribute when the other scoring gates pass.');
 incident.status='Unverified report';
 assert.equal(humanScorer(cell,[incident]).points,0,'Unverified reports must not change the numeric risk score.');
 
@@ -110,7 +117,7 @@ assert(!html.includes('L.rectangle([[cell.south,cell.west]'),'The active risk re
 console.log(JSON.stringify({
   status:'PASS',
   sample_cells:cells.length,
-  checks:30,
+  checks:33,
   examples:{
     green:green.score,amber:amber.score,red:red.score,
     flow_only:flowOnly.score,rising_only:risingOnly.score,
