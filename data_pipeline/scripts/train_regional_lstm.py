@@ -256,13 +256,26 @@ def main():
 
     args.output_dir.mkdir(parents=True,exist_ok=True)
     model_path=args.output_dir/"regional_discharge_lstm.pt"
+    scaler_path=args.output_dir/"regional_discharge_lstm.scalers.json"
     report_path=args.output_dir/"regional_discharge_lstm.report.json"
     torch.save(model.state_dict(),model_path)
+    input_features=["scaled log1p discharge","observation mask","day-of-year sin/cos","latitude","longitude"]
+    model_config={"input_size":6,"hidden_size":96,"num_layers":2,"lstm_dropout":0.2,
+      "head":["LayerNorm(96)","Linear(96,96)","GELU","Dropout(0.15)",f"Linear(96,{args.lead_days})"],
+      "batch_first":True,"forecast_horizon_days":args.lead_days}
+    normalization={"discharge_log1p_mean":mu,"discharge_log1p_std":sd,
+      "latitude_divisor":90.0,"longitude_divisor":180.0,
+      "coordinate_policy":"median source latitude/longitude per station; missing coordinates imputed to 0 before normalization",
+      "discharge_transform":"log1p(max(discharge_m3_s,0))",
+      "missing_history_policy":"mask feature 0; scaled discharge feature set to 0 only where mask is false",
+      "input_features":input_features}
+    scaler_path.write_text(json.dumps(normalization,indent=2),encoding="utf-8")
     report={"model_type":"regional multi-station masked-input LSTM","status":"experimental_research_only",
       "states":STATES,"source_station_count":int(df.station_id.nunique()),"stations_with_windows":len(used),
       "calendar_start":str(dates.min().date()),"calendar_end":str(dates.max().date()),
       "lookback_days":args.lookback_days,"lead_days":args.lead_days,"window_stride_days":args.window_stride,
-      "input_features":["scaled log1p discharge","observation mask","day-of-year sin/cos","latitude","longitude"],
+      "model_config":model_config,"normalization":normalization,"scalers_file":str(scaler_path),
+      "input_features":input_features,
       "windows":{k:len(v) for k,v in data.items()},
       "candidate_windows_before_sampling":candidate_counts,
       "max_windows_per_station_split":args.max_windows_per_station_split,
