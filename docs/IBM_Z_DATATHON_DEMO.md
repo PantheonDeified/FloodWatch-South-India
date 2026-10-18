@@ -41,47 +41,42 @@ Explain the intended platform role: a stable, auditable backend for source inges
 
 ## IBM Z / LinuxONE deployment status
 
-The provided event VM specification is Ubuntu 24.04, 3 vCPUs, 8 GiB RAM and a 50 GB root disk. That is sufficient for the FastAPI data API and lightweight data-quality jobs. It is not evidence by itself of the processor architecture, and it is not a reason to assume a PyTorch build is available.
+The event VM specification is Ubuntu 24.04, 3 vCPUs, 8 GiB RAM and a 50 GB root disk. It can host the lightweight FastAPI service and may run the regional LSTM if the installed Python/PyTorch runtime passes the on-machine checks. The VM label alone does not prove architecture, and a GitHub Actions pass does not prove the server has been deployed.
 
-The website is deployed independently on GitHub Pages. The backend is a separate FastAPI application under `backend/`; training code currently runs in GitHub Actions and produces a research artifact. The repository now includes a [user-service installer and Ubuntu/LinuxONE runbook](../deploy/ibm-linuxone/README.md); it deploys the API on localhost and checks the health endpoints without installing PyTorch. The [regional-ML runner](../deploy/ibm-linuxone/run-regional-lstm.sh) provides a preflight and repeatable train/inference command where a tested PyTorch `>=2.2` runtime is available. On s390x it deliberately refuses to install an unverified wheel; the currently tested regional train/inference workflow runs in GitHub Actions. The LSTM is not served by the backend or wired to the map score.
+The current official [PyTorch CPU wheel index](https://download.pytorch.org/whl/cpu/torch/) lists `torch 2.10.0+cpu` wheels for CPython 3.12 on `linux_s390x`. The repository's ML setup now uses that official CPU index and validates imports/API support. This is a concrete path to running inference/training on IBM Z; the actual VM still has to pass `setup`, `preflight` and `train` before the submission claims it ran there.
 
-Run these **read-only** checks in the Ubuntu VM before installing any machine-learning dependency:
+Use the [Windows SSH + LinuxONE deployment runbook](../deploy/ibm-linuxone/README.md). It references the user's local key filename `FloodWatchKey.pem` in a PowerShell command. The SSH private key must stay on the user's computer; never commit or upload it. The VM user/IP need to match the instance's connection instructions.
 
-```
-uname -m
-lscpu
-python3 --version
-df -h /
-free -h
-```
+### Deploy the service and run the model
 
-- If `uname -m` returns `s390x`, this is an IBM Z architecture environment. Confirm the required Python wheels support it before attempting PyTorch installation. Keep API deployment separate from experimental model training if they do not.
-- If it returns `x86_64` or another architecture, report the actual result accurately; do not infer the processor from the project name or VM label.
-- Never paste an SSH private key, cloud password, API credential, or access token into the project repository or presentation.
+From the checked-out repository root on the VM:
 
-### Run a local API smoke check on the VM
-
-From a checkout of the repository, in the repository root:
-
-```
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r backend/requirements.txt
-python -m py_compile backend/main.py
-python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+```bash
+bash deploy/ibm-linuxone/install-user-service.sh
+bash deploy/ibm-linuxone/run-regional-lstm.sh setup
+bash deploy/ibm-linuxone/run-regional-lstm.sh preflight
+bash deploy/ibm-linuxone/run-regional-lstm.sh train
 ```
 
-In a second terminal on the same VM:
+The installer runs FastAPI in a lightweight virtual environment at `127.0.0.1:8000`. The regional ML runner builds a separate virtual environment, retrieves/normalizes CWC/NWDP-derived data, trains the regional model, evaluates it against persistence, and creates saved weights/scalers/report plus a research-forecast JSON output. Keep the full command output for judging evidence. A failed `preflight` is a blocker, not a successful IBM Z ML deployment.
 
-```
+Check the API on the VM:
+
+```bash
 curl -fsS http://127.0.0.1:8000/health
 curl -fsS http://127.0.0.1:8000/api/v1/status
-curl -fsS 'http://127.0.0.1:8000/api/v1/models/status'
+curl -fsS http://127.0.0.1:8000/api/v1/models/status
+curl -fsS --max-time 45 http://127.0.0.1:8000/api/v1/models/regional-discharge/forecast
 ```
 
-Do not expose port 8000 directly to the public Internet. For an external browser demo, use an approved HTTPS reverse proxy/tunnel and restrict CORS to the exact front-end origin. A temporary tunnel is not a production deployment. The frontend's optional API setting can then be tested against the returned HTTPS origin.
+The last endpoint invokes the regional LSTM using local saved weights and normalized history if all runtime files are present. It returns discharge forecasts, not water-level estimates, flood probabilities, inundation depth, or an official alert. It caches repeated inference for ten minutes. The frontend risk contours are still a separate index and do not consume this neural-network output. The response's history freshness is based on source timestamps; it cannot independently verify that a river sensor is transmitting now.
 
+### Secure public demo connection
+
+GitHub Pages remains separate from the VM service. To demonstrate the API from the public webpage, expose the service through an approved HTTPS reverse proxy or tunnel and configure its exact origin in the frontend. Do not expose port 8000 directly to the public Internet, put credentials in the repository, or hard-code a temporary tunnel URL. If the API or model assets are not available, the UI should report that status rather than silently inventing a prediction.
+
+Before claiming IBM Z deployment, record `uname -m`, Python/NumPy/pandas/PyTorch versions, successful `/health` and `/api/v1/status` responses, and a successful forecast response from the VM. Until those command outputs are captured, the VM deployment remains pending even though the repository includes the runbook and endpoint.
+ 
 ## Architecture for the judging discussion
 
 ```
