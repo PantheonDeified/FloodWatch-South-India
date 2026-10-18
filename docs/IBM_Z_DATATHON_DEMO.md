@@ -43,7 +43,7 @@ Explain the intended platform role: a stable, auditable backend for source inges
 
 The provided event VM specification is Ubuntu 24.04, 3 vCPUs, 8 GiB RAM and a 50 GB root disk. That is sufficient for the FastAPI data API and lightweight data-quality jobs. It is not evidence by itself of the processor architecture, and it is not a reason to assume a PyTorch build is available.
 
-The website is deployed independently on GitHub Pages. The backend is a separate FastAPI application under `backend/`; training code currently runs in GitHub Actions and produces a research artifact. The LSTM is not served by the backend or wired to the map score.
+The website is deployed independently on GitHub Pages. The backend is a separate FastAPI application under `backend/`; training code currently runs in GitHub Actions and produces a research artifact. The repository now includes a [user-service installer and Ubuntu/LinuxONE runbook](../deploy/ibm-linuxone/README.md); it deploys the API on localhost and checks the health endpoints without installing PyTorch. The LSTM is not served by the backend or wired to the map score.
 
 Run these **read-only** checks in the Ubuntu VM before installing any machine-learning dependency:
 
