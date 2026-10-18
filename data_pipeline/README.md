@@ -22,6 +22,8 @@ This folder is the first reproducible data-ingestion and basin-mapping step for 
 
 ## Research LSTM training and inference
 
+**Fastest end-to-end neural-network experiment:** use the [Train FloodWatch discharge LSTM workflow](../.github/workflows/train-discharge-lstm.yml) to download the historical CWC/NWDP discharge archives, normalize them, train a discharge-only PyTorch LSTM for a selected station, compare it against a persistence baseline, and download the metrics/model artifact. The default station is Yadgir in the Krishna basin. See [the ML pilot guide](STREAMFLOW_ML_PILOT.md). This first version predicts daily maximum discharge from prior discharge only; it is not yet an operational flood forecast.
+
 Only train a single-gauge LSTM after the input tables have been verified and contain enough continuous **observed discharge** history. Do not use the public 407-record snapshot as a substitute for a curated historical daily discharge table; it mixes measurement types and timestamp quality.
 
 Install the optional ML dependencies:
