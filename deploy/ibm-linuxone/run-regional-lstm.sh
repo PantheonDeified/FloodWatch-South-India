@@ -95,6 +95,8 @@ for attr in ("inference_mode", "set_num_threads", "set_num_interop_threads"):
         raise SystemExit(4)
 PY
 then
+  :
+else
   status=$?
   if [[ "$ARCH" == "s390x" ]]; then
     cat >&2 <<'MSG'
