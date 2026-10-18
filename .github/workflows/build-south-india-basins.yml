@@ -31,6 +31,8 @@ jobs:
       - name: Download official HydroBASINS Asia level-6 geometry
         run: |
           curl --fail --location --retry 3 --retry-delay 2 --max-time 480 \
+            --user-agent 'Mozilla/5.0 (compatible; FloodWatchDataPipeline/1.0)' \
+            --referer 'https://www.hydrosheds.org/products/hydrobasins' \
             'https://data.hydrosheds.org/file/hydrobasins/standard/hybas_as_lev01-12_v1c.zip' \
             --output /tmp/hybas_as_lev01-12_v1c.zip
           test -s /tmp/hybas_as_lev06_v1c.zip
