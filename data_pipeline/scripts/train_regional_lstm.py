@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
 """Experimental regional discharge LSTM; no weather forcing or inundation model."""
 from __future__ import annotations
-import argparse, datetime as dt, json, pathlib, random
+import argparse, datetime as dt, json, os, pathlib, random, time
 import numpy as np
 import pandas as pd
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
-STATES = ["Andhra Pradesh", "Karnataka", "Kerala", "Tamil Nadu",
-          "Telangana", "Puducherry", "Goa"]
+STATES = ["Andhra Pradesh", "Karnataka", "Kerala", "Tamil Nadu", "Telangana"]
 
 class RegionalLSTM(nn.Module):
-    def __init__(self, horizon):
+    def __init__(self, horizon, hidden_size=48, num_layers=1):
         super().__init__()
-        self.lstm = nn.LSTM(6, 96, num_layers=2, dropout=0.2, batch_first=True)
-        self.head = nn.Sequential(nn.LayerNorm(96), nn.Linear(96, 96),
-                                  nn.GELU(), nn.Dropout(0.15), nn.Linear(96, horizon))
+        if horizon < 1 or hidden_size < 8 or num_layers < 1:
+            raise ValueError("horizon must be positive; hidden_size >= 8; num_layers >= 1")
+        self.lstm = nn.LSTM(
+            6, hidden_size, num_layers=num_layers,
+            dropout=0.1 if num_layers > 1 else 0.0, batch_first=True
+        )
+        self.head = nn.Sequential(
+            nn.LayerNorm(hidden_size), nn.Linear(hidden_size, hidden_size),
+            nn.GELU(), nn.Dropout(0.1), nn.Linear(hidden_size, horizon)
+        )
     def forward(self, x):
         seq, _ = self.lstm(x)
         return self.head(seq[:, -1])
@@ -28,6 +34,24 @@ def metrics(a, p):
             "rmse_m3s": float(np.sqrt((err ** 2).mean())),
             "nse": float(1 - (err ** 2).sum() / denom) if denom else None,
             "samples": int(a.size)}
+
+def choose_alpha_on_validation(actual, model_prediction, baseline_prediction):
+    """Choose neural-network blend weight on chronological validation data only."""
+    actual = np.asarray(actual, dtype=float)
+    model_prediction = np.asarray(model_prediction, dtype=float)
+    baseline_prediction = np.asarray(baseline_prediction, dtype=float)
+    if actual.shape != model_prediction.shape or actual.shape != baseline_prediction.shape:
+        raise ValueError("Validation arrays must have matching shapes.")
+    if actual.size == 0 or not (np.isfinite(actual).all() and np.isfinite(model_prediction).all() and np.isfinite(baseline_prediction).all()):
+        raise ValueError("Validation arrays must be non-empty and finite.")
+    best_alpha = 0.0
+    best_rmse = metrics(actual, baseline_prediction)["rmse_m3s"]
+    for alpha in np.linspace(0.0, 1.0, 21):
+        blended = np.maximum((1.0-alpha)*baseline_prediction + alpha*model_prediction, 0.0)
+        candidate_rmse = metrics(actual, blended)["rmse_m3s"]
+        if candidate_rmse < best_rmse - 1e-9:
+            best_alpha, best_rmse = float(alpha), float(candidate_rmse)
+    return best_alpha, float(best_rmse)
 
 def sample_station_windows(rows, max_windows, peak_threshold=None):
     """Bound per-station window memory while preserving timeline coverage and some training peaks.
@@ -65,7 +89,10 @@ def main():
     ap.add_argument("--lookback-days", type=int, default=90)
     ap.add_argument("--lead-days", type=int, default=7)
     ap.add_argument("--window-stride", type=int, default=7, help="Sample forecast origins every N days to control memory and reduce overlapping-window redundancy.")
-    ap.add_argument("--epochs", type=int, default=40)
+    ap.add_argument("--epochs", type=int, default=8)
+    ap.add_argument("--hidden-size", type=int, default=48)
+    ap.add_argument("--num-layers", type=int, default=1)
+    ap.add_argument("--batch-size", type=int, default=512)
     ap.add_argument("--patience", type=int, default=5)
     ap.add_argument("--min-stations", type=int, default=5)
     ap.add_argument("--max-missing-fraction", type=float, default=0.2)
@@ -75,9 +102,17 @@ def main():
     args = ap.parse_args()
     if (args.lookback_days < 14 or args.lead_days < 1 or args.epochs < 1
             or args.window_stride < 1 or args.patience < 1
-            or args.max_windows_per_station_split < 40):
-        raise SystemExit("Require lookback >=14, lead >=1, epochs/stride/patience >=1 and max-windows-per-station-split >=40.")
+            or args.max_windows_per_station_split < 40 or args.hidden_size < 8
+            or args.num_layers < 1 or args.batch_size < 1):
+        raise SystemExit("Require lookback >=14, lead >=1, positive epochs/stride/patience/batch/layers, hidden-size >=8 and max-windows-per-station-split >=40.")
     random.seed(args.seed); np.random.seed(args.seed); torch.manual_seed(args.seed)
+    # Explicit CPU thread caps avoid the severe oversubscription often seen on CI runners.
+    torch.set_num_threads(max(1, int(os.environ.get("OMP_NUM_THREADS", "2"))))
+    try:
+        torch.set_num_interop_threads(1)
+    except RuntimeError:
+        pass
+    started_at = time.monotonic()
     cols = ["station_id","state","latitude","longitude","observed_at","discharge_m3_s"]
     try:
         df = pd.read_csv(args.observations, usecols=cols, dtype={"station_id":str,"state":str})
@@ -116,6 +151,8 @@ def main():
         offset=int((station_dates[0]-dates[0]).days)
         raw=s.reindex(station_dates).to_numpy(float)
         log=np.full(len(station_dates),np.nan); ok=np.isfinite(raw); log[ok]=np.log1p(raw[ok])
+        # latitude/longitude are already normalized to [-1, 1] in the input-preparation
+        # block above. Do not divide them a second time here; inference uses the same scale.
         lat,lon=map(float,meta.loc[sid].tolist())
         # The station-specific high-flow threshold is derived from this station's
         # training-period observations only; never use validation/test targets to select train peaks.
@@ -157,13 +194,14 @@ def main():
     def pack(rows):
         return (np.stack([r[0] for r in rows]),np.stack([r[1] for r in rows]),
                 np.stack([r[2] for r in rows]),np.stack([r[3] for r in rows]))
-    xt,yt,_,_=pack(data["train"]); xv,yv,_,_=pack(data["validation"])
+    xt,yt,_,_=pack(data["train"])
+    xv,yv,validation_actual,validation_base=pack(data["validation"])
     xs,ys,actual,base=pack(data["test"])
     device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model=RegionalLSTM(args.lead_days).to(device)
+    model=RegionalLSTM(args.lead_days, hidden_size=args.hidden_size, num_layers=args.num_layers).to(device)
     opt=torch.optim.AdamW(model.parameters(),lr=7e-4,weight_decay=1e-4)
     sched=torch.optim.lr_scheduler.ReduceLROnPlateau(opt,patience=3,factor=.5)
-    loader=DataLoader(TensorDataset(torch.from_numpy(xt),torch.from_numpy(yt)),batch_size=256,shuffle=True)
+    loader=DataLoader(TensorDataset(torch.from_numpy(xt),torch.from_numpy(yt)),batch_size=args.batch_size,shuffle=True)
     xv_t,yv_t=torch.from_numpy(xv).to(device),torch.from_numpy(yv).to(device)
     best=float("inf"); state=None; stale=0; history=[]
     peak=float(np.quantile(yt*sd+mu,.9))
@@ -184,11 +222,32 @@ def main():
         if stale>=args.patience: break
     if state is None: raise SystemExit("No valid model checkpoint.")
     model.load_state_dict(state); model.eval()
+    # Choose the LSTM contribution using validation data only; never tune against test results.
+    with torch.no_grad():
+        validation_scaled=model(torch.from_numpy(xv).to(device)).cpu().numpy()
+    validation_prediction=np.expm1(np.maximum(validation_scaled*sd+mu,0))
+    alpha,validation_blend_rmse=choose_alpha_on_validation(validation_actual,validation_prediction,validation_base)
+    validation_selected=np.maximum((1.0-alpha)*validation_base+alpha*validation_prediction,0.0)
+    validation_selection={
+        "method":"minimize chronological validation RMSE over alpha 0.00..1.00 in 0.05 steps; persistence wins ties",
+        "alpha":alpha,
+        "persistence_metrics":metrics(validation_actual,validation_base),
+        "raw_lstm_metrics":metrics(validation_actual,validation_prediction),
+        "selected_metrics":metrics(validation_actual,validation_selected),
+        "selected_rmse_m3s":validation_blend_rmse,
+        "test_set_used_for_selection":False
+    }
     with torch.no_grad(): pred=model(torch.from_numpy(xs).to(device)).cpu().numpy()
     pred=np.expm1(np.maximum(pred*sd+mu,0))
-    m,b=metrics(actual,pred),metrics(actual,base)
+    selected_pred=np.maximum((1.0-alpha)*base+alpha*pred,0.0)
+    raw_lstm_metrics=metrics(actual,pred)
+    m,b=metrics(actual,selected_pred),metrics(actual,base)
+    raw_skill=1-raw_lstm_metrics["rmse_m3s"]/b["rmse_m3s"] if b["rmse_m3s"]>0 else None
     skill=1-m["rmse_m3s"]/b["rmse_m3s"] if b["rmse_m3s"]>0 else None
-    per_horizon=[{"lead_day":h+1,"model":metrics(actual[:,h],pred[:,h]),
+    selected_model_type=("persistence_selected_by_validation" if alpha<=1e-12 else
+                         "lstm_persistence_blend" if alpha<1.0-1e-12 else "raw_lstm")
+    per_horizon=[{"lead_day":h+1,"selected_model":metrics(actual[:,h],selected_pred[:,h]),
+                  "raw_lstm":metrics(actual[:,h],pred[:,h]),
                   "persistence":metrics(actual[:,h],base[:,h])} for h in range(args.lead_days)]
 
     # A pooled score can hide stations where the LSTM fails. Report every held-out
@@ -200,9 +259,11 @@ def main():
     for sid in sorted(set(test_station_ids.tolist())):
         mask_station = test_station_ids == sid
         station_actual = actual[mask_station]
-        station_pred = pred[mask_station]
+        station_pred = selected_pred[mask_station]
+        station_raw_pred = pred[mask_station]
         station_base = base[mask_station]
         station_model_metrics = metrics(station_actual, station_pred)
+        station_raw_metrics = metrics(station_actual, station_raw_pred)
         station_baseline_metrics = metrics(station_actual, station_base)
         station_baseline_rmse = station_baseline_metrics["rmse_m3s"]
         station_model_rmse = station_model_metrics["rmse_m3s"]
@@ -220,8 +281,10 @@ def main():
             if high_flow_count:
                 high_actual = station_actual[high_mask]
                 high_pred = station_pred[high_mask]
+                high_raw_pred = station_raw_pred[high_mask]
                 high_base = station_base[high_mask]
                 high_model_metrics = metrics(high_actual, high_pred)
+                high_raw_metrics = metrics(high_actual, high_raw_pred)
                 high_baseline_metrics = metrics(high_actual, high_base)
                 baseline_high_rmse = high_baseline_metrics["rmse_m3s"]
                 model_high_rmse = high_model_metrics["rmse_m3s"]
@@ -229,12 +292,14 @@ def main():
                     high_flow_skill = float(1 - model_high_rmse / baseline_high_rmse)
                     station_high_flow_skill.append(high_flow_skill)
                 high_flow_report = {
-                    "model": high_model_metrics,
+                    "selected_model": high_model_metrics,
+                    "raw_lstm": high_raw_metrics,
                     "persistence": high_baseline_metrics,
                     "rmse_skill_vs_persistence": high_flow_skill,
                 }
         per_station_metrics[sid] = {
             "test_metrics": station_model_metrics,
+            "raw_lstm_test_metrics": station_raw_metrics,
             "persistence_baseline_test_metrics": station_baseline_metrics,
             "rmse_skill_vs_persistence": station_skill,
             "training_period_90th_percentile_discharge_m3s": threshold,
@@ -259,35 +324,35 @@ def main():
     scaler_path=args.output_dir/"regional_discharge_lstm.scalers.json"
     report_path=args.output_dir/"regional_discharge_lstm.report.json"
     torch.save(model.state_dict(),model_path)
-    input_features=["scaled log1p discharge","observation mask","day-of-year sin/cos","latitude","longitude"]
-    model_config={"input_size":6,"hidden_size":96,"num_layers":2,"lstm_dropout":0.2,
-      "head":["LayerNorm(96)","Linear(96,96)","GELU","Dropout(0.15)",f"Linear(96,{args.lead_days})"],
-      "batch_first":True,"forecast_horizon_days":args.lead_days}
-    normalization={"discharge_log1p_mean":mu,"discharge_log1p_std":sd,
-      "latitude_divisor":90.0,"longitude_divisor":180.0,
-      "coordinate_policy":"median source latitude/longitude per station; missing coordinates imputed to 0 before normalization",
-      "discharge_transform":"log1p(max(discharge_m3_s,0))",
-      "missing_history_policy":"mask feature 0; scaled discharge feature set to 0 only where mask is false",
-      "input_features":input_features}
-    scaler_path.write_text(json.dumps(normalization,indent=2),encoding="utf-8")
-    report={"model_type":"regional multi-station masked-input LSTM","status":"experimental_research_only",
+    scaler_path.write_text(json.dumps({
+      "version":2,"target_transform":"log1p","global_log1p_mean":mu,"global_log1p_std":sd,
+      "validation_blend_alpha":alpha,"validation_blend_selection":validation_selection,
+      "lookback_days":args.lookback_days,"lead_days":args.lead_days,
+      "input_features":["scaled_log1p_discharge","observation_mask","day_of_year_sin","day_of_year_cos","latitude_div_90","longitude_div_180"],
+      "latitude_scaling":"latitude_degrees / 90; normalized to [-1,1]","longitude_scaling":"longitude_degrees / 180; normalized to [-1,1]"
+    },indent=2),encoding="utf-8")
+    report={"model_type":"regional multi-station masked-input LSTM with validation-selected blend","selected_model_type":selected_model_type,"status":"experimental_research_only",
       "states":STATES,"source_station_count":int(df.station_id.nunique()),"stations_with_windows":len(used),
       "calendar_start":str(dates.min().date()),"calendar_end":str(dates.max().date()),
       "lookback_days":args.lookback_days,"lead_days":args.lead_days,"window_stride_days":args.window_stride,
-      "model_config":model_config,"normalization":normalization,"scalers_file":str(scaler_path),
-      "input_features":input_features,
+      "architecture":{"hidden_size":args.hidden_size,"num_layers":args.num_layers,"batch_size":args.batch_size,"epochs_requested":args.epochs,"early_stopping_patience":args.patience,"torch_threads":torch.get_num_threads()},
+      "input_features":["scaled log1p discharge","observation mask","day-of-year sin/cos","latitude","longitude"],
       "windows":{k:len(v) for k,v in data.items()},
       "candidate_windows_before_sampling":candidate_counts,
       "max_windows_per_station_split":args.max_windows_per_station_split,
       "window_sampling":{"validation_test":"uniformly spread across available chronological candidates per station; no target-based selection",
         "training":"uniform time coverage plus up to one-third of each station's cap from high-flow target horizons; station threshold is the 90th percentile of training-period observed discharge"},
       "split":{"train_before":str(dates[tr].date()),"validation_before":str(dates[va].date()),"test_from":str(dates[va].date())},
-      "test_metrics":m,"persistence_baseline_test_metrics":b,"rmse_skill_vs_persistence":skill,
+      "test_metrics":m,"raw_lstm_test_metrics":raw_lstm_metrics,"persistence_baseline_test_metrics":b,
+      "validation_blend_alpha":alpha,"validation_blend_selection":validation_selection,
+      "raw_lstm_rmse_skill_vs_persistence":raw_skill,"rmse_skill_vs_persistence":skill,
       "beats_persistence_baseline_on_rmse":bool(skill is not None and skill>0),
+      "selected_model_type":selected_model_type,
       "per_station_summary":per_station_summary,
       "per_station_metrics":per_station_metrics,
       "per_horizon_metrics":per_horizon,
-      "training_history":history,"model_file":str(model_path),"created_at_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
+      "training_history":history,"model_file":str(model_path),"scaler_file":str(scaler_path),
+      "training_duration_seconds":round(time.monotonic()-started_at,2),"created_at_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
       "weather_forecast_inputs_available":False,"operational_status":"not_validated_for_public_warnings",
       "limitations":["No rainfall/weather forecast forcing or static basin descriptors.",
       "Window counts are bounded per station/split for CPU/RAM; validation/test windows are evenly time-sampled rather than exhaustive.",
