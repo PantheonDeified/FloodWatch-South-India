@@ -140,6 +140,41 @@ jobs:
                       print("WARN no named layer records parsed. XML preview: " + raw[:700].decode("utf-8", errors="replace").replace("\\n", " ") )
               except Exception as exc:
                   print(f"WARN {label}: capability request could not be verified ({exc})")
+          # Inspect the official hazard atlas front end for its current map endpoint.
+          import re
+          from html.parser import HTMLParser
+
+          class AssetParser(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.assets = []
+              def handle_starttag(self, tag, attrs):
+                  a = dict(attrs)
+                  src = a.get("src") or a.get("href")
+                  if src and (tag == "script" or tag == "link"):
+                      self.assets.append((tag, src))
+
+          pages = [
+              ("NRSC Flood Hazard Zones", "https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty"),
+              ("NDRF/NRSC Flood Hazard Atlas", "https://ndrf.nrsc.gov.in/hydrological_fhz.php?lang=en"),
+          ]
+          for label, page_url in pages:
+              try:
+                  req = urllib.request.Request(page_url, headers={"User-Agent": "FloodWatch-source-discovery/1.0"})
+                  with urllib.request.urlopen(req, timeout=18) as response:
+                      html = response.read().decode("utf-8", errors="replace")
+                      print(f"PORTAL {label}: HTTP {response.status}, {len(html)} chars")
+                  parser = AssetParser()
+                  parser.feed(html)
+                  for tag, asset in parser.assets:
+                      if any(word in asset.lower() for word in ("js", "map", "flood", "hazard", "arcgis", "geoserver", "api")):
+                          print(f"  ASSET {tag}: {asset}")
+                  matches = [line.strip() for line in html.splitlines()
+                             if any(word in line.lower() for word in ("wms", "geoserver", "mapserver", "arcgis", "rest/services", "tilelayer", "featurelayer", "flood_hz", "hazard"))]
+                  for line in matches[:30]:
+                      print("  SOURCE-HINT: " + line[:500])
+              except Exception as exc:
+                  print(f"WARN portal inspection {label}: {exc}")
           PY
 
       - name: Check optional live backend API
