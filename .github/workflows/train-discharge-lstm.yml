@@ -1,6 +1,10 @@
 name: Train FloodWatch discharge LSTM
 
 on:
+  # One-time bootstrap: automatically run when this workflow itself is first configured/updated.
+  push:
+    paths:
+      - '.github/workflows/train-discharge-lstm.yml'
   workflow_dispatch:
     inputs:
       station_id:
