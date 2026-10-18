@@ -38,11 +38,13 @@ jobs:
         run: |
           python -m json.tool data/water-observations.json > /dev/null
           python data_pipeline/scripts/validate_water_snapshot.py --snapshot data/water-observations.json
+      - name: Generate water data quality report
+        run: python data_pipeline/scripts/audit_water_snapshot.py --snapshot data/water-observations.json --out docs/water-pipeline-report.md
       - name: Publish changed snapshot to GitHub Pages
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/water-observations.json
+          git add data/water-observations.json docs/water-pipeline-report.md
           if git diff --cached --quiet; then
             echo "No data snapshot changes to publish."
           else
