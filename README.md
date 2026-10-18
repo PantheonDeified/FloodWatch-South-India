@@ -8,7 +8,8 @@ Expected GitHub Pages URL: https://pantheondeified.github.io/FloodWatch-South-In
 
 Full feature matrix: [FloodWatch capabilities and implementation status](docs/FEATURES_AND_CAPABILITIES.md).
 
-IBM Z Datathon: [3-minute demo, architecture, ML metrics and Ubuntu VM runbook](docs/IBM_Z_DATATHON_DEMO.md).
+IBM Z Datathon: [3-minute demo, architecture, ML metrics and Ubuntu VM runbook](docs/IBM_Z_DATATHON_DEMO.md).  
+Final hand-in checks: [submission checklist and verified CI evidence](docs/DATATHON_SUBMISSION_CHECKLIST.md).
 
 **Deploy the API on the event VM:** [Ubuntu/LinuxONE quick installer and service commands](deploy/ibm-linuxone/README.md).
 
