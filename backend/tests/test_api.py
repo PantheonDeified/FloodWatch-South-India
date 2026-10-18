@@ -128,13 +128,16 @@ def test_weather_rejects_provider_payload_without_current_conditions(monkeypatch
     assert "did not include current conditions" in response.json()["detail"]
 
 
-def test_model_status_does_not_claim_a_trained_forecast():
+def test_model_status_reports_experimental_training_without_claiming_operational_forecast():
     response = client.get("/api/v1/models/status")
     assert response.status_code == 200
     data = response.json()
     assert data["validated_south_india_flood_forecast"] is False
-    assert data["trained_model_artifact"] == "not_deployed"
-    assert "verified historical discharge" in " ".join(data["required_before_inference"])
+    assert data["live_inference_available"] is False
+    assert data["trained_model_artifact"] == "available_as_temporary_github_actions_artifact_not_loaded_by_this_api"
+    assert data["single_station_test_metrics"]["overall_rmse_skill_vs_persistence"] > 0
+    assert data["single_station_test_metrics"]["high_flow_nse"] < 0
+    assert "persist and load a versioned model artifact" in " ".join(data["required_before_operational_inference"])
 
 
 def test_water_observations_are_paginated_and_labelled(monkeypatch):
