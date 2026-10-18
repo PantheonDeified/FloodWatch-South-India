@@ -4,11 +4,11 @@ Last repository review: 2026-10-18.
 
 ## Accurate status for a demo
 
-FloodWatch has a completed experimental single-station LSTM pilot and a completed regional multi-station discharge LSTM training run. A subsequent feature-branch run is adding an inference smoke test that loads model weights plus preprocessing scalers and emits a research-only seven-day output. Neither model is validated for public flood warnings, and neither model is connected to or deployed on the public map.
+FloodWatch has a completed experimental single-station LSTM pilot and a completed regional multi-station discharge LSTM training run, including a saved-weight inference smoke test. A subsequent review found that the earlier trainer accepted Goa and Puducherry as well as the five core states, and that the resulting inference output was a stale historical replay rather than live. The trainer has now been restricted to Andhra Pradesh, Karnataka, Kerala, Tamil Nadu and Telangana, the downloader requests the current calendar year, and a fresh run has been queued on the feature branch. Neither model is validated for public flood warnings, and neither model is connected to or deployed on the public map.
 
 | Capability | Status | Evidence |
 |---|---|---|
-| Regional neural-network weights | Trained artifact exists | [Regional training run #39122959850](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39122959850), artifact floodwatch-regional-lstm. |
+| Regional neural-network weights | Trained artifact exists | [Regional training run #39124572229 (earlier broader-scope experiment)](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39122959850), artifact floodwatch-regional-lstm. |
 | Regional model evaluation | Completed on chronological holdout | 92,015 pooled test targets; LSTM RMSE 1,121.33 m³/s vs persistence 2,079.66 m³/s (46.1% lower pooled RMSE). This aggregate hides substantial station-level variance. |
 | Per-station robustness | Mixed; not a pass for deployment | 107 of 223 tested stations beat persistence on RMSE. Only 63 of 119 high-flow stations with a comparable baseline beat persistence on high-flow RMSE. |
 | Reproducible inference | Predictor script and workflow smoke-test step added on feature branch | data_pipeline/scripts/predict_regional_lstm.py uses the saved weights, saved scaling values and an eligible 90-day history. Re-check the latest workflow run before treating the smoke test as passed. |
@@ -18,7 +18,7 @@ FloodWatch has a completed experimental single-station LSTM pilot and a complete
 
 ## Regional training configuration and metrics
 
-The accelerated run used a 90-day input history, seven-day forecast horizon, a 48-unit single-layer LSTM, batch size 512, a maximum of six epochs, early-stopping patience two and two CPU threads. Training itself took 47.27 seconds after acquisition and normalization; total workflow wall-clock time is longer because official archive retrieval and normalization precede training.
+The earlier broader-scope run used a 90-day input history, seven-day forecast horizon, a 48-unit single-layer LSTM, batch size 512, a maximum of six epochs, early-stopping patience two and two CPU threads. Training itself took about 48 seconds after acquisition and normalization; total workflow wall-clock time is longer because official archive retrieval and normalization precede training. The cited metrics below are provisional historical-baseline results from the broader seven-region state filter, not the definitive five-state run.
 
 | Pooled chronological test metric | Regional LSTM | Persistence baseline |
 |---|---:|---:|
@@ -27,9 +27,13 @@ The accelerated run used a 90-day input history, seven-day forecast horizon, a 4
 | NSE | 0.343 | −1.261 |
 | Test targets | 92,015 | 92,015 |
 
-The report uses 247 source station IDs and produced usable forecast windows for 236. The holdout spans from 2016-11-07 to the end of the available source period. Test windows are sampled across stations rather than exhaustive. Source station metadata and coordinate identity need additional audit. Pooled RMSE skill is not proof that most stations improve: only 107 of 223 test stations beat persistence on RMSE, and 63 of 119 comparable high-flow station subsets beat their baseline. Review each station and high-flow counts before making performance claims.
+The earlier report used 247 source station IDs and produced usable forecast windows for 236. The source period ended on 2025-12-31; the successful inference smoke test therefore reported forecast_is_live=false and history_age_days=291 as of 2026-10-18. The holdout spans from 2016-11-07 to the end of the available source period. Test windows are sampled across stations rather than exhaustive. Source station metadata and coordinate identity need additional audit. Pooled RMSE skill is not proof that most stations improve: only 107 of 223 test stations beat persistence on RMSE, and 63 of 119 comparable high-flow station subsets beat their baseline. Review each station and high-flow counts before making performance claims.
 
 Interpretation: the model is a meaningful training milestone, not an operational flood-prediction model. A physical discharge value, a station-relative high-flow threshold and an official flood-warning level are distinct concepts.
+
+## Current five-state retraining
+
+The latest feature-branch workflow uses exactly Andhra Pradesh, Karnataka, Kerala, Tamil Nadu and Telangana. It requests archive data through the current UTC calendar year and uses a versioned same-day cache. Workflow: https://github.com/PantheonDeified/FloodWatch-South-India/actions/workflows/train-regional-lstm.yml. Do not use the prior seven-state pooled metrics as final five-state performance. The rerun must complete training, inference, and artifact upload; its report must be re-reviewed for station counts, input dates and per-station/high-flow performance. A successful smoke test on observations older than three days must remain labelled historical, not live.
 
 ## What the network uses
 
