@@ -1,0 +1,128 @@
+name: Build South India basin geometry
+
+on:
+  workflow_dispatch: {}
+  push:
+    paths:
+      - '.github/workflows/build-south-india-basins.yml'
+      - 'data_pipeline/scripts/build_south_india_basins.py'
+
+permissions:
+  contents: write
+
+jobs:
+  build-basin-layer:
+    # Keep generated data writes confined to the specifically approved feature branch.
+    if: github.ref == 'refs/heads/feature/continuous-risk-contours-data-basin-20261018' || github.ref == 'refs/heads/deploy/continuous-risk-contours-main-20261018' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install vector geometry dependencies
+        run: python -m pip install --upgrade pip geopandas
+      - name: Query all HydroBASINS Asia level-6 features for South India
+        env:
+          BASIN_QUERY_URL: https://services2.arcgis.com/PYn6bWCjT6bhw1z3/ArcGIS/rest/services/Global_Loaches_2022_WFL1/FeatureServer/2/query
+        run: |
+          # ZIP distribution returns HTTP 403 from hosted runners; use its public feature-service equivalent.
+          python - <<'PY'
+          import json
+          import os
+          import time
+          import urllib.parse
+          import urllib.request
+          from pathlib import Path
+
+          endpoint = os.environ["BASIN_QUERY_URL"]
+          common = {
+              "where": "1=1",
+              "geometry": "73.5,7.5,86.5,21.5",
+              "geometryType": "esriGeometryEnvelope",
+              "inSR": "4326",
+              "spatialRel": "esriSpatialRelIntersects",
+              "returnGeometry": "true",
+              "outFields": "HYBAS_ID,NEXT_DOWN,NEXT_SINK,MAIN_BAS,SUB_AREA,UP_AREA,PFAF_ID",
+              "outSR": "4326",
+              "f": "geojson",
+          }
+          def get_json(params):
+              url = endpoint + "?" + urllib.parse.urlencode(params)
+              req = urllib.request.Request(url, headers={"User-Agent": "FloodWatch-South-India/0.1 (watershed geometry build)"})
+              with urllib.request.urlopen(req, timeout=90) as response:
+                  return json.load(response)
+          id_response = get_json({**common, "returnIdsOnly": "true", "returnGeometry": "false", "f": "json"})
+          if "error" in id_response:
+              raise SystemExit(f"HydroBASINS object-ID query error: {id_response['error']}")
+          object_ids = id_response.get("objectIds")
+          if not isinstance(object_ids, list) or not object_ids:
+              raise SystemExit(f"HydroBASINS query returned no object IDs: {id_response}")
+          object_ids = sorted(set(object_ids))
+          features = []
+          batch_size = 100
+          for start in range(0, len(object_ids), batch_size):
+              ids = object_ids[start:start + batch_size]
+              payload = get_json({
+                  **common,
+                  "objectIds": ",".join(str(x) for x in ids),
+                  "resultRecordCount": str(batch_size),
+              })
+              if "error" in payload:
+                  raise SystemExit(f"HydroBASINS feature batch failed at offset {start}: {payload['error']}")
+              batch = payload.get("features")
+              if not isinstance(batch, list):
+                  raise SystemExit(f"Invalid feature payload at offset {start}")
+              features.extend(batch)
+              print(f"Fetched basin features {min(start + len(batch), len(object_ids))}/{len(object_ids)}")
+              if start + batch_size < len(object_ids):
+                  time.sleep(0.15)
+          unique = {}
+          for feature in features:
+              props = feature.get("properties") or {}
+              basin_id = props.get("HYBAS_ID")
+              if basin_id is None or feature.get("geometry") is None:
+                  raise SystemExit("HydroBASINS response is missing a required ID or polygon geometry.")
+              unique[str(basin_id)] = feature
+          if len(unique) != len(object_ids):
+              raise SystemExit(f"Expected {len(object_ids)} distinct basin IDs, received {len(unique)} features.")
+          geojson = {"type": "FeatureCollection", "features": list(unique.values())}
+          out = Path("/tmp/hydrobasins_south_india.geojson")
+          out.write_text(json.dumps(geojson, separators=(",", ":")), encoding="utf-8")
+          print(f"Saved {len(unique)} HydroBASINS polygons to {out}.")
+          PY
+      - name: Clip and validate basin polygons for the five-state mask
+        run: |
+          python data_pipeline/scripts/build_south_india_basins.py \
+            --basins-geojson /tmp/hydrobasins_south_india.geojson \
+            --states data/south-india-states.geojson \
+            --output data/south-india-basins.geojson \
+            --metadata data/south-india-basins.metadata.json
+      - name: Commit generated public basin geometry on feature branch only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp data/south-india-basins.geojson /tmp/south-india-basins.geojson
+          cp data/south-india-basins.metadata.json /tmp/south-india-basins.metadata.json
+          TARGET_BRANCH="$GITHUB_REF_NAME"
+          git fetch origin "$TARGET_BRANCH"
+          git checkout -B "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
+          cp /tmp/south-india-basins.geojson data/south-india-basins.geojson
+          cp /tmp/south-india-basins.metadata.json data/south-india-basins.metadata.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/south-india-basins.geojson data/south-india-basins.metadata.json
+          if git diff --cached --quiet; then
+            echo 'Generated basin geometry is already current; no commit needed.'
+          else
+            git commit -m 'Add clipped HydroBASINS level-6 geometry for South India'
+            git push origin HEAD:"$TARGET_BRANCH"
+          fi
+
+# This workflow never targets main, merges a pull request, or deploys the site.
