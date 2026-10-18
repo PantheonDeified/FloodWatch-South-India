@@ -39,7 +39,7 @@ The project lead is handling the tasks that were originally split between teamma
 ## Early warning and infrastructure accountability
 
 - The workflow and safeguards are documented in [docs/EARLY_WARNING_AND_ACCOUNTABILITY.md](docs/EARLY_WARNING_AND_ACCOUNTABILITY.md). The dashboard currently explains this plan; it does not yet run a validated alert engine or maintain a server-side evidence register.
-- Next accountability deliverable: source-linked public records for dam/reservoir bulletins, latest inspection date/status, embankment/drainage maintenance reports, land-use records, and official warning/response timelines. Missing inspection information must be marked **not verified**. Never infer structural strength from water level or assign blame without a competent investigation.
+- Implemented: the dashboard has a browser-local infrastructure evidence notebook with HTTPS source links, review-status labels, local deletion and JSON export. Remaining: curate reliable public-source links and build a shared/server-side verified register with reviewer identity, correction history and access controls. Missing inspection information must be marked **not verified**. Never infer structural strength from water level or assign blame without a competent investigation.
 - Before operational alerts: locally approved thresholds, IMD/CWC/state cross-checking, event-based validation, false-alarm/missed-event analysis, human review, delivery testing and audit logs.
 
 ## Source links
