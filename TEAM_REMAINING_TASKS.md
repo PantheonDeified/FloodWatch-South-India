@@ -19,7 +19,7 @@ The project lead is handling the tasks that were originally split between teamma
 ## Latest risk-map work (added; do not remove existing features)
 
 - Added a dedicated Risk map selector beside the street/terrain/satellite base-map selector: historical NRSC/ISRO flood hazard, GDACS cyclone threat, and combined historic-hazard + cyclone-event view.
-- Verified via the NRSC WMS capability catalogue and CI GetMap probes that `ap_hz`, `agg_karnataka`, `agg_kerala`, and `agg_tamilnadu` return PNG images. The map preserves source styling and links to the official hazard atlas. The latest syntax and deployed-site checks passed before the documentation-only updates.
+- Verified via the NRSC WMS catalogue and CI that `ap_hz`, `agg_karnataka`, `agg_kerala`, and `agg_tamilnadu` return PNG images in both EPSG:4326 and Leaflet's EPSG:3857 projection. The MapCache `GetLegendGraphic` endpoint returns HTTP 501; the map preserves source styling and links to the official atlas rather than inventing colour thresholds. The latest syntax and deployed-site checks passed before the current legend UI update; re-check the newest run.
 - Remaining: visually inspect tile alignment/legend in a real browser and test a location in each state. Telangana is not verified in the selected WMS catalogue and must remain unknown; do not fill it green. Build and validate a separate live flood-probability model only after suitable rainfall, discharge, catchment and event data are aligned and evaluated. GDACS polygons/markers are source event geometry, not a home-made storm-radius forecast.
 
 ## Highest priority: verify the complete experience
