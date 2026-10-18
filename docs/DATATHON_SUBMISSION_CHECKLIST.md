@@ -4,11 +4,12 @@ This checklist separates repository checks already passed from checks that must 
 
 ## Verified on main (18 October 2026)
 
-- [x] Current main includes the datathon demo guide, LinuxONE deployment runbook and model runner. Re-check the linked CI workflows for the exact submission commit before final upload.
-- [x] GitHub Pages build/deployment passed: [run #39131306933](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39131306933).
-- [x] Frontend JavaScript and calculated-risk regression passed: [run #39131307073](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39131307073).
-- [x] Backend tests, container build and installer shell syntax passed: [run #39131307093](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39131307093).
-- [x] Deployed-site and public water-snapshot smoke checks passed: [run #39131307064](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39131307064).
+- [x] Submission-prep commit merged to main: [7163dc1](https://github.com/PantheonDeified/FloodWatch-South-India/commit/7163dc1a438f307214af8d85f6e1a8cc08a515f2).
+- [x] GitHub Pages build/deployment passed on that commit: [run #39135499003](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39135499003).
+- [x] Frontend JavaScript and calculated-risk regression passed: [run #39135499219](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39135499219).
+- [x] Backend tests, container build, inference-route tests and installer shell syntax passed: [run #39135499268](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39135499268).
+- [x] Water-data pipeline validation passed: [run #39135499246](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39135499246).
+- [x] Deployed-site and public water-snapshot smoke checks passed: [run #39135499289](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39135499289).
 - [x] The demo guide and installer are in the repository: [IBM Z Datathon demo guide](IBM_Z_DATATHON_DEMO.md) · [LinuxONE VM runbook](../deploy/ibm-linuxone/README.md).
 
 ## Required on the actual Ubuntu VM
