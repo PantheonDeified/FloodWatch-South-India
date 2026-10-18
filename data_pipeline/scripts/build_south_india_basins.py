@@ -16,6 +16,7 @@ import sys
 
 import geopandas as gpd
 import pandas as pd
+from shapely import make_valid
 
 OFFICIAL_SOURCE = 'https://services2.arcgis.com/PYn6bWCjT6bhw1z3/ArcGIS/rest/services/Global_Loaches_2022_WFL1/FeatureServer/2/query'
 ARCGIS_LAYER = 'https://services2.arcgis.com/PYn6bWCjT6bhw1z3/ArcGIS/rest/services/Global_Loaches_2022_WFL1/FeatureServer/2'
@@ -55,9 +56,14 @@ def build_layer(basin_path: pathlib.Path, states_path: pathlib.Path, output_path
         raise ValueError('Both basin and South India mask files must declare a CRS.')
     basins = basins.to_crs('EPSG:4326')
     states = states.to_crs('EPSG:4326')
-    states = states[states.geometry.notna() & ~states.geometry.is_empty]
+    states = states[states.geometry.notna() & ~states.geometry.is_empty].copy()
     if states.empty:
         raise ValueError('South India state mask contains no usable polygons.')
+    # Repair self-intersections before union/intersection; state boundary sources sometimes
+    # include invalid rings that make GEOS overlay operations fail with TopologyException.
+    states['geometry'] = states.geometry.map(lambda geom: make_valid(geom) if not geom.is_valid else geom)
+    basins = basins[basins.geometry.notna() & ~basins.geometry.is_empty].copy()
+    basins['geometry'] = basins.geometry.map(lambda geom: make_valid(geom) if not geom.is_valid else geom)
     id_col = find_field(basins.columns, ['HYBAS_ID'])
     down_col = find_field(basins.columns, ['NEXT_DOWN'])
     pfaf_col = find_field(basins.columns, ['PFAF_ID'])
