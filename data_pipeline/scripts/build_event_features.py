@@ -34,8 +34,8 @@ def main() -> int:
     obs = pd.read_csv(args.observations, dtype={"station_id": str})
     if not {"station_id", "date", "precipitation_sum"}.issubset(weather.columns):
         raise SystemExit("Weather file needs station_id, date, precipitation_sum.")
-    if not {"station_id", "observed_at", "kind", "value", "unit"}.issubset(obs.columns):
-        raise SystemExit("Observations must include station_id, observed_at, kind, value, and normalized unit.")
+    if not {"station_id", "observed_at", "kind", "value", "unit", "source_url", "source_timezone"}.issubset(obs.columns):
+        raise SystemExit("Observations must include station_id, observed_at, kind, value, normalized unit, source_url, and source_timezone.")
 
     weather["date"] = pd.to_datetime(weather["date"], errors="coerce").dt.strftime("%Y-%m-%d")
     numeric_weather = [
@@ -48,6 +48,9 @@ def main() -> int:
         weather[col] = pd.to_numeric(weather[col], errors="coerce")
     weather = weather.dropna(subset=["station_id", "date"]).sort_values(["station_id", "date"])
     obs["value"] = pd.to_numeric(obs["value"], errors="coerce")
+    if obs["source_url"].fillna("").astype(str).str.strip().eq("").any():
+        raise SystemExit("Every observation must retain a source_url; restore provenance before feature building.")
+    obs["source_timezone"] = obs["source_timezone"].fillna("unspecified").astype(str).str.strip()
     obs["unit"] = obs["unit"].astype(str).str.strip().str.casefold()
     expected_units = {
         "river_level": {"m"}, "reservoir_level": {"m"},
@@ -153,6 +156,12 @@ def main() -> int:
         "stations_weather": int(weather["station_id"].nunique()),
         "stations_observations": int(obs["station_id"].nunique()),
         "observation_kinds": sorted(obs["kind"].dropna().astype(str).unique().tolist()),
+        "observation_unit_counts": {
+            str(kind): {str(unit): int(count) for unit, count in units.items()}
+            for kind, units in obs.groupby("kind")["unit"].value_counts().groupby(level=0)
+        },
+        "source_urls": sorted(obs["source_url"].dropna().astype(str).unique().tolist()),
+        "source_timezones": sorted(obs["source_timezone"].dropna().astype(str).unique().tolist()),
         "missingness_policy": "No missing observations are zero-filled; rolling rainfall totals require complete consecutive calendar windows.",
         "interpretation": "Lagged relationships show temporal association, not proof of causality or flood probability. Verified event labels and independent evaluation are required.",
     }
