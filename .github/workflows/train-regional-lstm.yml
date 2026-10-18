@@ -39,10 +39,29 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install "pandas>=2.1,<3" "numpy>=1.26,<3" requests beautifulsoup4
           python -m pip install --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple "torch==2.10.0+cpu"
+      - name: Define same-day source cache key
+        id: source-cache-day
+        run: echo "day=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+      - name: Cache normalized CWC/NWDP training data
+        id: nwdp-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            data_pipeline/raw/nwdp_history/
+            data_pipeline/output/cwc_discharge_normalized.csv
+            data_pipeline/output/cwc_discharge_quality_report.json
+          key: floodwatch-nwdp-v2-${{ runner.os }}-${{ hashFiles('data_pipeline/scripts/download_nwdp_history.py', 'data_pipeline/scripts/normalize_cwc_discharge.py') }}-${{ steps.source-cache-day.outputs.day }}
+          restore-keys: |
+            floodwatch-nwdp-v2-${{ runner.os }}-${{ hashFiles('data_pipeline/scripts/download_nwdp_history.py', 'data_pipeline/scripts/normalize_cwc_discharge.py') }}-
       - name: Download official CWC/NWDP discharge archives
+        if: steps.nwdp-cache.outputs.cache-hit != 'true'
         run: |
+          # A restored previous-day cache is a warm start only; do not mix it with today's downloads.
+          rm -rf data_pipeline/raw/nwdp_history
+          mkdir -p data_pipeline/raw/nwdp_history
           python data_pipeline/scripts/download_nwdp_history.py --out-dir data_pipeline/raw/nwdp_history --keywords "river discharge" --start-year 1950 --end-year 2025 --max-resources 50
       - name: Normalize source observations
+        if: steps.nwdp-cache.outputs.cache-hit != 'true'
         run: |
           python data_pipeline/scripts/normalize_cwc_discharge.py --input-dir data_pipeline/raw/nwdp_history --output data_pipeline/output/cwc_discharge_normalized.csv --report data_pipeline/output/cwc_discharge_quality_report.json
       - name: Train regional multi-station LSTM
