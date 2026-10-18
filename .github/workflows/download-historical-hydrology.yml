@@ -1,0 +1,37 @@
+name: Download historical South India hydrology data
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install downloader dependencies
+        run: python -m pip install "requests>=2.31,<3" "beautifulsoup4>=4.12,<5"
+      - name: Download historical CWC discharge and rainfall CSVs
+        run: |
+          python data_pipeline/scripts/download_nwdp_history.py \
+            --source-url "https://nwdp.nwic.gov.in/dataset/river-discharge-manual-dailly-central-water-commission-cwc" \
+            --source-url "https://nwdp.nwic.gov.in/en/dataset/rainfall-manual-daily-central-water-commission-cwc" \
+            --keywords "andhra pradesh,karnataka,kerala,tamil nadu,telangana" \
+            --start-year 1950 --end-year 2025 \
+            --max-resources 20 \
+            --out-dir data_pipeline/raw/nwdp_history
+      - name: Upload raw archives and source manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: floodwatch-south-india-historical-hydrology
+          path: data_pipeline/raw/nwdp_history/
+          if-no-files-found: error
+          retention-days: 7
