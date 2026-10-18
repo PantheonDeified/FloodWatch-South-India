@@ -1052,7 +1052,7 @@ function computeRiskScore(cell,bundle){
    componentsUsed.push('recent observed high/rising river signal; connectivity not verified unless source says so');
   }
   if(score==null&&humanSignal.points>0){
-   score=humanSignal.points;
+   score=humanSignal.incident?Math.max(35,humanSignal.points):humanSignal.points;
    standaloneBase='human';
    componentsUsed.push('source-linked infrastructure evidence only; weather/flow baseline unavailable');
   }
