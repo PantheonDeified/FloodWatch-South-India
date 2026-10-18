@@ -11,13 +11,20 @@ import unittest
 
 import numpy as np
 import pandas as pd
-import torch
+try:
+    import torch
+except ImportError:
+    torch = None
 
 SCRIPTS = pathlib.Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
-from train_regional_lstm import RegionalLSTM
+if torch is not None:
+    from train_regional_lstm import RegionalLSTM
+else:
+    RegionalLSTM = None
 
 
+@unittest.skipIf(torch is None, 'regional inference integration test requires PyTorch; run the dedicated regional LSTM workflow')
 class RegionalInferenceTests(unittest.TestCase):
     def test_inference_emits_seven_nonnegative_predictions(self):
         with tempfile.TemporaryDirectory() as td:
