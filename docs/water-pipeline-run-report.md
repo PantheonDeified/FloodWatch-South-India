@@ -31,6 +31,19 @@ The workflow's push trigger used to include `data/water-observations.json`, whic
 
 The workflow now refuses to publish a snapshot if the collector returns an empty observation list, the record count does not match the list, or the generation timestamp is missing. This prevents a temporary source outage from replacing a working snapshot with an empty file. Run #39090443542 passed the guard with 407 records. The site already classifies timestamps more than one hour in the future as unknown rather than recent.
 
+## Automated validation added
+
+The workflow now runs unit tests from `data_pipeline/tests/test_validate_water_snapshot.py` and calls `data_pipeline/scripts/validate_water_snapshot.py` before publishing. The validator fails on an empty snapshot, mismatched record counts, duplicate/missing IDs, unsupported measurement types, non-numeric values, invalid or half-missing coordinates, unparseable timestamps, and missing/invalid HTTPS source links. It reports warnings for records without coordinates/state, out-of-core-area labels, unspecified source timezones, and timestamps that appear later than the collector clock.
+
+Run the check locally from the repository root:
+
+```bash
+python -m unittest discover -s data_pipeline/tests -p "test_*.py"
+python data_pipeline/scripts/validate_water_snapshot.py --snapshot data/water-observations.json
+```
+
+Warnings require human review. In particular, do not automatically rewrite a timestamp when the source timezone isn't confirmed.
+
 ## How to check the next run
 
 1. Open the [Actions workflow](https://github.com/PantheonDeified/FloodWatch-South-India/actions/workflows/refresh-water-observations.yml).
