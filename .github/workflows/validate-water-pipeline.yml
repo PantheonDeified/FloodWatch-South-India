@@ -32,7 +32,7 @@ jobs:
       - name: Run water-pipeline unit tests
         run: python -m unittest discover -s data_pipeline/tests -p "test_*.py"
       - name: Syntax-check ML and neural-network scripts without installing ML dependencies
-        run: python -m py_compile data_pipeline/scripts/train_streamflow_lstm.py data_pipeline/scripts/predict_streamflow_lstm.py data_pipeline/scripts/train_event_ml.py data_pipeline/scripts/build_event_features.py data_pipeline/scripts/assess_streamflow_readiness.py data_pipeline/scripts/download_nwdp_history.py
+        run: python -m py_compile data_pipeline/scripts/train_streamflow_lstm.py data_pipeline/scripts/predict_streamflow_lstm.py data_pipeline/scripts/train_event_ml.py data_pipeline/scripts/build_event_features.py data_pipeline/scripts/assess_streamflow_readiness.py data_pipeline/scripts/download_nwdp_history.py data_pipeline/scripts/inspect_nwdp_archive.py
       - name: Validate committed snapshot
         run: python data_pipeline/scripts/validate_water_snapshot.py --snapshot data/water-observations.json
       - name: Generate audit report and ensure report generation works
