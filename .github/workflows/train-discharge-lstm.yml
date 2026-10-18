@@ -75,11 +75,11 @@ jobs:
         run: |
           python data_pipeline/scripts/train_discharge_lstm.py \
             --observations data_pipeline/output/cwc_discharge_normalized.csv \
-            --station-id "${{ inputs.station_id }}" \
+            --station-id "${{ inputs.station_id || 'karnataka|yadgir|16.73750000|77.12527778' }}" \
             --output-dir data_pipeline/output/models \
-            --lookback-days "${{ inputs.lookback_days }}" \
-            --lead-days "${{ inputs.lead_days }}" \
-            --epochs "${{ inputs.epochs }}"
+            --lookback-days "${{ inputs.lookback_days || '90' }}" \
+            --lead-days "${{ inputs.lead_days || '7' }}" \
+            --epochs "${{ inputs.epochs || '80' }}"
 
       - name: Upload model, metrics, and source-quality report
         if: always()
@@ -89,5 +89,6 @@ jobs:
           path: |
             data_pipeline/output/models/
             data_pipeline/output/cwc_discharge_quality_report.json
+            data_pipeline/output/cwc_discharge_normalized.csv
           if-no-files-found: warn
           retention-days: 14
