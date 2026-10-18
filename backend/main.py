@@ -21,6 +21,7 @@ DEFAULT_SNAPSHOT = REPO_ROOT / "data" / "water-observations.json"
 SNAPSHOT_URL = "https://raw.githubusercontent.com/PantheonDeified/FloodWatch-South-India/main/data/water-observations.json"
 _snapshot_cache = {"loaded_at": 0.0, "payload": None}
 WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
+FLOOD_URL = "https://flood-api.open-meteo.com/v1/flood"
 
 app = FastAPI(
     title="FloodWatch South India API",
@@ -68,6 +69,7 @@ def api_status():
         "version": APP_VERSION,
         "weather_provider": "Open-Meteo",
         "weather_endpoint": "/api/v1/weather?latitude=<lat>&longitude=<lon>",
+        "river_flow_endpoint": "/api/v1/river-flow?latitude=<lat>&longitude=<lon>",
         "water_observations_endpoint": "/api/v1/water-observations?limit=100",
         "model_readiness_endpoint": "/api/v1/models/status",
         "water_observations": "Published GitHub Pages JSON snapshot; collector runs every six hours when scheduled execution succeeds; observation freshness varies by source",
@@ -202,6 +204,50 @@ def water_observations(
             "not_a_flood_warning": True,
         },
     }
+
+
+@app.get("/api/v1/river-flow")
+def get_river_flow(
+    latitude: float = Query(..., ge=7.0, le=21.8, description="Latitude within the supported South India region"),
+    longitude: float = Query(..., ge=73.0, le=87.0, description="Longitude within the supported South India region"),
+):
+    """Proxy the Open-Meteo Flood API/GloFAS context series; not a local FloodWatch prediction."""
+    params = urlencode({
+        "latitude": f"{latitude:.5f}",
+        "longitude": f"{longitude:.5f}",
+        "daily": "river_discharge",
+        "past_days": "90",
+        "forecast_days": "7",
+        "timezone": "auto",
+    })
+    request = Request(
+        f"{FLOOD_URL}?{params}",
+        headers={"Accept": "application/json", "User-Agent": f"FloodWatch-South-India/{APP_VERSION}"},
+        method="GET",
+    )
+    try:
+        with urlopen(request, timeout=15) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        raise HTTPException(status_code=502, detail=f"Open-Meteo Flood API returned HTTP {exc.code}.") from exc
+    except (URLError, TimeoutError, OSError) as exc:
+        raise HTTPException(status_code=502, detail="The river-flow model provider could not be reached.") from exc
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=502, detail="The river-flow provider returned an invalid response.") from exc
+    daily = payload.get("daily") if isinstance(payload, dict) else None
+    if not isinstance(daily, dict) or not isinstance(daily.get("time"), list) or not isinstance(daily.get("river_discharge"), list):
+        raise HTTPException(status_code=502, detail="The river-flow provider did not return a valid daily discharge series.")
+    if len(daily["time"]) != len(daily["river_discharge"]) or not daily["time"]:
+        raise HTTPException(status_code=502, detail="The river-flow provider returned mismatched or empty series.")
+    payload["_floodwatch"] = {
+        "backend_version": APP_VERSION,
+        "provider": "Open-Meteo Flood API / GloFAS",
+        "fetched_at_utc": datetime.now(timezone.utc).isoformat(),
+        "data_type": "modelled river-discharge context, not a gauge observation or FloodWatch-trained prediction",
+        "forecast_horizon_days": 7,
+        "historical_context_days": 90,
+    }
+    return payload
 
 
 @app.get("/api/v1/models/status")
