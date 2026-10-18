@@ -74,6 +74,7 @@ def validate_snapshot(data: object, *, now: dt.datetime | None = None) -> dict:
     missing_state = 0
     non_core_states = 0
     future_timestamp_candidates = 0
+    timezone_unspecified = 0
     core_state_count = 0
 
     for index, row in enumerate(observations):
@@ -148,8 +149,14 @@ def validate_snapshot(data: object, *, now: dt.datetime | None = None) -> dict:
             non_core_states += 1
 
         source_timezone = row.get("source_timezone")
-        if not isinstance(source_timezone, str) or not source_timezone.strip():
-            warnings.append(f"{label}.source_timezone is not documented")
+        if (
+            not isinstance(source_timezone, str)
+            or not source_timezone.strip()
+            or "not specified" in source_timezone.lower()
+            or "unknown" in source_timezone.lower()
+            or "unspecified" in source_timezone.lower()
+        ):
+            timezone_unspecified += 1
 
     if missing_coordinates:
         warnings.append(f"{missing_coordinates} records have no coordinates and cannot be plotted as points")
@@ -157,6 +164,11 @@ def validate_snapshot(data: object, *, now: dt.datetime | None = None) -> dict:
         warnings.append(f"{missing_state} records do not identify a state")
     if non_core_states:
         warnings.append(f"{non_core_states} records are labelled outside the five core states; review basin relevance")
+    if timezone_unspecified:
+        warnings.append(
+            f"{timezone_unspecified} records do not have a confirmed source timezone; "
+            "do not assume the raw timestamp is UTC"
+        )
     if future_timestamp_candidates:
         warnings.append(
             f"{future_timestamp_candidates} timestamp(s) appear later than the collection clock; "
@@ -174,6 +186,7 @@ def validate_snapshot(data: object, *, now: dt.datetime | None = None) -> dict:
             "missing_state": missing_state,
             "non_core_state_records": non_core_states,
             "future_timestamp_candidates": future_timestamp_candidates,
+            "timezone_unspecified": timezone_unspecified,
         },
     }
 
