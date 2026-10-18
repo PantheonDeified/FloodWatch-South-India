@@ -1302,11 +1302,26 @@ function updateBasinRiskContext(){
  }
  const result=best>=0&&bestDistance<=45?riskCalculatedResults[best]:null;
  const scoreText=result&&result.score!=null?'Nearest local-cell score: '+Math.round(result.score)+'/100 ('+result.level.toUpperCase()+'). ':'Local cell score: UNKNOWN. ';
- const basin=basinForPoint(selected.lon,selected.lat,window.__floodwatchBasinGeoJSON||null);
- const basinText=basin?'Mapped sub-basin: '+basin.name+' · ID '+basin.id+'. ':'Basin aggregate: UNKNOWN because no reviewed basin polygon layer is present. ';
+ const basinGeo=window.__floodwatchBasinGeoJSON||null;
+ const basin=basinForPoint(selected.lon,selected.lat,basinGeo);
+ let basinText='Basin aggregate: UNKNOWN — no basin polygon contains this point or the basin layer is unavailable. ';
+ if(basin){
+  const basinCells=[];
+  for(let i=0;i<riskCalculatedCells.length;i++){
+   if(String(riskCalculatedCells[i].basinId||'')===String(basin.id)&&Number.isFinite(riskCalculatedResults[i]?.score))basinCells.push(riskCalculatedResults[i].score);
+  }
+  const mean=basinCells.length?basinCells.reduce((sum,value)=>sum+value,0)/basinCells.length:null;
+  let downstream='not supplied';
+  const feature=(basinGeo?.features||[]).find(item=>String(item.properties?.HYBAS_ID??item.properties?.hybas_id??'')===String(basin.id));
+  if(feature)downstream=String(feature.properties?.NEXT_DOWN??'not supplied');
+  basinText='Mapped HydroBASINS sub-basin ID '+basin.id+'. ';
+  if(mean!=null)basinText+='Sampled score mean '+mean.toFixed(1)+'/100; max '+Math.max(...basinCells).toFixed(1)+'/100 across '+basinCells.length+' cells. ';
+  else basinText+='Sampled score UNKNOWN: no valid local score samples yet. ';
+  basinText+='Source downstream-basin ID '+downstream+'. ';
+ }
  const records=Array.isArray(waterSnapshot?.observations)?waterSnapshot.observations:[];
  const linked=records.filter(r=>r.hydrology_link_verified===true||r.hydrologyLinked===true).length;
- el.textContent=scoreText+basinText+'Source records explicitly marked as hydrology-linked: '+linked+'. Nearest-by-distance alone is not treated as upstream; dam impacts require a verified connection and independent hydrological validation.';
+ el.textContent=scoreText+basinText+'Station records explicitly marked hydrology-linked: '+linked+'. NEXT_DOWN is a basin-network candidate, not proof that a nearby gauge is upstream; river-flowline and station metadata validation is still required.';
 }
 async function setComputedRiskGrid(requestId){
  $('riskMapLegend').hidden=false;
