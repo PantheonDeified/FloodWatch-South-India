@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Experimental regional discharge LSTM; no weather forcing or inundation model."""
 from __future__ import annotations
-import argparse, datetime as dt, json, pathlib, random
+import argparse, datetime as dt, json, os, pathlib, random, time
 import numpy as np
 import pandas as pd
 import torch
@@ -11,11 +11,18 @@ STATES = ["Andhra Pradesh", "Karnataka", "Kerala", "Tamil Nadu",
           "Telangana", "Puducherry", "Goa"]
 
 class RegionalLSTM(nn.Module):
-    def __init__(self, horizon):
+    def __init__(self, horizon, hidden_size=48, num_layers=1):
         super().__init__()
-        self.lstm = nn.LSTM(6, 96, num_layers=2, dropout=0.2, batch_first=True)
-        self.head = nn.Sequential(nn.LayerNorm(96), nn.Linear(96, 96),
-                                  nn.GELU(), nn.Dropout(0.15), nn.Linear(96, horizon))
+        if horizon < 1 or hidden_size < 8 or num_layers < 1:
+            raise ValueError("horizon must be positive; hidden_size >= 8; num_layers >= 1")
+        self.lstm = nn.LSTM(
+            6, hidden_size, num_layers=num_layers,
+            dropout=0.1 if num_layers > 1 else 0.0, batch_first=True
+        )
+        self.head = nn.Sequential(
+            nn.LayerNorm(hidden_size), nn.Linear(hidden_size, hidden_size),
+            nn.GELU(), nn.Dropout(0.1), nn.Linear(hidden_size, horizon)
+        )
     def forward(self, x):
         seq, _ = self.lstm(x)
         return self.head(seq[:, -1])
@@ -65,7 +72,10 @@ def main():
     ap.add_argument("--lookback-days", type=int, default=90)
     ap.add_argument("--lead-days", type=int, default=7)
     ap.add_argument("--window-stride", type=int, default=7, help="Sample forecast origins every N days to control memory and reduce overlapping-window redundancy.")
-    ap.add_argument("--epochs", type=int, default=40)
+    ap.add_argument("--epochs", type=int, default=8)
+    ap.add_argument("--hidden-size", type=int, default=48)
+    ap.add_argument("--num-layers", type=int, default=1)
+    ap.add_argument("--batch-size", type=int, default=512)
     ap.add_argument("--patience", type=int, default=5)
     ap.add_argument("--min-stations", type=int, default=5)
     ap.add_argument("--max-missing-fraction", type=float, default=0.2)
@@ -75,9 +85,17 @@ def main():
     args = ap.parse_args()
     if (args.lookback_days < 14 or args.lead_days < 1 or args.epochs < 1
             or args.window_stride < 1 or args.patience < 1
-            or args.max_windows_per_station_split < 40):
-        raise SystemExit("Require lookback >=14, lead >=1, epochs/stride/patience >=1 and max-windows-per-station-split >=40.")
+            or args.max_windows_per_station_split < 40 or args.hidden_size < 8
+            or args.num_layers < 1 or args.batch_size < 1):
+        raise SystemExit("Require lookback >=14, lead >=1, positive epochs/stride/patience/batch/layers, hidden-size >=8 and max-windows-per-station-split >=40.")
     random.seed(args.seed); np.random.seed(args.seed); torch.manual_seed(args.seed)
+    # Explicit CPU thread caps avoid the severe oversubscription often seen on CI runners.
+    torch.set_num_threads(max(1, int(os.environ.get("OMP_NUM_THREADS", "2"))))
+    try:
+        torch.set_num_interop_threads(1)
+    except RuntimeError:
+        pass
+    started_at = time.monotonic()
     cols = ["station_id","state","latitude","longitude","observed_at","discharge_m3_s"]
     try:
         df = pd.read_csv(args.observations, usecols=cols, dtype={"station_id":str,"state":str})
@@ -160,10 +178,10 @@ def main():
     xt,yt,_,_=pack(data["train"]); xv,yv,_,_=pack(data["validation"])
     xs,ys,actual,base=pack(data["test"])
     device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model=RegionalLSTM(args.lead_days).to(device)
+    model=RegionalLSTM(args.lead_days, hidden_size=args.hidden_size, num_layers=args.num_layers).to(device)
     opt=torch.optim.AdamW(model.parameters(),lr=7e-4,weight_decay=1e-4)
     sched=torch.optim.lr_scheduler.ReduceLROnPlateau(opt,patience=3,factor=.5)
-    loader=DataLoader(TensorDataset(torch.from_numpy(xt),torch.from_numpy(yt)),batch_size=256,shuffle=True)
+    loader=DataLoader(TensorDataset(torch.from_numpy(xt),torch.from_numpy(yt)),batch_size=args.batch_size,shuffle=True)
     xv_t,yv_t=torch.from_numpy(xv).to(device),torch.from_numpy(yv).to(device)
     best=float("inf"); state=None; stale=0; history=[]
     peak=float(np.quantile(yt*sd+mu,.9))
@@ -256,12 +274,20 @@ def main():
 
     args.output_dir.mkdir(parents=True,exist_ok=True)
     model_path=args.output_dir/"regional_discharge_lstm.pt"
+    scaler_path=args.output_dir/"regional_discharge_lstm.scalers.json"
     report_path=args.output_dir/"regional_discharge_lstm.report.json"
     torch.save(model.state_dict(),model_path)
+    scaler_path.write_text(json.dumps({
+      "version":1,"target_transform":"log1p","global_log1p_mean":mu,"global_log1p_std":sd,
+      "lookback_days":args.lookback_days,"lead_days":args.lead_days,
+      "input_features":["scaled_log1p_discharge","observation_mask","day_of_year_sin","day_of_year_cos","latitude_div_90","longitude_div_180"],
+      "latitude_scaling":"latitude_degrees / 90","longitude_scaling":"longitude_degrees / 180"
+    },indent=2),encoding="utf-8")
     report={"model_type":"regional multi-station masked-input LSTM","status":"experimental_research_only",
       "states":STATES,"source_station_count":int(df.station_id.nunique()),"stations_with_windows":len(used),
       "calendar_start":str(dates.min().date()),"calendar_end":str(dates.max().date()),
       "lookback_days":args.lookback_days,"lead_days":args.lead_days,"window_stride_days":args.window_stride,
+      "architecture":{"hidden_size":args.hidden_size,"num_layers":args.num_layers,"batch_size":args.batch_size,"epochs_requested":args.epochs,"early_stopping_patience":args.patience,"torch_threads":torch.get_num_threads()},
       "input_features":["scaled log1p discharge","observation mask","day-of-year sin/cos","latitude","longitude"],
       "windows":{k:len(v) for k,v in data.items()},
       "candidate_windows_before_sampling":candidate_counts,
@@ -274,7 +300,8 @@ def main():
       "per_station_summary":per_station_summary,
       "per_station_metrics":per_station_metrics,
       "per_horizon_metrics":per_horizon,
-      "training_history":history,"model_file":str(model_path),"created_at_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
+      "training_history":history,"model_file":str(model_path),"scaler_file":str(scaler_path),
+      "training_duration_seconds":round(time.monotonic()-started_at,2),"created_at_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
       "weather_forecast_inputs_available":False,"operational_status":"not_validated_for_public_warnings",
       "limitations":["No rainfall/weather forecast forcing or static basin descriptors.",
       "Window counts are bounded per station/split for CPU/RAM; validation/test windows are evenly time-sampled rather than exhaustive.",
