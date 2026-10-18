@@ -48,6 +48,21 @@ class RegionalLSTMTests(unittest.TestCase):
         result = MODULE.metrics(np.array([4.0, 4.0]), np.array([4.0, 5.0]))
         self.assertIsNone(result["nse"])
 
+    def test_validation_blend_chooses_persistence_when_lstm_is_worse(self):
+        actual = np.array([[10.0, 12.0], [15.0, 14.0], [9.0, 10.0]])
+        baseline = np.full_like(actual, 10.0)
+        bad_model = baseline + 100.0
+        alpha, selected_rmse = MODULE.choose_alpha_on_validation(actual, bad_model, baseline)
+        self.assertEqual(alpha, 0.0)
+        self.assertAlmostEqual(selected_rmse, MODULE.metrics(actual, baseline)["rmse_m3s"])
+
+    def test_validation_blend_can_retain_a_better_lstm(self):
+        actual = np.array([[10.0, 12.0], [15.0, 14.0], [9.0, 10.0]])
+        baseline = np.zeros_like(actual)
+        alpha, selected_rmse = MODULE.choose_alpha_on_validation(actual, actual, baseline)
+        self.assertEqual(alpha, 1.0)
+        self.assertEqual(selected_rmse, 0.0)
+
     def test_regional_training_scope_is_exactly_the_five_target_states(self):
         source = (pathlib.Path(__file__).resolve().parents[1] / "scripts" / "train_regional_lstm.py").read_text(encoding="utf-8")
         for state in ("Andhra Pradesh", "Karnataka", "Kerala", "Tamil Nadu", "Telangana"):
