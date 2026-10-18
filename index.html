@@ -459,15 +459,34 @@ function renderWaterObservations(){
 }
 async function loadWaterObservations(){
  try{
-  const r=await fetch('data/water-observations.json?refresh='+Date.now(),{cache:'no-store'});
-  if(!r.ok)throw Error('Published snapshot returned HTTP '+r.status);
-  const snapshot=await r.json();
+  let snapshot,waterSource='published GitHub Pages snapshot';
+  let apiBase='';
+  try{apiBase=(localStorage.getItem('floodwatchApiBaseUrl')||'').replace(/\/$/,'')}catch(e){}
+  if(apiBase){
+   try{
+    const response=await fetch(apiBase+'/api/v1/water-observations?limit=500',{cache:'no-store'});
+    if(!response.ok)throw Error('Backend water endpoint returned HTTP '+response.status);
+    const payload=await response.json();
+    if(!Array.isArray(payload.observations)||payload.total_records>payload.observations.length)throw Error('Backend page is incomplete or has an unexpected format');
+    snapshot={...payload,observation_count:payload.total_records,resource_count_checked:payload.source_resource_count_checked};
+    waterSource='FloodWatch backend API';
+   }catch(apiError){
+    const fallback=await fetch('data/water-observations.json?refresh='+Date.now(),{cache:'no-store'});
+    if(!fallback.ok)throw Error('Backend failed ('+apiError.message+') and published snapshot returned HTTP '+fallback.status);
+    snapshot=await fallback.json();
+    waterSource='published GitHub Pages snapshot (backend fallback)';
+   }
+  }else{
+   const r=await fetch('data/water-observations.json?refresh='+Date.now(),{cache:'no-store'});
+   if(!r.ok)throw Error('Published snapshot returned HTTP '+r.status);
+   snapshot=await r.json();
+  }
   if(!Array.isArray(snapshot.observations))throw Error('Snapshot has no observations list');
   waterSnapshot=snapshot;
   renderWaterStations();
   const count=snapshot.observation_count??snapshot.observations.length;
   if(count){
-   $('waterSnapshotStatus').textContent='Snapshot contains '+count+' station records. These are not guaranteed to be live; check each reading’s freshness label and timestamp.';
+   $('waterSnapshotStatus').textContent='Snapshot contains '+count+' station records · source: '+waterSource+'. These are not guaranteed to be live; check each reading’s freshness label and timestamp.';
   }else{
    $('waterSnapshotStatus').textContent='The repository snapshot is empty. The scheduled official-data collector must finish successfully before station readings appear.';
   }
