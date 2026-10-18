@@ -321,7 +321,7 @@ apiCheckButton.addEventListener('click',checkBackendApi);
 apiUrlInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();checkBackendApi()}});
 $('clearApiButton').addEventListener('click',()=>{apiUrlInput.value='';try{localStorage.removeItem('floodwatchApiBaseUrl')}catch(e){}$('apiConnectionStatus').textContent='Saved URL cleared. Paste an HTTPS API URL to test again.';$('apiStatusDetails').hidden=true});
 
-function selectLocation(lat,lon,name='Selected map point'){selected={lat,lon,name};renderNearbyWaterStations();if(marker)map.removeLayer(marker);marker=L.marker([lat,lon],{draggable:true}).addTo(map).bindPopup('<b>'+name+'</b><br>'+lat.toFixed(5)+', '+lon.toFixed(5)+'<br>Drag this pin to fine-tune the point.').openPopup();marker.on('dragend',e=>{const p=e.target.getLatLng();selectLocation(p.lat,p.lng,'Manually adjusted point')});$('placeName').textContent=name;$('coords').textContent='Latitude '+lat.toFixed(5)+' · Longitude '+lon.toFixed(5);$('latInput').value=lat.toFixed(5);$('lonInput').value=lon.toFixed(5);loadWeather();loadHistorical(lat,lon);if(activeOverlay==='rain'||activeOverlay==='cloud'||activeOverlay==='wind')setOverlay(activeOverlay);updateSignalChain()}
+function selectLocation(lat,lon,name='Selected map point'){selected={lat,lon,name};renderNearbyWaterStations();if(marker)map.removeLayer(marker);marker=L.marker([lat,lon],{draggable:true}).addTo(map).bindPopup('<b>'+name+'</b><br>'+lat.toFixed(5)+', '+lon.toFixed(5)+'<br>Drag this pin to fine-tune the point.').openPopup();marker.on('dragend',e=>{const p=e.target.getLatLng();selectLocation(p.lat,p.lng,'Manually adjusted point')});$('placeName').textContent=name;$('coords').textContent='Latitude '+lat.toFixed(5)+' · Longitude '+lon.toFixed(5);$('latInput').value=lat.toFixed(5);$('lonInput').value=lon.toFixed(5);loadWeather();loadHistorical(lat,lon);if(activeOverlay==='rain'||activeOverlay==='cloud'||activeOverlay==='wind'||activeOverlay==='nasa-imerg')setOverlay(activeOverlay);updateSignalChain();updateBasinRiskContext()}
 map.on('click',e=>selectLocation(e.latlng.lat,e.latlng.lng,'Manually selected map point'));
 map.on('click',e=>{
  if($('riskLayer').value!=='computed-risk'||!riskCalculatedCells.length)return;
@@ -668,7 +668,7 @@ async function loadWaterObservations(){
   renderNearbyWaterStations();
   $('waterSnapshotStatus').textContent='Public station observations loaded where available. See each row for its source-reported value, timestamp and link.';
   $('waterMeta').textContent='Provider update schedules and timestamp conventions vary. Records with unknown or stale timestamps do not count as live river-rise evidence.';
-  renderWaterObservations();
+  renderWaterObservations();updateBasinRiskContext();
  }catch(e){
   $('waterSnapshotStatus').textContent='Public station snapshot unavailable: '+e.message+'. Use the official source links below to check readings.';
   $('waterMeta').textContent='No water observations are displayed until a valid snapshot can be loaded.';
@@ -1044,20 +1044,26 @@ function computeRiskScore(cell,bundle){
   if(gauge.rising)riverAdjustment+=12;
   if(gauge.rapidRise)riverAdjustment+=8;
  }
+ let standaloneBase=null;
  if(score==null){
-  if(gauge&&(riverAdjustment>=12||gauge.percentile>=90)){
-   score=Math.max(riverAdjustment,gauge.percentile>=95?45:gauge.percentile>=90?38:0);
-   if(score>0)componentsUsed.push('recent observed high/rising river signal; connectivity not verified');
+  if(gauge&&(gauge.rising||gauge.percentile>=90)){
+   score=Math.max(gauge.rapidRise?42:gauge.rising?35:0,gauge.percentile>=95?45:gauge.percentile>=90?38:0);
+   standaloneBase='gauge';
+   componentsUsed.push('recent observed high/rising river signal; connectivity not verified unless source says so');
   }
   if(score==null&&humanSignal.points>0){
    score=humanSignal.points;
+   standaloneBase='human';
    componentsUsed.push('source-linked infrastructure evidence only; weather/flow baseline unavailable');
   }
  }
  if(score==null)return {score:null,level:'unknown',reason:'Insufficient current forecasts, flow history, gauge signals and local evidence',gauge,humanSignal};
  if(gauge&&riverAdjustment>0)componentsUsed.push('recent gauge percentile/rising-trend adjustment');
  if(humanSignal.points>0)componentsUsed.push('dated source-linked human-made contributor evidence');
- score=Math.max(0,Math.min(100,score+riverAdjustment+(score===humanSignal.points&&!rainScore&&!flowScore&&!gauge?0:humanSignal.points)));
+ // When river/evidence is the only signal, use it as the base instead of adding it twice.
+ const addRiver=standaloneBase==='gauge'?0:riverAdjustment;
+ const addHuman=standaloneBase==='human'?0:humanSignal.points;
+ score=Math.max(0,Math.min(100,score+addRiver+addHuman));
  const level=score>=65?'red':score>=35?'amber':'green';
  return {score,level,components:componentsUsed,rain24:rain24.length>=12?rain24.reduce((a,b)=>a+b,0):null,
   rain72:rain72.length>=36?rain72.reduce((a,b)=>a+b,0):null,
@@ -1095,6 +1101,20 @@ function riskScoreRgb(score){
  const a=score<35?green:amber,b=score<35?amber:red;
  const t=score<35?Math.max(0,Math.min(1,score/35)):Math.max(0,Math.min(1,(score-35)/30));
  return a.map((v,i)=>Math.round(v+(b[i]-v)*t));
+}
+function basinForPoint(lon,lat,geo){
+ if(!geo||!Array.isArray(geo.features))return null;
+ for(const feature of geo.features){
+  const geom=feature?.geometry;if(!geom)continue;
+  const polygons=geom.type==='Polygon'?[geom.coordinates]:geom.type==='MultiPolygon'?geom.coordinates:[];
+  for(const rings of polygons){
+   if(!pointInPolygonRings(lon,lat,rings))continue;
+   const props=feature.properties||{},id=props.HYBAS_ID??props.hybas_id??props.BASIN_ID??props.basin_id??props.PFAF_ID??props.pfaf_id;
+   if(id==null||String(id).trim()==='')continue;
+   return {id:String(id),name:String(props.BASIN_NAME||props.basin_name||props.NAME||props.name||'Hydrological sub-basin')};
+  }
+ }
+ return null;
 }
 function appendRiskMaskPath(ctx,geo,width,height,bounds){
  const xy=coord=>[(Number(coord[0])-bounds.west)/(bounds.east-bounds.west)*width,
@@ -1207,6 +1227,23 @@ function drawComputedRiskCells(cells,weatherRows,requestId,mask){
   {color:'#fff1f2',text:'Light contour line · score 65'}
  ],'Smooth interpolation of FloodWatch’s own numerical risk score; contours are not probabilities or official warnings. Transparent areas mean unknown, not safe.','https://open-meteo.com/en/docs/flood-api');
  $('riskLegendNote').textContent+=' Sample points: '+cells.length+' · red '+counts.red+' · amber '+counts.amber+' · green '+counts.green+' · unknown '+counts.unknown+'.';
+ updateBasinRiskContext();
+}
+function updateBasinRiskContext(){
+ const el=$('basinRiskSummary');if(!el)return;
+ if(!selected){el.textContent='Select a map location to inspect the nearest computed local score and any source-linked river records.';return}
+ let best=-1,bestDistance=Infinity;
+ for(let i=0;i<riskCalculatedCells.length;i++){
+  const c=riskCalculatedCells[i],distance=kmBetween(selected.lat,selected.lon,c.lat,c.lon);
+  if(distance<bestDistance){bestDistance=distance;best=i}
+ }
+ const result=best>=0&&bestDistance<=45?riskCalculatedResults[best]:null;
+ const scoreText=result&&result.score!=null?'Nearest local-cell score: '+Math.round(result.score)+'/100 ('+result.level.toUpperCase()+'). ':'Local cell score: UNKNOWN. ';
+ const basin=basinForPoint(selected.lon,selected.lat,window.__floodwatchBasinGeoJSON||null);
+ const basinText=basin?'Mapped sub-basin: '+basin.name+' · ID '+basin.id+'. ':'Basin aggregate: UNKNOWN because no reviewed basin polygon layer is present. ';
+ const records=Array.isArray(waterSnapshot?.observations)?waterSnapshot.observations:[];
+ const linked=records.filter(r=>r.hydrology_link_verified===true||r.hydrologyLinked===true).length;
+ el.textContent=scoreText+basinText+'Source records explicitly marked as hydrology-linked: '+linked+'. Nearest-by-distance alone is not treated as upstream; dam impacts require a verified connection and independent hydrological validation.';
 }
 async function setComputedRiskGrid(requestId){
  $('riskMapLegend').hidden=false;
@@ -1220,6 +1257,15 @@ async function setComputedRiskGrid(requestId){
   const maskResponse=await fetch(FLOODWATCH_RISK_GRID.statesFile,{cache:'force-cache'});
   if(!maskResponse.ok)throw Error('Regional state mask returned HTTP '+maskResponse.status);
   const geo=await maskResponse.json(),cells=buildRiskGridCells(geo);
+  let basinGeo=null;
+  try{
+   const basinResponse=await fetch('data/south-india-basins.geojson',{cache:'force-cache'});
+   if(basinResponse.ok){const candidate=await basinResponse.json();if(Array.isArray(candidate?.features)&&candidate.features.length)basinGeo=candidate}
+  }catch(e){/* Optional HydroBASINS data; basin status remains unknown if missing. */}
+  if(basinGeo){
+   window.__floodwatchBasinGeoJSON=basinGeo;
+   cells.forEach(cell=>{const basin=basinForPoint(cell.lon,cell.lat,basinGeo);if(basin){cell.basinId=basin.id;cell.basinName=basin.name}});
+  }
   if(requestId!==riskLayerRequest||$('riskLayer').value!=='computed-risk')return;
   if(!cells.length)throw Error('No South India grid cells matched the regional mask');
   const batches=[];for(let i=0;i<cells.length;i+=35)batches.push(cells.slice(i,i+35));
