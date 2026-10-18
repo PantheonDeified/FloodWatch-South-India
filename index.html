@@ -32,7 +32,10 @@
 <select id="obsKindFilter" aria-label="Filter observation type">
 <option value="all">All data types</option><option value="river_level">River levels</option><option value="river_discharge">River discharge</option><option value="reservoir_level">Reservoir / dam levels</option><option value="reservoir_storage">Reservoir storage</option><option value="reservoir_discharge">Dam / regulator release</option>
 </select>
+<button id="toggleWaterMap" type="button">Show stations on map</button>
 </div>
+<div id="waterMapStatus" class="status">Map station overlay is off. Only coordinate-located public source records can be plotted; markers are not flood alerts.</div>
+<div class="water-freshness">Map marker legend: blue = river level · teal = river discharge · gold = reservoir level · purple = reservoir storage · coral = reservoir/regulator release.</div>
 <div id="waterTableWrap" class="water-table-wrap"><table class="water-table"><thead><tr><th>Station / asset</th><th>Type</th><th>River / area</th><th>Latest source value</th><th>Time reported by source</th><th>Source</th></tr></thead><tbody id="waterRows"><tr><td colspan="6">Waiting for public observations; no values are simulated.</td></tr></tbody></table></div>
 <div class="history-label"><b>Selected gauge / dam history:</b> recent source-reported readings where a station time series is available</div>
 <canvas id="waterHistoryChart" class="history-chart" role="img" aria-label="Recent source-reported river or reservoir readings for the nearest located source station."></canvas>
@@ -113,7 +116,7 @@ const tiles={
  terrain:L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxNativeZoom:16,maxZoom:16,attribution:'© OpenTopoMap contributors'}),
  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:18,maxZoom:18,attribution:'Tiles © Esri'})
 };tiles.street.addTo(map);
-let marker=null,overlay=null,cycloneLayer=null,selected=null,activeOverlay='rain',currentBaseLayer='street',historyRequest=0,waterSnapshot=null,waterDisplayedRecords=[];
+let marker=null,overlay=null,cycloneLayer=null,selected=null,activeOverlay='rain',currentBaseLayer='street',historyRequest=0,waterSnapshot=null,waterDisplayedRecords=[],waterStationsLayer=null,waterStationsEnabled=false;
 const $=id=>document.getElementById(id),fmt=(v,u='',d=0)=>v==null?'—':Number(v).toFixed(d)+u;
 function updateZoomStatus(){
  // Leaflet can upscale tiles beyond their native zoom. The old warning incorrectly
@@ -218,6 +221,42 @@ function nearestObservation(kinds,maxDistanceKm=100){
   if(distance<=maxDistanceKm&&(!best||distance<best.distanceKm))best={record,distanceKm:distance};
  }
  return best;
+}
+function hasWaterMapCoordinates(record){
+ if(record?.latitude==null||record?.longitude==null||record.latitude===''||record.longitude==='')return false;
+ const lat=Number(record.latitude),lon=Number(record.longitude);
+ if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<7||lat>21.8||lon<73||lon>87)return false;
+ const state=String(record.state||'').trim();
+ const coreStates=['Andhra Pradesh','Karnataka','Kerala','Tamil Nadu','Telangana'];
+ return !state||coreStates.includes(state);
+}
+function renderWaterStations(){
+ if(waterStationsLayer){if(map.hasLayer(waterStationsLayer))map.removeLayer(waterStationsLayer);waterStationsLayer=null}
+ const records=Array.isArray(waterSnapshot?.observations)?waterSnapshot.observations:[];
+ const plotted=records.filter(hasWaterMapCoordinates);
+ const colors={river_level:'#56a8ff',river_discharge:'#36c9b2',reservoir_level:'#f0bc4c',reservoir_storage:'#ba8cff',reservoir_discharge:'#ff808b'};
+ const layer=L.layerGroup();
+ plotted.forEach(record=>{
+  const lat=Number(record.latitude),lon=Number(record.longitude),color=colors[record.kind]||'#e2e8f0';
+  const marker=L.circleMarker([lat,lon],{radius:5,color,weight:1.2,fillColor:color,fillOpacity:.86});
+  const name=record.station_name||record.station_id||'Unnamed source location';
+  const value=Number.isFinite(Number(record.value))?Number(record.value).toLocaleString(undefined,{maximumFractionDigits:3}):'Value unavailable';
+  const unit=record.unit&&record.unit!=='source-defined'?' '+record.unit:' (source unit not stated)';
+  const sourceTime=reportedTimeLabel(record);
+  const freshness=observationFreshness(record);
+  const sourceUrl=String(record.source_dataset_url||'');
+  const sourceLink=sourceUrl.startsWith('https://')?'<a href="'+escapeHtml(sourceUrl)+'" target="_blank" rel="noopener noreferrer">Open official dataset</a>':'Official source link unavailable';
+  const popup='<div style="min-width:190px;max-width:280px"><b>'+escapeHtml(name)+'</b><div>'+escapeHtml(readableKind(record.kind))+'</div><div style="font-size:16px;font-weight:700;margin:4px 0">'+escapeHtml(value+unit)+'</div><div>Source time: '+escapeHtml(sourceTime)+'</div><div>Freshness: '+escapeHtml(freshness.label)+'</div><div style="font-size:11px;margin-top:5px">'+escapeHtml(record.source_name||record.agency||'Public source')+'</div><div style="margin-top:5px">'+sourceLink+'</div><div style="font-size:10px;margin-top:5px">Source-reported value; not a flood warning. Source timezone may be unspecified.</div></div>';
+  marker.bindPopup(popup);
+  layer.addLayer(marker);
+ });
+ waterStationsLayer=layer;
+ if(waterStationsEnabled)waterStationsLayer.addTo(map);
+ const omitted=Math.max(0,records.length-plotted.length);
+ $('toggleWaterMap').textContent=waterStationsEnabled?'Hide stations on map':'Show stations on map';
+ $('waterMapStatus').textContent=waterStationsEnabled
+  ?'Showing '+plotted.length+' geolocated public-source records within the core map area. '+omitted+' records are excluded because coordinates are missing or their state/location is outside the map area. Markers show observations, not flood alerts.'
+  :'Map layer is off. '+plotted.length+' source records could be plotted; '+omitted+' are excluded because coordinates are missing or their state/location is outside the map area.';
 }
 function reportedTimeLabel(record){return record?.observed_at_raw||record?.observed_at||'time not supplied'}
 function observationFreshness(record,nowMs=Date.now()){
@@ -379,6 +418,7 @@ async function loadWaterObservations(){
   const snapshot=await r.json();
   if(!Array.isArray(snapshot.observations))throw Error('Snapshot has no observations list');
   waterSnapshot=snapshot;
+  renderWaterStations();
   const count=snapshot.observation_count??snapshot.observations.length;
   if(count){
    $('waterSnapshotStatus').textContent='Snapshot contains '+count+' station records. These are not guaranteed to be live; check each reading’s freshness label and timestamp.';
@@ -443,6 +483,7 @@ $('locate').addEventListener('click',()=>{if(!navigator.geolocation){$('overlayS
 updateZoomStatus();
 $('placeName').textContent='Choose a location';$('coords').textContent='Click the map, search for a place, or enter coordinates.';$('updated').textContent='No location selected yet';$('temp').textContent='—';$('rain').textContent='—';$('wind').textContent='—';$('humidity').textContent='—';
 // Connect the station-table controls and map buttons.
+$('toggleWaterMap').addEventListener('click',()=>{waterStationsEnabled=!waterStationsEnabled;renderWaterStations()});
 $('obsSearch').addEventListener('input',renderWaterObservations);
 $('obsKindFilter').addEventListener('change',renderWaterObservations);
 $('waterRows').addEventListener('click',e=>{
