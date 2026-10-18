@@ -31,6 +31,25 @@ python -m uvicorn main:app --host 0.0.0.0 --port 8000
 
 4. Keep Uvicorn and the Cloudflare Quick Tunnel running while testing. If the Python compilation fails, do not replace the backup; share the error and restore the backup if needed.
 
+## Install dependencies and run backend tests
+
+For a clean development environment, install runtime requirements with:
+
+```bash
+python -m pip install -r backend/requirements.txt
+```
+
+To run the API test suite locally from the repository root:
+
+```bash
+python -m pip install -r backend/requirements-dev.txt
+python -m pytest -q backend/tests
+```
+
+A GitHub Actions workflow runs these tests when backend source, tests, requirements or the workflow itself change: [Test FloodWatch backend](../.github/workflows/backend-tests.yml).
+
+The tests mock the upstream weather request; they validate the API contract and error handling without depending on external weather availability.
+
 ## Smoke tests
 
 On the Linux server, in a second SSH session:
