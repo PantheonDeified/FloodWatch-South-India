@@ -189,8 +189,10 @@
       <option value="Disputed">Disputed; needs review</option>
       <option value="Needs follow-up">Needs follow-up / newer inspection requested</option>
     </select>
-    <label for="infraSource">Public source URL (HTTPS required)</label>
-    <input id="infraSource" type="url" required maxlength="1200" placeholder="https://...">
+    <label for="infraSource">Primary public source URL (HTTPS required)</label>
+    <input id="infraSource" type="url" required maxlength="1200" placeholder="https://official-source.example/report">
+    <label for="infraCorroboratingSource">Independent corroborating public source URL (required when review status is Corroborated)</label>
+    <input id="infraCorroboratingSource" type="url" maxlength="1200" placeholder="Use a separate publisher/domain; leave blank if not independently corroborated">
     <label for="infraNotes">What the source actually says (max 600 characters)</label>
     <textarea id="infraNotes" rows="3" maxlength="600" placeholder="Record dates, published condition/status, release figures and units exactly as sourced. Separate facts from hypotheses."></textarea>
     <button class="primary" type="submit">Save evidence entry in this browser</button>
@@ -1508,7 +1510,8 @@ function initInfrastructureRegister(){
     '<div class="infra-meta">Agency: '+escapeHtml(r.agency)+' · Evidence date: '+escapeHtml(r.date)+' · Review status: '+escapeHtml(r.status)+'</div>'+
     (r.notes?'<p>'+escapeHtml(r.notes)+'</p>':'')+
     '<p class="infra-meta">Location: '+escapeHtml(Number.isFinite(Number(r.latitude))?Number(r.latitude).toFixed(4):'not saved')+', '+escapeHtml(Number.isFinite(Number(r.longitude))?Number(r.longitude).toFixed(4):'not saved')+' · Hydrology link: '+(r.hydrologyLinked?'source-verified':'not verified')+'</p>'+
-    (url?'<p>Public source: <a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(url)+'</a></p>':'<p class="infra-meta">Source URL is invalid; entry needs correction.</p>')+
+    (url?'<p>Primary source: <a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(url)+'</a></p>':'<p class="infra-meta">Primary source URL is invalid; entry needs correction.</p>')+
+    (r.corroboratingSourceUrl&&sourceUrl(r.corroboratingSourceUrl)?'<p>Independent source: <a href="'+escapeHtml(sourceUrl(r.corroboratingSourceUrl))+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(sourceUrl(r.corroboratingSourceUrl))+'</a></p>':'')+
     '<div class="infra-meta">Saved in this browser: '+escapeHtml(r.savedAt||'date unknown')+'</div>'+
     '<button type="button" data-infra-delete="'+i+'">Delete local entry</button></article>';
   }).join('');
@@ -1518,10 +1521,18 @@ function initInfrastructureRegister(){
   e.preventDefault();
   const src=sourceUrl($('infraSource').value);
   if(!src){$('infraFormStatus').textContent='Please provide a valid public HTTPS source URL.';return}
+  const reviewStatus=$('infraStatus').value;
+  const corroborating=sourceUrl($('infraCorroboratingSource').value);
+  if(reviewStatus==='Corroborated'){
+   if(!corroborating){$('infraFormStatus').textContent='Corroborated status requires a second independent HTTPS source URL.';return}
+   let firstHost='',secondHost='';
+   try{firstHost=new URL(src).hostname.toLowerCase();secondHost=new URL(corroborating).hostname.toLowerCase()}catch(e){}
+   if(src===corroborating||!firstHost||!secondHost||firstHost===secondHost){$('infraFormStatus').textContent='Use two distinct source URLs on different hostnames to mark evidence Corroborated.';return}
+  }
   if(records.length>=100){$('infraFormStatus').textContent='This local notebook holds up to 100 entries. Export and clear some first.';return}
   const lat=Number($('infraLatitude').value),lon=Number($('infraLongitude').value);
   if(!Number.isFinite(lat)||lat < -90||lat > 90||!Number.isFinite(lon)||lon < -180||lon > 180){$('infraFormStatus').textContent='Enter valid affected-location coordinates. The map score needs a documented location.';return}
-  records.unshift({category:$('infraType').value,place:$('infraPlace').value.trim(),latitude:lat,longitude:lon,hydrologyLinked:$('infraHydrologyLinked').checked,agency:$('infraAgency').value.trim(),date:$('infraDate').value,status:$('infraStatus').value,sourceUrl:src,notes:$('infraNotes').value.trim(),savedAt:new Date().toISOString()});
+  records.unshift({category:$('infraType').value,place:$('infraPlace').value.trim(),latitude:lat,longitude:lon,hydrologyLinked:$('infraHydrologyLinked').checked,agency:$('infraAgency').value.trim(),date:$('infraDate').value,status:reviewStatus,sourceUrl:src,corroboratingSourceUrl:reviewStatus==='Corroborated'?corroborating:'',notes:$('infraNotes').value.trim(),savedAt:new Date().toISOString()});
   persist();render();form.reset();redrawCachedRiskLayer();
  });
  $('infraEvidenceList').addEventListener('click',e=>{
