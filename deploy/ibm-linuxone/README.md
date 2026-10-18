@@ -11,9 +11,11 @@ df -h /
 free -h
 ```
 
-From your checkout of this repository:
+Install the small OS prerequisites first, then run the installer from a checkout of this repository:
 
 ```bash
+sudo apt-get update
+sudo apt-get install -y git python3-venv python3-pip curl
 git pull origin main
 bash deploy/ibm-linuxone/install-user-service.sh
 ```
