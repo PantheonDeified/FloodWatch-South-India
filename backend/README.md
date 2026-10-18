@@ -38,7 +38,7 @@ The included service file assumes the server account is `linux1` and the applica
 After updating `main.py` and compiling it successfully, use these steps on the Linux server. First inspect any existing Uvicorn process; if one is still running from an earlier `nohup` command, stop only that process before enabling the service so port 8000 is not already occupied.
 
 ```bash
-pgrep -af 'uvicorn main:app' || true
+pgrep -af '[u]vicorn main:app' || true
 # If the command above shows an old Uvicorn PID, stop that specific PID:
 # kill <PID>
 curl -fL "https://raw.githubusercontent.com/PantheonDeified/FloodWatch-South-India/main/backend/floodwatch-api.service" -o /tmp/floodwatch-api.service
