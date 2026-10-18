@@ -6,7 +6,7 @@ An independent, browser-based flood situational-awareness research prototype for
 
 Expected GitHub Pages URL: https://pantheondeified.github.io/FloodWatch-South-India/
 
-Full feature matrix: [FloodWatch capabilities and implementation status](docs/FEATURES_AND_CAPABILITIES.md).\n\n## Backend and ML status
+Full feature matrix: [FloodWatch capabilities and implementation status](docs/FEATURES_AND_CAPABILITIES.md).\n\nNew: [Problems solved, early-warning workflow and infrastructure accountability](docs/EARLY_WARNING_AND_ACCOUNTABILITY.md).\n\n## Backend and ML status
 
 The FastAPI backend is in `backend/`. It includes health/status endpoints, the Open-Meteo weather proxy, a paginated `/api/v1/water-observations` endpoint, and `/api/v1/models/status`. The water endpoint can read a local snapshot or fetch the public repository snapshot. Updating files in GitHub does **not** automatically update the separately running Linux API service; follow [backend deployment notes](backend/README.md).
 
