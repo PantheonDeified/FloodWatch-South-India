@@ -2,6 +2,13 @@
 
 **Purpose:** submission-time evidence of what has actually been executed. This is a research prototype, not an operational flood-warning service.
 
+## On-demand API inference path
+
+The submission branch adds `GET /api/v1/models/regional-discharge/forecast`. It calls the repository's saved-weight predictor only if the configured ML Python executable, normalized observation file, weights, scalers, evaluation report and predictor script are present. The default ML executable is `~/.local/share/floodwatch-regional-ml/venv/bin/python`. Run `setup`, `preflight`, and `train` on the VM to create those files. If they are absent, the endpoint returns HTTP 503 and `/api/v1/models/status` lists the missing assets.
+
+This makes model inference runnable by request; it does not upgrade the model's scientific status. The model still predicts discharge only, uses historical inputs without future rainfall forcing, and is not connected to public risk colours or warnings. An actual IBM Z execution claim requires a saved successful VM log and forecast response.
+
+
 ## Verified single-station LSTM run
 
 Source: [GitHub Actions run #39114067094](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39114067094), artifact `floodwatch-discharge-lstm-4`.

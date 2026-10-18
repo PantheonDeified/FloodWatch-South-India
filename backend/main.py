@@ -5,9 +5,15 @@ This service proxies Open-Meteo weather for South India and labels model data
 as estimates. It does not calculate or issue flood warnings.
 """
 from datetime import datetime, timezone
+import json
+import logging
+import math
 import os
 from pathlib import Path
-import json
+import subprocess
+import tempfile
+import threading
+import time
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -15,10 +21,30 @@ from urllib.request import Request, urlopen
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-APP_VERSION = "0.4.0"
+APP_VERSION = "0.5.0"
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SNAPSHOT = REPO_ROOT / "data" / "water-observations.json"
 SNAPSHOT_URL = "https://raw.githubusercontent.com/PantheonDeified/FloodWatch-South-India/main/data/water-observations.json"
+REGIONAL_MODEL_DIR = Path(os.environ.get(
+    "FLOODWATCH_REGIONAL_MODEL_DIR",
+    str(REPO_ROOT / "data_pipeline" / "output" / "regional_models"),
+)).expanduser()
+REGIONAL_OBSERVATIONS = Path(os.environ.get(
+    "FLOODWATCH_REGIONAL_OBSERVATIONS",
+    str(REPO_ROOT / "data_pipeline" / "output" / "cwc_discharge_normalized.csv"),
+)).expanduser()
+REGIONAL_ML_PYTHON = Path(os.environ.get(
+    "FLOODWATCH_ML_PYTHON",
+    str(Path.home() / ".local" / "share" / "floodwatch-regional-ml" / "venv" / "bin" / "python"),
+)).expanduser()
+REGIONAL_MODEL_FILE = REGIONAL_MODEL_DIR / "regional_discharge_lstm.pt"
+REGIONAL_SCALERS_FILE = REGIONAL_MODEL_DIR / "regional_discharge_lstm.scalers.json"
+REGIONAL_REPORT_FILE = REGIONAL_MODEL_DIR / "regional_discharge_lstm.report.json"
+REGIONAL_PREDICTOR = REPO_ROOT / "data_pipeline" / "scripts" / "predict_regional_lstm.py"
+REGIONAL_INFERENCE_CACHE_TTL_SECONDS = 600
+_regional_inference_cache: dict[str, tuple[float, dict]] = {}
+_regional_inference_lock = threading.Lock()
+logger = logging.getLogger(__name__)
 _snapshot_cache = {"loaded_at": 0.0, "payload": None}
 WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
 FLOOD_URL = "https://flood-api.open-meteo.com/v1/flood"
@@ -72,8 +98,9 @@ def api_status():
         "river_flow_endpoint": "/api/v1/river-flow?latitude=<lat>&longitude=<lon>",
         "water_observations_endpoint": "/api/v1/water-observations?limit=100",
         "model_readiness_endpoint": "/api/v1/models/status",
+        "regional_discharge_forecast_endpoint": "/api/v1/models/regional-discharge/forecast",
         "water_observations": "Published GitHub Pages JSON snapshot; collector runs every six hours when scheduled execution succeeds; observation freshness varies by source",
-        "flood_forecast_model": "External Open-Meteo Flood API/GloFAS proxy available; a five-state regional discharge LSTM has completed a historical holdout evaluation, but model inference is not served by this API and no flood-probability model is deployed.",
+        "flood_forecast_model": "External Open-Meteo Flood API/GloFAS proxy available; the five-state regional discharge LSTM has completed a historical holdout evaluation and can be invoked on demand at /api/v1/models/regional-discharge/forecast when local ML assets are installed. Outputs are discharge research forecasts, not flood probabilities or official warnings.",
         "last_checked": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -250,14 +277,36 @@ def get_river_flow(
     return payload
 
 
+def regional_inference_asset_status() -> dict:
+    """Check local files only; this does not import PyTorch or imply model validity."""
+    checks = {
+        "ml_python_executable": REGIONAL_ML_PYTHON.is_file() and os.access(REGIONAL_ML_PYTHON, os.X_OK),
+        "normalized_observations": REGIONAL_OBSERVATIONS.is_file(),
+        "model_weights": REGIONAL_MODEL_FILE.is_file(),
+        "scaler_metadata": REGIONAL_SCALERS_FILE.is_file(),
+        "evaluation_report": REGIONAL_REPORT_FILE.is_file(),
+        "predictor_script": REGIONAL_PREDICTOR.is_file(),
+    }
+    return {
+        "required_assets_present": all(checks.values()),
+        "asset_checks": checks,
+    }
+
+
 @app.get("/api/v1/models/status")
 def model_status():
-    """Report completed research-model evaluation separately from inference actually served."""
+    """Report evaluation evidence and whether this machine has enough files for on-demand inference."""
+    runtime = regional_inference_asset_status()
+    assets_ready = runtime["required_assets_present"]
     return {
-        "status": "regional_lstm_trained_evaluated_not_served",
+        "status": (
+            "regional_lstm_local_inference_assets_ready"
+            if assets_ready else
+            "regional_lstm_evaluated_local_inference_assets_missing"
+        ),
         "api_version": APP_VERSION,
         "regional_model": {
-            "status": "trained_and_evaluated_in_github_actions",
+            "status": "historically_trained_and_evaluated; local inference is conditional on installed assets",
             "model_type": "regional multi-station masked-input LSTM with validation-selected persistence blend",
             "states": ["Andhra Pradesh", "Karnataka", "Kerala", "Tamil Nadu", "Telangana"],
             "source_station_count": 241,
@@ -287,7 +336,7 @@ def model_status():
             "source_history_end_date": "2026-10-17",
             "training_run_url": "https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39126986154",
             "artifact_url": "https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39126986154/artifacts/12136079681",
-            "artifact_note": "GitHub Actions artifact is temporary and may expire; run the regional training workflow to reproduce it."
+            "artifact_note": "GitHub Actions artifacts can expire. The VM's own inference assets are checked separately below."
         },
         "single_station_test_metrics": {
             "station": "Yadgir, Karnataka",
@@ -298,22 +347,179 @@ def model_status():
             "high_flow_nse": -0.0129,
             "note": "The single-station pilot's overall metric improved but high-flow performance remains weak."
         },
-        "trained_model_artifact": "available_as_temporary_github_actions_artifact_not_loaded_by_this_api",
-        "training_run_url": "https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39126986154",
-        "evaluation_report_url": "https://github.com/PantheonDeified/FloodWatch-South-India/blob/main/data_pipeline/SUBMISSION_MODEL_CARD.md",
+        "inference_endpoint_available": True,
+        "inference_endpoint": "/api/v1/models/regional-discharge/forecast",
+        "trained_model_artifact": (
+            "Local model weights, scalers and report are present; run on-demand inference to verify runtime compatibility."
+            if assets_ready else
+            "not available as local server artifacts; the GitHub Actions artifact is temporary and may expire"
+        ),
         "live_inference_available": False,
-        "model_served_by_api": False,
+        "local_runtime_note": "On-demand inference is distinct from verified live sensor data; source-history age must be inspected.",
+        "on_demand_inference_available": assets_ready,
+        "model_served_by_api": assets_ready,
+        "live_sensor_data_verified": False,
+        "runtime_assets": runtime,
         "connected_to_frontend_risk_score": False,
         "validated_south_india_flood_forecast": False,
-        "required_before_operational_inference": [
-            "run reproducible inference using a current, source-validated station history",
-            "validate predictions on independent gauges, years and flood events across the region",
+        "required_before_public_warning_use": [
+            "validate predictions on independent gauges, years and verified flood events across the region",
             "align discharge and weather inputs with station/catchment metadata and confirmed units",
             "report per-station, per-horizon, high-flow skill and uncertainty",
-            "review catchment mapping, monitoring, rollback and a published model card"
+            "verify input freshness and sensor/source transmission separately from file timestamps",
+            "complete operational review, monitoring, rollback and publish the model card"
         ],
-        "message": "The regional LSTM has trained and completed a chronological holdout evaluation. The raw network is weaker than persistence on pooled RMSE; a validation-selected 25% LSTM / 75% persistence blend improves pooled test RMSE by 7.3%. The API does not serve this model and its output does not colour the map. This is a discharge research model, not a flood-probability or official-warning service."
+        "message": (
+            "The API can run the saved regional LSTM on demand when the local ML virtualenv, normalized observations, weights, scalers and report are present. The returned value is discharge, not flood probability, water level or inundation. "
+            "A chronological validation-selected 25% LSTM / 75% persistence blend improved pooled test RMSE by 7.3%, while raw LSTM predictions were worse than persistence. "
+            "Inference is not used to colour the map or issue public warnings."
+        )
     }
+
+
+@app.get("/api/v1/models/regional-discharge/forecast")
+def regional_discharge_forecast(
+    station_id: str | None = Query(
+        None, max_length=120,
+        description="Optional exact station ID from the normalized CWC/NWDP history; omit to use the predictor's default eligible station.",
+    ),
+):
+    """Run the saved regional discharge model on demand; never convert output into a flood probability."""
+    chosen_station = (station_id or "").strip()
+    if chosen_station and (chosen_station.startswith("-") or any(ord(char) < 32 for char in chosen_station)):
+        raise HTTPException(status_code=422, detail="station_id contains unsupported characters.")
+
+    cache_key = chosen_station or "__default_eligible_station__"
+
+    def cached_response():
+        cached = _regional_inference_cache.get(cache_key)
+        if not cached:
+            return None
+        stored_at, stored_payload = cached
+        if time.monotonic() - stored_at > REGIONAL_INFERENCE_CACHE_TTL_SECONDS:
+            _regional_inference_cache.pop(cache_key, None)
+            return None
+        result = json.loads(json.dumps(stored_payload))
+        result["serving_metadata"]["cache_hit"] = True
+        result["serving_metadata"]["served_at_utc"] = datetime.now(timezone.utc).isoformat()
+        return result
+
+    cached = cached_response()
+    if cached is not None:
+        return cached
+
+    if not _regional_inference_lock.acquire(blocking=False):
+        raise HTTPException(
+            status_code=429,
+            detail="Another regional inference is running. Retry shortly; duplicate requests are intentionally throttled.",
+        )
+    try:
+        # Re-check after acquiring the lock so concurrent requests share the same cached result.
+        cached = cached_response()
+        if cached is not None:
+            return cached
+
+        runtime = regional_inference_asset_status()
+        if not runtime["required_assets_present"]:
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "message": "Regional inference assets are not ready on this server.",
+                    "asset_checks": runtime["asset_checks"],
+                    "next_steps": [
+                        "Run bash deploy/ibm-linuxone/run-regional-lstm.sh setup",
+                        "Run bash deploy/ibm-linuxone/run-regional-lstm.sh preflight",
+                        "Run bash deploy/ibm-linuxone/run-regional-lstm.sh train",
+                        "Retry /api/v1/models/status and this endpoint after the run succeeds",
+                    ],
+                },
+            )
+
+        with tempfile.TemporaryDirectory(prefix="floodwatch-regional-inference-") as tmp_dir:
+            output_file = Path(tmp_dir) / "forecast.json"
+            command = [
+                str(REGIONAL_ML_PYTHON),
+                str(REGIONAL_PREDICTOR),
+                "--observations", str(REGIONAL_OBSERVATIONS),
+                "--model-file", str(REGIONAL_MODEL_FILE),
+                "--scalers-file", str(REGIONAL_SCALERS_FILE),
+                "--report-file", str(REGIONAL_REPORT_FILE),
+                "--output-file", str(output_file),
+                "--lookback-days", "90",
+            ]
+            if chosen_station:
+                command.append(f"--station-id={chosen_station}")
+            env = os.environ.copy()
+            env.setdefault("OMP_NUM_THREADS", "2")
+            env.setdefault("MKL_NUM_THREADS", "2")
+            env.setdefault("OPENBLAS_NUM_THREADS", "2")
+            env.setdefault("NUMEXPR_NUM_THREADS", "2")
+            try:
+                completed = subprocess.run(
+                    command, capture_output=True, text=True, timeout=45,
+                    check=False, env=env,
+                )
+            except subprocess.TimeoutExpired as exc:
+                raise HTTPException(
+                    status_code=504,
+                    detail="Regional discharge inference exceeded the 45-second limit; inspect VM CPU/memory and model logs.",
+                ) from exc
+            except OSError as exc:
+                logger.exception("Could not start the configured regional ML Python executable.")
+                raise HTTPException(
+                    status_code=503,
+                    detail="Could not start the configured regional ML runtime; inspect server configuration and logs.",
+                ) from exc
+
+            if completed.returncode != 0:
+                logger.error(
+                    "Regional inference failed (exit=%s): %s",
+                    completed.returncode,
+                    ((completed.stderr or completed.stdout or "no runtime details")[-1800:]),
+                )
+                raise HTTPException(
+                    status_code=503,
+                    detail="Regional inference failed. Run the ML preflight and inspect the API service journal for the underlying error.",
+                )
+            if not output_file.is_file():
+                raise HTTPException(status_code=502, detail="Regional predictor finished without writing its output artifact.")
+            try:
+                payload = json.loads(output_file.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as exc:
+                logger.exception("Regional predictor output could not be parsed.")
+                raise HTTPException(status_code=502, detail="Regional predictor output was not valid JSON.") from exc
+
+        predictions = payload.get("forecast") if isinstance(payload, dict) else None
+        if not isinstance(predictions, list) or not predictions:
+            raise HTTPException(status_code=502, detail="Regional predictor output is missing its forecast list.")
+        for item in predictions:
+            if not isinstance(item, dict):
+                raise HTTPException(status_code=502, detail="Regional predictor output contains an invalid forecast row.")
+            try:
+                value = float(item["predicted_discharge_m3_s"])
+            except (KeyError, TypeError, ValueError) as exc:
+                raise HTTPException(status_code=502, detail="Regional forecast row is missing a numeric discharge prediction.") from exc
+            if not math.isfinite(value) or value < 0:
+                raise HTTPException(status_code=502, detail="Regional predictor output contains a non-finite or negative discharge prediction.")
+
+        # Never expose absolute server paths from the local inference subprocess.
+        payload.pop("model_artifact", None)
+        payload.pop("scalers_artifact", None)
+        payload["serving_metadata"] = {
+            "inference_mode": "on-demand saved-weight inference",
+            "served_at_utc": datetime.now(timezone.utc).isoformat(),
+            "cache_ttl_seconds": REGIONAL_INFERENCE_CACHE_TTL_SECONDS,
+            "cache_hit": False,
+            "input_observations_file": "configured normalized CWC/NWDP history",
+            "uses_future_rainfall_forcing": False,
+            "is_flood_probability": False,
+            "is_official_warning": False,
+            "note": "forecast_is_live is a source-history age heuristic only; it does not verify live sensor transmission. Discharge is not water level or inundation depth.",
+        }
+        _regional_inference_cache[cache_key] = (time.monotonic(), payload)
+        return json.loads(json.dumps(payload))
+    finally:
+        _regional_inference_lock.release()
 
 
 @app.get("/api/v1/weather")

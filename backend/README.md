@@ -9,7 +9,8 @@ This folder contains the versioned FastAPI service source.
 - `GET /api/v1/status` — provider and capability status.
 - `GET /api/v1/river-flow?latitude=19.15&longitude=77.30` — 90-day historical context and 7-day Open-Meteo Flood API/GloFAS discharge series; this is modelled external data, not a locally trained FloodWatch prediction.
 - `GET /api/v1/water-observations?state=Kerala&limit=100` — paginated published NWDP/NWIC snapshot with optional state, measurement kind, freshness, search, and nearby-coordinate/radius filters. Nearby results use only published station coordinates and include `distance_km`; records without usable coordinates are excluded. If the repo data file is absent on the server, it fetches the public snapshot from GitHub and caches it for five minutes.
-- `GET /api/v1/models/status` — model readiness report; confirms whether a locally trained forecast is available and lists prerequisites.
+- `GET /api/v1/models/status` — evaluation metrics plus a file-based readiness check for the local ML virtual environment, normalized observations, model weights, scalers and report.
+- `GET /api/v1/models/regional-discharge/forecast` — runs the saved-weight regional LSTM on demand when those local assets exist; accepts an optional exact `station_id`, returns seven daily discharge estimates, caches per-station results for 10 minutes, and returns HTTP 503 when required assets are missing.
 - `GET /api/v1/weather?latitude=19.15&longitude=77.30` — current Open-Meteo model conditions and two days of hourly forecast for coordinates within the prototype's South India coverage (latitude 7–21.8, longitude 73–87).
 
 The water endpoint returns source-reported measurements and labels freshness unknown if a naive timestamp has no reliable timezone. A snapshot's generation time is not the same as the time of every measurement.
@@ -21,51 +22,19 @@ The weather response preserves Open-Meteo's normal response fields (`current`, `
 From the repository root:
 
 ```bash
-docker build -f backend/Dockerfile -t floodwatch-api:0.3.0 .
+docker build -f backend/Dockerfile -t floodwatch-api:0.5.0 .
 docker run --rm -p 8000:8000 floodwatch-api:0.3.0
 ```
 
 The container runs as a non-root user and includes a health check. It fetches the published water snapshot from the repository because the image intentionally contains only the API source, not the full data directory. For a stable public deployment, put the service behind HTTPS, configure origin restrictions for the actual frontend domain, and use a persistent deployment rather than a temporary Quick Tunnel.
 
-## Update the existing IBM LinuxONE server
+## Deploy on the IBM Z / LinuxONE VM
 
-The running service is separate from GitHub Pages. Updating this source file in GitHub does not automatically update the Linux server.
+Use the [Windows SSH and Ubuntu/LinuxONE runbook](../deploy/ibm-linuxone/README.md), which uses the local key file `FloodWatchKey.pem` without adding it to the repository. The API service remains on `127.0.0.1:8000`; it is separate from GitHub Pages.
 
-1. Open a Windows PowerShell session and connect to `linux1@148.100.98.93` with your existing SSH key.
-2. In the Linux shell, check whether Uvicorn is already running with `pgrep -af 'uvicorn main:app'`. If a process is running, stop that specific PID with `kill <PID>` before starting another one. Do not kill unrelated processes.
-3. Run these commands in the Linux shell, one at a time:
+To enable on-demand regional inference on the VM, run the ML runner's `setup`, `preflight` and `train` modes. The API endpoint `/api/v1/models/regional-discharge/forecast` looks for the normalized CWC/NWDP archive, model weights, scalers, report, and the ML virtual environment. When ready, it invokes `predict_regional_lstm.py` and returns the seven-day discharge forecast. It returns a clear HTTP 503 if assets are missing; it does not invent fallback predictions.
 
-```bash
-cd ~/floodwatch-api
-source .venv/bin/activate
-cp main.py "main.py.backup.$(date +%Y%m%d-%H%M%S)"
-curl -fL "https://raw.githubusercontent.com/PantheonDeified/FloodWatch-South-India/main/backend/main.py" -o main.py.new
-python -m py_compile main.py.new
-mv main.py.new main.py
-python -m uvicorn main:app --host 0.0.0.0 --port 8000
-```
-
-4. Keep the Linux terminal running Uvicorn while testing. Run the Cloudflare Quick Tunnel separately in the Windows PowerShell window where you launch `cloudflared`. If compilation fails, do not replace the running source; share the error and restore the backup if needed. Updating GitHub does not automatically update the Linux server.
-
-## Recommended: keep the API running with systemd
-
-The included service file assumes the server account is `linux1` and the application directory is `/home/linux1/floodwatch-api`. It restarts Uvicorn if it crashes and starts the API at boot. Updating code in GitHub still requires pulling/downloading the latest `main.py` onto the server.
-
-After updating `main.py` and compiling it successfully, use these steps on the Linux server. First inspect any existing Uvicorn process; if one is still running from an earlier `nohup` command, stop only that process before enabling the service so port 8000 is not already occupied.
-
-```bash
-pgrep -af '[u]vicorn main:app' || true
-# If the command above shows an old Uvicorn PID, stop that specific PID:
-# kill <PID>
-curl -fL "https://raw.githubusercontent.com/PantheonDeified/FloodWatch-South-India/main/backend/floodwatch-api.service" -o /tmp/floodwatch-api.service
-sudo install -m 644 /tmp/floodwatch-api.service /etc/systemd/system/floodwatch-api.service
-sudo systemctl daemon-reload
-sudo systemctl enable --now floodwatch-api
-sudo systemctl status --no-pager floodwatch-api
-curl --max-time 10 http://127.0.0.1:8000/health
-```
-
-If it does not start, inspect the logs with `sudo journalctl -u floodwatch-api -n 60 --no-pager`. Keep the Cloudflare Quick Tunnel running separately on your Windows computer when you need HTTPS access during the demo.
+This route is a software inference path, not validation of a flood-warning system. It is not connected to the frontend risk colours and does not return flood probability, water level, inundation or evacuation recommendations.
 
 ## Install dependencies and run backend tests
 

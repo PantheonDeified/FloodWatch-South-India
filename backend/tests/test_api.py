@@ -68,7 +68,7 @@ def test_status_lists_weather_proxy():
     assert data["model_readiness_endpoint"] == "/api/v1/models/status"
     assert "GloFAS proxy available" in data["flood_forecast_model"]
     assert "completed a historical holdout evaluation" in data["flood_forecast_model"]
-    assert "not served by this API" in data["flood_forecast_model"]
+    assert "/api/v1/models/regional-discharge/forecast" in data["flood_forecast_model"]
 
 
 def test_weather_returns_provider_payload_and_metadata(monkeypatch):
@@ -129,17 +129,23 @@ def test_weather_rejects_provider_payload_without_current_conditions(monkeypatch
     assert "did not include current conditions" in response.json()["detail"]
 
 
-def test_model_status_reports_regional_metrics_without_claiming_operational_forecast():
+def test_model_status_reports_metrics_and_local_inference_readiness():
     response = client.get("/api/v1/models/status")
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "regional_lstm_trained_evaluated_not_served"
+    expected_assets_ready = main.regional_inference_asset_status()["required_assets_present"]
+    assert data["status"] == (
+        "regional_lstm_local_inference_assets_ready"
+        if expected_assets_ready else
+        "regional_lstm_evaluated_local_inference_assets_missing"
+    )
     assert data["validated_south_india_flood_forecast"] is False
-    assert data["live_inference_available"] is False
-    assert data["model_served_by_api"] is False
+    assert data["live_sensor_data_verified"] is False
+    assert data["on_demand_inference_available"] is expected_assets_ready
+    assert data["model_served_by_api"] is expected_assets_ready
     assert data["connected_to_frontend_risk_score"] is False
+    assert data["inference_endpoint"] == "/api/v1/models/regional-discharge/forecast"
     regional = data["regional_model"]
-    assert regional["status"] == "trained_and_evaluated_in_github_actions"
     assert regional["states"] == [
         "Andhra Pradesh", "Karnataka", "Kerala", "Tamil Nadu", "Telangana"
     ]
@@ -150,9 +156,114 @@ def test_model_status_reports_regional_metrics_without_claiming_operational_fore
     assert metrics["raw_lstm"]["rmse"] > metrics["persistence_baseline"]["rmse"]
     assert metrics["selected_lstm_persistence_blend"]["rmse"] < metrics["persistence_baseline"]["rmse"]
     assert metrics["selected_blend_rmse_skill_vs_persistence"] > 0.07
-    assert "available_as_temporary_github_actions_artifact" in data["trained_model_artifact"]
+    assert "not available as local server artifacts" in data["trained_model_artifact"] or "Local model weights" in data["trained_model_artifact"]
     assert data["single_station_test_metrics"]["high_flow_nse"] < 0
-    assert "not a flood-probability" in data["message"]
+    assert "not flood probability" in data["message"]
+
+
+def _install_fake_local_model_assets(monkeypatch, tmp_path):
+    monkeypatch.setattr(main, "REGIONAL_ML_PYTHON", Path(sys.executable))
+    observation_file = tmp_path / "observations.csv"
+    observation_file.write_text("station_id,state,observed_at,discharge_m3_s\\n", encoding="utf-8")
+    monkeypatch.setattr(main, "REGIONAL_OBSERVATIONS", observation_file)
+    model_file = tmp_path / "regional_discharge_lstm.pt"
+    scaler_file = tmp_path / "regional_discharge_lstm.scalers.json"
+    report_file = tmp_path / "regional_discharge_lstm.report.json"
+    for path in (model_file, scaler_file, report_file):
+        path.write_text("test", encoding="utf-8")
+    monkeypatch.setattr(main, "REGIONAL_MODEL_FILE", model_file)
+    monkeypatch.setattr(main, "REGIONAL_SCALERS_FILE", scaler_file)
+    monkeypatch.setattr(main, "REGIONAL_REPORT_FILE", report_file)
+    main._regional_inference_cache.clear()
+
+
+def test_regional_inference_returns_503_until_local_assets_exist(monkeypatch, tmp_path):
+    missing = tmp_path / "missing"
+    monkeypatch.setattr(main, "REGIONAL_ML_PYTHON", missing / "python")
+    monkeypatch.setattr(main, "REGIONAL_OBSERVATIONS", missing / "observations.csv")
+    monkeypatch.setattr(main, "REGIONAL_MODEL_FILE", missing / "model.pt")
+    monkeypatch.setattr(main, "REGIONAL_SCALERS_FILE", missing / "scalers.json")
+    monkeypatch.setattr(main, "REGIONAL_REPORT_FILE", missing / "report.json")
+    response = client.get("/api/v1/models/regional-discharge/forecast")
+    assert response.status_code == 503
+    details = response.json()["detail"]
+    assert "assets are not ready" in details["message"]
+    assert details["asset_checks"]["model_weights"] is False
+    assert any(step.endswith("bash deploy/ibm-linuxone/run-regional-lstm.sh train") for step in details["next_steps"])
+
+
+def test_regional_inference_runs_saved_predictor_and_caches_result(monkeypatch, tmp_path):
+    from types import SimpleNamespace
+
+    _install_fake_local_model_assets(monkeypatch, tmp_path)
+    calls = {"count": 0}
+
+    def fake_run(command, **kwargs):
+        calls["count"] += 1
+        output_path = Path(command[command.index("--output-file") + 1])
+        requested = next((arg.split("=", 1)[1] for arg in command if arg.startswith("--station-id=")), "TEST-STATION")
+        payload = {
+            "model_type": "validation_selected_lstm_persistence_blend",
+            "status": "experimental_research_only",
+            "station_id": requested,
+            "state": "Karnataka",
+            "forecast_origin_date": "2026-10-17",
+            "history_window_end": "2026-10-17",
+            "forecast_is_live": False,
+            "history_freshness": "stale_historical_replay",
+            "forecast": [
+                {"date": "2026-10-18", "predicted_discharge_m3_s": 12.5,
+                 "lstm_discharge_m3_s": 10.0, "persistence_baseline_discharge_m3_s": 15.0}
+            ],
+            "model_artifact": "/private/server/path/model.pt",
+            "scalers_artifact": "/private/server/path/scalers.json",
+        }
+        output_path.write_text(json.dumps(payload), encoding="utf-8")
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(main.subprocess, "run", fake_run)
+    response = client.get(
+        "/api/v1/models/regional-discharge/forecast",
+        params={"station_id": "TEST-STATION"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["station_id"] == "TEST-STATION"
+    assert data["forecast"][0]["predicted_discharge_m3_s"] == 12.5
+    assert data["serving_metadata"]["inference_mode"] == "on-demand saved-weight inference"
+    assert data["serving_metadata"]["cache_hit"] is False
+    assert "model_artifact" not in data and "scalers_artifact" not in data
+
+    cached = client.get(
+        "/api/v1/models/regional-discharge/forecast",
+        params={"station_id": "TEST-STATION"},
+    )
+    assert cached.status_code == 200
+    assert cached.json()["serving_metadata"]["cache_hit"] is True
+    assert calls["count"] == 1
+
+
+def test_regional_inference_rejects_invalid_station_id_and_negative_predictions(monkeypatch, tmp_path):
+    from types import SimpleNamespace
+
+    _install_fake_local_model_assets(monkeypatch, tmp_path)
+    invalid_id = client.get("/api/v1/models/regional-discharge/forecast", params={"station_id": "--help"})
+    assert invalid_id.status_code == 422
+
+    def fake_run(command, **kwargs):
+        output_path = Path(command[command.index("--output-file") + 1])
+        output_path.write_text(json.dumps({
+            "status": "experimental_research_only",
+            "station_id": "TEST-STATION",
+            "forecast": [{"predicted_discharge_m3_s": -2.0}],
+        }), encoding="utf-8")
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(main.subprocess, "run", fake_run)
+    response = client.get("/api/v1/models/regional-discharge/forecast")
+    assert response.status_code == 502
+    assert "negative discharge prediction" in response.json()["detail"]
+
 
 
 def test_water_observations_are_paginated_and_labelled(monkeypatch):

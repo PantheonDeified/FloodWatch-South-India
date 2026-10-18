@@ -21,8 +21,9 @@ Optional environment:
   FLOODWATCH_SKIP_DOWNLOAD=1  # use existing normalized data only
 
 The pipeline is tested with Python 3.12 and PyTorch 2.10 on the GitHub Actions
-runner. Setup installs dependencies automatically on common x86_64 Linux hosts.
-On s390x, it deliberately refuses to install an unverified PyTorch wheel.
+runner. Setup installs a pinned CPU build from the official PyTorch wheel index.
+That index advertises CPython 3.12 Linux s390x wheels; setup and preflight still
+must pass on the actual VM before claiming that training works there.
 HELP
   exit 0
 fi
@@ -82,13 +83,14 @@ if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
 fi
 
 if "$PYTHON_BIN" - <<'PY'
-import sys
+import platform, sys
 try:
     import numpy, pandas, torch
 except Exception as exc:
     print(f"Missing or unimportable ML dependency: {exc}", file=sys.stderr)
     raise SystemExit(2)
 version = tuple(int(part) for part in torch.__version__.split("+")[0].split(".")[:2])
+print(f"Architecture: {platform.machine()}")
 print(f"Python {sys.version.split()[0]}")
 print(f"NumPy {numpy.__version__} · pandas {pandas.__version__} · PyTorch {torch.__version__}")
 if version < (2, 2):
@@ -105,12 +107,14 @@ else
   status=$?
   if [[ "$ARCH" == "s390x" ]]; then
     cat >&2 <<'MSG'
-This IBM Z/LinuxONE host cannot yet run the regional LSTM with the Python/PyTorch
-environment currently selected. Do not install an x86_64 wheel. Keep the
-regional training/inference in GitHub Actions, whose current workflow is tested,
-and run the lightweight FastAPI service on this VM. See:
+The selected Python/PyTorch environment failed its import/API check on this s390x
+host. The official PyTorch CPU wheel index currently lists torch 2.10.0+cpu
+wheels for CPython 3.12 linux_s390x, so this failure does not by itself prove
+that IBM Z is unsupported. Review the setup/pip error, retry setup, then rerun
+preflight. Do not install an x86_64 wheel or bypass the runtime checks.
+Use the tested GitHub Actions workflow as a reproducible fallback if needed:
   https://github.com/PantheonDeified/FloodWatch-South-India/actions/workflows/train-regional-lstm.yml
-  https://ibm.github.io/pytorch-on-z/
+  https://download.pytorch.org/whl/cpu/torch/
 MSG
   else
     echo "Install the ML requirements with: bash deploy/ibm-linuxone/run-regional-lstm.sh setup" >&2

@@ -318,7 +318,16 @@ button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,s
     <p><a href="https://github.com/PantheonDeified/FloodWatch-South-India/actions/workflows/train-regional-lstm.yml" target="_blank" rel="noopener noreferrer">Retraining workflow ↗</a> · <a href="https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39126986154" target="_blank" rel="noopener noreferrer">Training/inference evidence ↗</a> · <a href="https://github.com/PantheonDeified/FloodWatch-South-India/blob/main/data_pipeline/SUBMISSION_MODEL_CARD.md" target="_blank" rel="noopener noreferrer">Model card ↗</a></p>
     <div class="warning"><b>Scope:</b> this is a discharge research model, not a flood probability, inundation estimate or official warning. It does not colour the public map.</div>
   </details>
-</section>
+
+  <div class="compact-details" id="regionalMlRuntimePanel">
+    <div class="section-title-row"><h3>Run the model on the connected VM</h3><span class="mini-tag">On demand</span></div>
+    <p>After the LinuxONE API and ML setup pass their checks, this calls the saved-weight regional LSTM endpoint. It returns discharge estimates for a selected station, not a prediction for the clicked map coordinate.</p>
+    <label for="regionalMlStationId">Optional exact station ID</label>
+    <input id="regionalMlStationId" type="text" maxlength="120" placeholder="Leave blank for the default eligible station" style="width:100%;min-width:0;margin-top:5px">
+    <button type="button" class="primary" id="runRegionalMlInference" style="width:100%;margin-top:9px">Run regional discharge inference</button>
+    <div class="history-note" id="regionalMlRuntimeStatus" aria-live="polite">Not run yet. Connect the HTTPS API in the Backend API panel (open this page with ?devtools=1), then use this button.</div>
+    <pre id="regionalMlRuntimeOutput" hidden style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:340px;overflow:auto;background:#07111d;border:1px solid #26364c;border-radius:8px;padding:10px;font-size:10px"></pre>
+  </div></section>
 <section class="section"><h2>Next 24 hours</h2><div id="hourly" class="muted">Loading forecast when a location is selected.</div></section>
 <section class="section" id="officialDataCatalog">
 <div class="section-title-row"><h2>Official sources</h2><span class="mini-tag">NASA · IMD · CWC</span></div>
@@ -384,6 +393,47 @@ try{
  if(apiParam){const parsedApi=new URL(apiParam);if(parsedApi.protocol==='https:'&&!parsedApi.username&&!parsedApi.password&&parsedApi.pathname==='/'&&!parsedApi.search&&!parsedApi.hash){localStorage.setItem('floodwatchApiBaseUrl',parsedApi.origin)}}
 }catch(e){}
 try{apiUrlInput.value=localStorage.getItem('floodwatchApiBaseUrl')||''}catch(e){}
+async function runRegionalMlForecast(){
+ const button=$('runRegionalMlInference'),statusBox=$('regionalMlRuntimeStatus'),output=$('regionalMlRuntimeOutput');
+ if(!button||!statusBox||!output)return;
+ let apiBase='';
+ try{apiBase=(localStorage.getItem('floodwatchApiBaseUrl')||'').replace(/\/+$/,'')}catch(e){}
+ if(!apiBase){
+  statusBox.textContent='No API origin is saved in this browser. Open this page with ?devtools=1, enter the server’s HTTPS API origin in the Backend API panel, click Test API, then retry.';
+  output.hidden=true;return;
+ }
+ try{
+  const parsed=new URL(apiBase);
+  if(parsed.protocol!=='https:'||parsed.username||parsed.password||parsed.search||parsed.hash||(parsed.pathname!=='/'&&parsed.pathname!==''))throw Error('The saved backend must be a bare HTTPS origin.');
+  apiBase=parsed.origin;
+ }catch(e){statusBox.textContent=e.message||'The saved backend URL is invalid.';output.hidden=true;return}
+ const stationId=$('regionalMlStationId').value.trim();
+ const params=new URLSearchParams();if(stationId)params.set('station_id',stationId);
+ const endpoint=apiBase+'/api/v1/models/regional-discharge/forecast'+(params.toString()?'?'+params.toString():'');
+ button.disabled=true;button.textContent='Running inference…';
+ statusBox.textContent='Requesting saved-weight inference from the configured API. The first run may take several seconds; missing local model assets are reported instead of replaced with sample data.';
+ output.hidden=true;output.textContent='';
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),50000);
+ try{
+  const response=await fetch(endpoint,{method:'GET',cache:'no-store',headers:{Accept:'application/json'},signal:controller.signal});
+  const raw=await response.text();let payload;
+  try{payload=JSON.parse(raw)}catch(e){throw Error('API returned a non-JSON response (HTTP '+response.status+').')}
+  if(!response.ok){
+   const detail=payload?.detail;
+   throw Error(typeof detail==='string'?detail:detail?JSON.stringify(detail):'API returned HTTP '+response.status+'.');
+  }
+  if(!payload||!Array.isArray(payload.forecast)||!payload.forecast.length)throw Error('Response is missing its discharge forecast list.');
+  const freshness=payload.history_freshness||'unknown freshness';
+  const through=payload.history_window_end||'unknown date';
+  statusBox.textContent='Inference completed · station '+(payload.station_id||'unknown')+' ('+(payload.state||'state unknown')+') · source history through '+through+' · freshness '+freshness+'. This is discharge output, not flood probability, water level, or an official warning.';
+  output.textContent=JSON.stringify(payload,null,2);output.hidden=false;
+ }catch(e){
+  const message=e.name==='AbortError'?'Timed out while the model endpoint was running. Check VM status, model files and service logs.':(e.message||'Inference request failed.');
+  statusBox.textContent='Inference unavailable: '+message;
+ }finally{
+  clearTimeout(timer);button.disabled=false;button.textContent='Run regional discharge inference';
+ }
+}
 async function checkBackendApi(){
  const raw=apiUrlInput.value.trim(),statusBox=$('apiConnectionStatus'),details=$('apiStatusDetails');
  if(!raw){statusBox.textContent='Enter the HTTPS URL printed by cloudflared first.';details.hidden=true;return}
@@ -435,6 +485,7 @@ async function checkBackendApi(){
  }finally{apiCheckButton.disabled=false;apiCheckButton.textContent='Test API'}
 }
 apiCheckButton.addEventListener('click',checkBackendApi);
+$('runRegionalMlInference').addEventListener('click',runRegionalMlForecast);
 apiUrlInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();checkBackendApi()}});
 $('clearApiButton').addEventListener('click',()=>{apiUrlInput.value='';try{localStorage.removeItem('floodwatchApiBaseUrl')}catch(e){}$('apiConnectionStatus').textContent='Saved URL cleared. Paste an HTTPS API URL to test again.';$('apiStatusDetails').hidden=true});
 
