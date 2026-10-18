@@ -15,6 +15,17 @@ The water endpoint returns source-reported measurements and labels freshness unk
 
 The weather response preserves Open-Meteo's normal response fields (`current`, `hourly`, `timezone`) and adds a `_floodwatch` metadata object. The values are gridded model estimates and forecasts, not direct measurements from a local station. This API does not issue a flood probability or official warning.
 
+## Build a container image
+
+From the repository root:
+
+```bash
+docker build -f backend/Dockerfile -t floodwatch-api:0.3.0 .
+docker run --rm -p 8000:8000 floodwatch-api:0.3.0
+```
+
+The container runs as a non-root user and includes a health check. It fetches the published water snapshot from the repository because the image intentionally contains only the API source, not the full data directory. For a stable public deployment, put the service behind HTTPS, configure origin restrictions for the actual frontend domain, and use a persistent deployment rather than a temporary Quick Tunnel.
+
 ## Update the existing IBM LinuxONE server
 
 The running service is separate from GitHub Pages. Updating this source file in GitHub does not automatically update the Linux server.
