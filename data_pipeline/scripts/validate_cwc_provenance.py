@@ -16,6 +16,7 @@ REQUIRED_NORMALIZED = {
     "source_resource_title", "source_sha256", "source_provenance_status",
 }
 SUCCESS_STATUSES = {"downloaded", "already_downloaded"}
+MAX_MISMATCH_SAMPLES = 100
 SHA256_PATTERN = re.compile(r"^[0-9a-fA-F]{64}$")
 
 
@@ -67,6 +68,14 @@ def validate(
         {"file": name, "problem": "successful manifest entry has no raw CSV file on disk"}
         for name in manifest_files_missing_on_disk
     )
+    mismatch_count = len(mismatches)
+    mismatches = mismatches[:MAX_MISMATCH_SAMPLES]
+
+    def record_mismatch(item: dict[str, Any]) -> None:
+        nonlocal mismatch_count
+        mismatch_count += 1
+        if len(mismatches) < MAX_MISMATCH_SAMPLES:
+            mismatches.append(item)
 
     report = json.loads(quality_report_path.read_text(encoding="utf-8"))
     per_file = report.get("source_provenance_by_file")
@@ -85,7 +94,7 @@ def validate(
         expected_title = str(item.get("title") or "").strip()
         expected_sha = str(item.get("sha256") or "").strip().lower()
         if not expected_resource or not expected_download or not expected_dataset or not expected_title:
-            mismatches.append({"file": raw_path.name, "problem": "manifest entry lacks exact resource metadata"})
+            record_mismatch({"file": raw_path.name, "problem": "manifest entry lacks exact resource metadata"})
         if not SHA256_PATTERN.fullmatch(expected_sha):
             mismatches.append({"file": raw_path.name, "problem": "manifest SHA-256 is missing or malformed"})
         file_report = per_file.get(raw_path.name)
@@ -158,7 +167,7 @@ def validate(
 
     missing_rows = sorted(name for name in manifest if name not in row_counts)
     result = {
-        "status": "passed" if not mismatches and total_rows > 0 else "failed",
+        "status": "passed" if mismatch_count == 0 and total_rows > 0 else "failed",
         "raw_csv_files": len(raw_files),
         "manifest_success_files": len(manifest),
         "normalized_rows": total_rows,
@@ -166,9 +175,9 @@ def validate(
         "normalized_rows_by_source_file": dict(sorted(row_counts.items())),
         "files_with_no_normalized_rows": missing_rows,
         "raw_sha256_recomputed": verify_raw_sha256,
-        "mismatch_count": len(mismatches),
-        "mismatches": mismatches[:100],
-        "mismatches_truncated": len(mismatches) > 100,
+        "mismatch_count": mismatch_count,
+        "mismatches": mismatches,
+        "mismatches_truncated": mismatch_count > len(mismatches),
         "warning": "Provenance integrity does not validate station coordinates, measurement accuracy, units beyond schema, or forecast skill.",
     }
     return result
