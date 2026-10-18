@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - '.github/workflows/production-smoke-check.yml'
+      - 'index.html'
+      - 'data/water-observations.json'
   workflow_dispatch:
     inputs:
       backend_base_url:
@@ -52,9 +54,15 @@ jobs:
               print(f"PASS {name}: HTTP {status}, {len(body)} bytes, {content_type}")
 
           html = responses["site"][0].decode("utf-8", errors="replace")
+          # Regression markers guard the previously implemented map/data features.
           for marker in ("FloodWatch", "leaflet", "water-observations.json",
-                         "infraEvidenceForm", "initInfrastructureRegister",
-                         "floodwatch.infrastructureEvidence.v1"):
+                         'data-overlay="rain"', 'data-overlay="cloud"',
+                         'data-overlay="wind"', 'data-overlay="cyclone"',
+                         "ERA5-Land", "waterRows", "dischargeInterpretation",
+                         "hourly", "infraEvidenceForm", "initInfrastructureRegister",
+                         "floodwatch.infrastructureEvidence.v1",
+                         "cwc.gov.in/national-register-large-dams",
+                         "sachet.ndma.gov.in"):
               if marker.casefold() not in html.casefold():
                   raise SystemExit(f"Deployed page is missing expected marker: {marker}")
           print("PASS deployed page contains expected app/map/data/infrastructure-evidence markers")
