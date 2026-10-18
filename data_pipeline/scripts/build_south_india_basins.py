@@ -17,7 +17,7 @@ import sys
 import geopandas as gpd
 import pandas as pd
 
-OFFICIAL_SOURCE = 'https://data.hydrosheds.org/file/hydrobasins/standard/hybas_as_lev06_v1c.zip'
+OFFICIAL_SOURCE = 'https://data.hydrosheds.org/file/hydrobasins/standard/hybas_as_lev01-12_v1c.zip'
 ATTRIBUTION = 'HydroBASINS v1c, Lehner & Grill (2013), HydroSHEDS; https://www.hydrosheds.org/products/hydrobasins'
 
 def find_field(columns, options):
@@ -119,7 +119,7 @@ def main() -> int:
         shape = extract_shapefile(args.basins_zip, pathlib.Path(temp))
         metadata = build_layer(shape, args.states, args.output, args.simplify_degrees)
     args.metadata.parent.mkdir(parents=True, exist_ok=True)
-    args.metadata.write_text(json.dumps(metadata, indent=2) + '\\n', encoding='utf-8')
+    args.metadata.write_text(json.dumps(metadata, indent=2) + '\n', encoding='utf-8')
     print(json.dumps(metadata, indent=2))
     return 0
 
