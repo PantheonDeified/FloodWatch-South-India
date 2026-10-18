@@ -39,3 +39,18 @@ The downloaded CWC archives include gaps and duplicate observations. The normali
 3. Add historical rainfall aligned to verified station coordinates and valid times; later add forecast rainfall from a documented forecast source.
 4. Build a multi-gauge/basin-aware model and evaluate flood-event recall, lead-time skill and uncertainty.
 5. Only after independent validation, show experimental estimates on the map with clear provenance and status labels.
+
+## Inference after training
+
+After downloading the artifact and preparing a normalized observations CSV with the same station IDs, run the matching inference script:
+
+```bash
+python data_pipeline/scripts/predict_discharge_lstm.py \\
+  --observations data_pipeline/output/cwc_discharge_normalized.csv \\
+  --station-id "karnataka|yadgir|16.73750000|77.12527778" \\
+  --model data_pipeline/output/models/discharge_lstm_karnataka_yadgir_16.73750000_77.12527778.pt \\
+  --scalers data_pipeline/output/models/discharge_lstm_karnataka_yadgir_16.73750000_77.12527778.scalers.npz \\
+  --output data_pipeline/output/experimental-discharge-forecast.csv
+```
+
+The script refuses a missing value in the most recent lookback window and writes a metadata sidecar that labels stale observations. Predictions should not be displayed as live unless the last observation is recent and the model has passed independent event validation.
