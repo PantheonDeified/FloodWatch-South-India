@@ -7,8 +7,7 @@ import pandas as pd
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
-STATES = ["Andhra Pradesh", "Karnataka", "Kerala", "Tamil Nadu",
-          "Telangana", "Puducherry", "Goa"]
+STATES = ["Andhra Pradesh", "Karnataka", "Kerala", "Tamil Nadu", "Telangana"]
 
 class RegionalLSTM(nn.Module):
     def __init__(self, horizon, hidden_size=48, num_layers=1):
