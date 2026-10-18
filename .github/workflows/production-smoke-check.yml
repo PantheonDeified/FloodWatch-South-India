@@ -112,6 +112,7 @@ jobs:
           import xml.etree.ElementTree as ET
 
           sources = [
+              ("NRSC state flood-hazard map cache", "https://bhuvan-ras2.nrsc.gov.in/mapcache"),
               ("NRSC historic flood hazard (1998–2007)", "https://bhuvan-ras2.nrsc.gov.in/cgi-bin/hazard.exe"),
               ("NRSC historic flood annual layers (1999–2010)", "https://bhuvan-ras2.nrsc.gov.in/cgi-bin/flood.exe"),
           ]
