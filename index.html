@@ -161,16 +161,22 @@
   <form id="infraEvidenceForm" class="infra-form">
     <label for="infraType">Evidence category</label>
     <select id="infraType" required>
-      <option value="Dam/reservoir inspection or safety report">Dam/reservoir inspection or safety report</option>
-      <option value="Reservoir level, inflow, outflow or release bulletin">Reservoir level, inflow, outflow or release bulletin</option>
-      <option value="Embankment, levee or flood defence">Embankment, levee or flood defence</option>
-      <option value="Drainage, culvert blockage or maintenance">Drainage, culvert blockage or maintenance</option>
-      <option value="Floodplain, land-use or development record">Floodplain, land-use or development record</option>
-      <option value="Official warning or response timeline">Official warning or response timeline</option>
-      <option value="Other public infrastructure record">Other public infrastructure record</option>
+      <option value="Dam/gate malfunction or abnormal release">Dam/gate malfunction or abnormal release</option>
+      <option value="Dam release / gate operation">Dam release / gate operation (only unusually high/abnormal release can affect score)</option>
+      <option value="Embankment breach or erosion">Embankment breach or erosion</option>
+      <option value="Drainage/culvert blockage">Drainage / culvert blockage</option>
+      <option value="Floodplain obstruction / documented land-use change">Documented floodplain obstruction / land-use change</option>
+      <option value="Dam/reservoir inspection or safety report">Inspection or safety report (accountability only; not assumed unsafe)</option>
+      <option value="Official warning or response timeline">Official warning / response timeline (accountability only)</option>
+      <option value="Other public infrastructure record">Other public infrastructure record (not scored automatically)</option>
     </select>
     <label for="infraPlace">Facility / place / river (no sensitive security details)</label>
     <input id="infraPlace" maxlength="140" required placeholder="e.g., named reservoir, district or river reach">
+    <label for="infraLatitude">Latitude of affected public location (required for map scoring)</label>
+    <input id="infraLatitude" type="number" step="any" min="-90" max="90" required placeholder="e.g., 15.12">
+    <label for="infraLongitude">Longitude of affected public location (required for map scoring)</label>
+    <input id="infraLongitude" type="number" step="any" min="-180" max="180" required placeholder="e.g., 76.82">
+    <label style="display:flex;gap:8px;align-items:flex-start;font-size:11px"><input id="infraHydrologyLinked" type="checkbox" style="width:auto;min-width:0;flex:0 0 auto;margin-top:2px"> Source explicitly verifies hydrologic connection to the affected downstream area (required for dam release/malfunction scoring)</label>
     <label for="infraAgency">Issuing agency / source organization</label>
     <input id="infraAgency" maxlength="140" required placeholder="Agency named in the document">
     <label for="infraDate">Document or observation date</label>
@@ -1365,6 +1371,7 @@ function initInfrastructureRegister(){
    return '<article class="infra-entry"><strong>'+escapeHtml(r.category)+' — '+escapeHtml(r.place)+'</strong>'+
     '<div class="infra-meta">Agency: '+escapeHtml(r.agency)+' · Evidence date: '+escapeHtml(r.date)+' · Review status: '+escapeHtml(r.status)+'</div>'+
     (r.notes?'<p>'+escapeHtml(r.notes)+'</p>':'')+
+    '<p class="infra-meta">Location: '+escapeHtml(Number.isFinite(Number(r.latitude))?Number(r.latitude).toFixed(4):'not saved')+', '+escapeHtml(Number.isFinite(Number(r.longitude))?Number(r.longitude).toFixed(4):'not saved')+' · Hydrology link: '+(r.hydrologyLinked?'source-verified':'not verified')+'</p>'+
     (url?'<p>Public source: <a href="'+escapeHtml(url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(url)+'</a></p>':'<p class="infra-meta">Source URL is invalid; entry needs correction.</p>')+
     '<div class="infra-meta">Saved in this browser: '+escapeHtml(r.savedAt||'date unknown')+'</div>'+
     '<button type="button" data-infra-delete="'+i+'">Delete local entry</button></article>';
@@ -1376,7 +1383,9 @@ function initInfrastructureRegister(){
   const src=sourceUrl($('infraSource').value);
   if(!src){$('infraFormStatus').textContent='Please provide a valid public HTTPS source URL.';return}
   if(records.length>=100){$('infraFormStatus').textContent='This local notebook holds up to 100 entries. Export and clear some first.';return}
-  records.unshift({category:$('infraType').value,place:$('infraPlace').value.trim(),agency:$('infraAgency').value.trim(),date:$('infraDate').value,status:$('infraStatus').value,sourceUrl:src,notes:$('infraNotes').value.trim(),savedAt:new Date().toISOString()});
+  const lat=Number($('infraLatitude').value),lon=Number($('infraLongitude').value);
+  if(!Number.isFinite(lat)||lat < -90||lat > 90||!Number.isFinite(lon)||lon < -180||lon > 180){$('infraFormStatus').textContent='Enter valid affected-location coordinates. The map score needs a documented location.';return}
+  records.unshift({category:$('infraType').value,place:$('infraPlace').value.trim(),latitude:lat,longitude:lon,hydrologyLinked:$('infraHydrologyLinked').checked,agency:$('infraAgency').value.trim(),date:$('infraDate').value,status:$('infraStatus').value,sourceUrl:src,notes:$('infraNotes').value.trim(),savedAt:new Date().toISOString()});
   persist();render();form.reset();
  });
  $('infraEvidenceList').addEventListener('click',e=>{
