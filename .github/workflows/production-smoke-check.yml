@@ -104,6 +104,42 @@ jobs:
               raise SystemExit(f"Water snapshot generation time is unexpectedly in the future ({age_hours:.1f}h)")
           PY
 
+      - name: Discover official NRSC historical flood hazard map services
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          import urllib.request
+          import xml.etree.ElementTree as ET
+
+          sources = [
+              ("NRSC historic flood hazard (1998–2007)", "https://bhuvan-ras2.nrsc.gov.in/cgi-bin/hazard.exe"),
+              ("NRSC historic flood annual layers (1999–2010)", "https://bhuvan-ras2.nrsc.gov.in/cgi-bin/flood.exe"),
+          ]
+          ns = {"wms": "http://www.opengis.net/wms"}
+          for label, base in sources:
+              url = base + "?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetCapabilities"
+              try:
+                  req = urllib.request.Request(url, headers={"User-Agent": "FloodWatch-source-discovery/1.0"})
+                  with urllib.request.urlopen(req, timeout=18) as response:
+                      raw = response.read()
+                      print(f"SERVICE {label}: HTTP {response.status}, {len(raw)} bytes")
+                  root = ET.fromstring(raw)
+                  layers = []
+                  for layer in root.findall(".//wms:Layer", ns):
+                      name = layer.findtext("wms:Name", default="", namespaces=ns).strip()
+                      title = layer.findtext("wms:Title", default="", namespaces=ns).strip()
+                      if name:
+                          layers.append((name, title))
+                  if layers:
+                      print("DISCOVERED LAYERS:")
+                      for name, title in layers:
+                          print(f"  {name} | {title}")
+                  else:
+                      print("WARN service answered, but no named WMS layers were parsed; inspect the response schema.")
+              except Exception as exc:
+                  print(f"WARN {label}: capability request could not be verified ({exc})")
+          PY
+
       - name: Check optional live backend API
         env:
           BACKEND_BASE_URL: ${{ github.event.inputs.backend_base_url || '' }}
