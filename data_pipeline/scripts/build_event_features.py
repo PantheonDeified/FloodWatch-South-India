@@ -34,8 +34,8 @@ def main() -> int:
     obs = pd.read_csv(args.observations, dtype={"station_id": str})
     if not {"station_id", "date", "precipitation_sum"}.issubset(weather.columns):
         raise SystemExit("Weather file needs station_id, date, precipitation_sum.")
-    if not {"station_id", "observed_at", "kind", "value"}.issubset(obs.columns):
-        raise SystemExit("Observations must include station_id, observed_at, kind, and value.")
+    if not {"station_id", "observed_at", "kind", "value", "unit"}.issubset(obs.columns):
+        raise SystemExit("Observations must include station_id, observed_at, kind, value, and normalized unit.")
 
     weather["date"] = pd.to_datetime(weather["date"], errors="coerce").dt.strftime("%Y-%m-%d")
     numeric_weather = [
@@ -48,6 +48,25 @@ def main() -> int:
         weather[col] = pd.to_numeric(weather[col], errors="coerce")
     weather = weather.dropna(subset=["station_id", "date"]).sort_values(["station_id", "date"])
     obs["value"] = pd.to_numeric(obs["value"], errors="coerce")
+    obs["unit"] = obs["unit"].astype(str).str.strip().str.casefold()
+    expected_units = {
+        "river_level": {"m"}, "reservoir_level": {"m"},
+        "discharge": {"m3/s", "m³/s"}, "river_discharge": {"m3/s", "m³/s"},
+        "reservoir_discharge": {"m3/s", "m³/s"},
+        "storage": {"million_m3"}, "reservoir_storage": {"million_m3"},
+    }
+    supported = obs["kind"].astype(str).isin(KIND_PREFIX)
+    bad_units = []
+    for kind, allowed in expected_units.items():
+        bad = obs[(obs["kind"].astype(str) == kind) & ~obs["unit"].isin(allowed)]
+        if not bad.empty:
+            bad_units.append({"kind": kind, "units": sorted(bad["unit"].dropna().unique().tolist()), "rows": int(len(bad))})
+    if bad_units:
+        raise SystemExit(
+            "Unsupported or unnormalized units found; convert them using normalize_cwc_levels.py "
+            f"and verify source metadata before feature building: {bad_units}"
+        )
+    obs = obs[supported].copy()
     # Preserve the timestamp's reported calendar date. The source timezone is not silently assumed.
     obs["date"] = obs["observed_at"].astype(str).str.slice(0, 10)
     obs = obs.dropna(subset=["station_id", "date", "value"])
