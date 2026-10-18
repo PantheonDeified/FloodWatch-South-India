@@ -11,7 +11,7 @@ This is a short task list for tonight. You can do the work yourself or paste you
 - Historical rainfall comparisons using ERA5-Land.
 - Modelled river-discharge context using Open-Meteo Flood API/GloFAS.
 - Water-observation table interface, filters, and a rainfall-to-river evidence chain.
-- GitHub Pages project and a basic FastAPI backend on IBM LinuxONE. The backend health endpoint was tested over HTTP.
+- GitHub Pages project and a basic FastAPI backend on IBM LinuxONE. The health endpoint has returned `healthy` through the temporary HTTPS tunnel. A configurable backend-check panel has been added to the frontend.
 
 These features still need end-to-end testing. A feature in the code does not automatically mean every live data source is currently working.
 
@@ -46,11 +46,11 @@ These features still need end-to-end testing. A feature in the code does not aut
 
 ## Project lead — Frontend, map, and backend
 
-1. Finish troubleshooting the HTTPS route from GitHub Pages to the IBM LinuxONE API. The API health endpoint worked over HTTP, but the Cloudflare Quick Tunnel had not succeeded yet.
-2. Test the published website and map controls in a browser.
-3. Integrate teammates’ verified outputs only after reviewing their pull requests.
-4. Check errors, data timestamps, and locations across all five states.
-5. Prepare a short demo showing what is working and what is still experimental.
+1. Open the published website and verify that the new backend connection panel appears after GitHub Pages redeploys.
+2. Paste the current HTTPS Quick Tunnel URL and test both `/health` and `/api/v1/status`; confirm both JSON responses in the browser panel.
+3. Keep the Linux API and Quick Tunnel running during the demo. The temporary URL is not a permanent deployment.
+4. Integrate teammates’ verified outputs only after reviewing their pull requests.
+5. Check errors, data timestamps, and locations across all five states, then prepare a short demo showing what is working and what is experimental.
 
 **Important:** Do not hardcode a temporary Cloudflare URL as a permanent endpoint. A Quick Tunnel URL only works while the tunnel is running and is not a reliable production deployment.
 
