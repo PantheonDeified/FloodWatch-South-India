@@ -48,6 +48,24 @@ class ResearchReadinessTests(unittest.TestCase):
             self.assertEqual(rows[0]["model_training_gate"], "blocked")
             self.assertEqual(report["stations_allowed_for_weather_join"], 0)
 
+    def test_multiple_archive_resource_urls_do_not_create_identity_conflict(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            catalog = [{"station_id": "s1", "station_name": "Gauge A", "state": "Kerala",
+                        "river": "River A", "basin": "West Coast", "record_count": "1000",
+                        "first_observed_at": "2000-01-01", "last_observed_at": "2003-01-01",
+                        "coordinate_verified": "false", "coordinate_source_url": ""}]
+            audit = [{"station_id": "s1", "station_name": ["Gauge A"], "states": ["Kerala"],
+                      "rivers": ["River A"], "basins": ["West Coast"], "row_count": 1000,
+                      "unique_observation_dates": 1000, "calendar_span_days": 1096,
+                      "missing_calendar_days": 96, "source_urls": [
+                          "https://nwdp.gov/resource/older", "https://nwdp.gov/resource/newer"],
+                      "review_flags": ["multiple_source_urls"]}]
+            rows, _ = self.run_builder(root, catalog, audit)
+            self.assertEqual(rows[0]["review_status"], "priority_for_manual_station_review")
+            self.assertEqual(rows[0]["source_resource_count"], "2")
+            self.assertNotIn("station_identity_or_metadata_conflict", rows[0]["review_reasons"])
+
     def test_conflicts_are_not_marked_as_priority(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
