@@ -11,7 +11,8 @@ Full feature matrix: [FloodWatch capabilities and implementation status](docs/FE
 IBM Z Datathon: [3-minute demo, architecture, ML metrics and Ubuntu VM runbook](docs/IBM_Z_DATATHON_DEMO.md).  
 Final hand-in checks: [submission checklist and verified CI evidence](docs/DATATHON_SUBMISSION_CHECKLIST.md).
 
-**Deploy the API on the event VM:** [Ubuntu/LinuxONE quick installer and service commands](deploy/ibm-linuxone/README.md).
+**Deploy the API on the event VM:** [Ubuntu/LinuxONE quick installer and service commands](deploy/ibm-linuxone/README.md).  
+**Regional ML runner/preflight:** [run and verify the LSTM pipeline where PyTorch support is available](deploy/ibm-linuxone/run-regional-lstm.sh).
 
 New: [Problems solved, early-warning workflow and infrastructure accountability](docs/EARLY_WARNING_AND_ACCOUNTABILITY.md).
 
