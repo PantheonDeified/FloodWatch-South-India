@@ -57,12 +57,10 @@ jobs:
       - name: Audit streamflow training readiness
         env:
           FEATURES_PATH: ${{ inputs.features_path }}
-          STATION_ID: ${{ inputs.station_id }}
         run: |
           python data_pipeline/scripts/assess_streamflow_readiness.py \
             --features "$FEATURES_PATH" \
-            --station-id "$STATION_ID" \
-            --report data_pipeline-readiness-report.json
+            --out data_pipeline-readiness-report.json
       - name: Train and evaluate LSTM against persistence baseline
         env:
           FEATURES_PATH: ${{ inputs.features_path }}
