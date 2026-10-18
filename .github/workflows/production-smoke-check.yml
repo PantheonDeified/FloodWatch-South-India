@@ -192,6 +192,21 @@ jobs:
                                       print(f"WARN WMS GetMap {layer_name}: non-image response {content_type}, {image_body[:100]!r}")
                               except Exception as map_exc:
                                   print(f"WARN WMS GetMap {layer_name}: {map_exc}")
+                              legend_params = urllib.parse.urlencode({
+                                  "SERVICE":"WMS","VERSION":"1.1.1","REQUEST":"GetLegendGraphic",
+                                  "LAYER":layer_name,"FORMAT":"image/png"
+                              })
+                              try:
+                                  legend_req = urllib.request.Request(base+"?"+legend_params, headers={"User-Agent":"FloodWatch-source-discovery/1.0"})
+                                  with urllib.request.urlopen(legend_req, timeout=18) as legend_response:
+                                      legend_body = legend_response.read()
+                                      legend_type = legend_response.headers.get("Content-Type","")
+                                  if legend_body.startswith(bytes([137,80,78,71,13,10,26,10])) or "image/png" in legend_type.lower():
+                                      print(f"PASS WMS GetLegendGraphic {layer_name}: {len(legend_body)} bytes, {legend_type}")
+                                  else:
+                                      print(f"WARN WMS GetLegendGraphic {layer_name}: non-image response {legend_type}, {legend_body[:100]!r}")
+                              except Exception as legend_exc:
+                                  print(f"WARN WMS GetLegendGraphic {layer_name}: {legend_exc}")
                   else:
                       print("WARN no named layer records parsed. XML preview: " + raw[:700].decode("utf-8", errors="replace").replace("\\n", " ") )
               except Exception as exc:
