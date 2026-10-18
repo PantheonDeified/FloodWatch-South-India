@@ -270,11 +270,38 @@ function renderWaterStations(){
   :'Map layer is off. '+plotted.length+' source records could be plotted; '+omitted+' are excluded because coordinates are missing or their state/location is outside the map area.';
 }
 function reportedTimeLabel(record){return record?.observed_at_raw||record?.observed_at||'time not supplied'}
+function observationEpochMs(record){
+ const raw=String(record?.observed_at||record?.observed_at_raw||'').trim();
+ if(!raw)return null;
+ // Explicit UTC/offset timestamps can be parsed directly without guessing.
+ if(/(?:Z|[+-]\\d{2}:?\\d{2})$/i.test(raw)){
+  const explicit=Date.parse(raw);
+  return Number.isFinite(explicit)?explicit:null;
+ }
+ // Naive timestamps are usable only when the source supplies a valid IANA timezone.
+ const tz=String(record?.source_timezone||'').trim();
+ if(!tz||/^(unknown|unspecified|not specified|local|n\\/a)$/i.test(tz))return null;
+ const match=raw.match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?$/);
+ if(!match)return null;
+ const nums=match.slice(1).map(Number),[year,month,day,hour,minute,second=0]=nums;
+ const wallUtc=Date.UTC(year,month-1,day,hour,minute,second);
+ try{
+  const formatter=new Intl.DateTimeFormat('en-GB',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+  let candidate=wallUtc;
+  // Iteratively align the formatted wall-clock time in the source timezone.
+  for(let i=0;i<3;i++){
+   const parts=Object.fromEntries(formatter.formatToParts(new Date(candidate)).filter(p=>p.type!=='literal').map(p=>[p.type,Number(p.value)]));
+   const formattedAsUtc=Date.UTC(parts.year,parts.month-1,parts.day,parts.hour,parts.minute,parts.second);
+   candidate+=wallUtc-formattedAsUtc;
+  }
+  return Number.isFinite(candidate)?candidate:null;
+ }catch(e){return null}
+}
 function observationFreshness(record,nowMs=Date.now()){
  const raw=record?.observed_at||record?.observed_at_raw||'';
  if(!raw)return {key:'unknown',label:'Timestamp unavailable',detail:'The provider did not supply a usable observation time.'};
- const parsed=Date.parse(raw);
- if(!Number.isFinite(parsed))return {key:'unknown',label:'Timestamp unclear',detail:'The source timestamp could not be parsed reliably.'};
+ const parsed=observationEpochMs(record);
+ if(!Number.isFinite(parsed))return {key:'unknown',label:'Timezone/timestamp unclear',detail:'The source time has no UTC offset and the source timezone is missing or invalid. Age is left unknown rather than guessed from your browser timezone.'};
  const ageHours=(nowMs-parsed)/3600000;
  if(ageHours < -1)return {key:'unknown',label:'Future timestamp',detail:'The reported time is in the future; check source timezone/format.'};
  if(ageHours < 24)return {key:'recent',label:'Recent (<24h)',detail:'Reported about '+Math.max(0,Math.round(ageHours))+' hours ago. This is timestamp age, not a guarantee of live data.'};
