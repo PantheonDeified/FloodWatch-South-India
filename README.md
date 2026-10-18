@@ -82,10 +82,10 @@ The Quick Tunnel URL may change and has no uptime guarantee; do not treat it as 
 
 ## ML and neural-network status — important for demos
 
-- **Model code exists:** a PyTorch LSTM research training script for a verified discharge gauge and a scikit-learn flood-event classifier with chronological evaluation.
+- **Model code exists:** a PyTorch LSTM training/inference path with persistence-baseline evaluation, a per-station readiness audit, and a scikit-learn flood-event classifier with validation-only threshold selection.
 - **Not yet operational:** no published trained South India model weights or validated local forecasts; the water-observation data exists, but source freshness, station coverage and historical inputs still require quality checks.
 - **Current river-flow outlook:** the website can request modelled GloFAS flow estimates via Open-Meteo. This is an external forecast, not a FloodWatch-trained neural network or a live CWC gauge reading.
 - **No validated local flood probabilities or depth maps are currently claimed.**
 
-See [ML / neural-network model card](data_pipeline/SUBMISSION_MODEL_CARD.md) for exact status, training requirements and scientific guardrails.
+See [ML / neural-network model card](data_pipeline/SUBMISSION_MODEL_CARD.md) for exact status, training requirements and scientific guardrails. See the [historical-data pipeline guide](data_pipeline/README.md), [Flood Hub gap analysis](FLOOD_HUB_GAP_ANALYSIS.md), and [manual historical CWC discharge/rainfall download workflow](.github/workflows/download-historical-hydrology.yml) for the next data-ingestion steps.
 
