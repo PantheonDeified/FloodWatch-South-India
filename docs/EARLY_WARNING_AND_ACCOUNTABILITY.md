@@ -25,6 +25,8 @@ FloodWatch can be used as an **early-awareness layer**, not as an autonomous eva
 
 **Current implementation boundary:** the public map has live API-dependent weather/radar and external modelled river-flow context, plus a public water-observation explorer. It does not currently operate a validated FloodWatch flood-warning classifier, send emergency notifications, estimate local inundation depth, or guarantee warning lead time. Do not advertise those as live features until implemented, independently tested and monitored.
 
+**Infrastructure evidence notebook now in the dashboard:** users can manually record public-source URLs and notes for dam/reservoir inspection or release bulletins, embankment/drainage maintenance, land-use documents and official warning/response timelines. Records are stored only in the current browser and can be exported as JSON; they are not sent to a server, published for other users, or automatically verified. This is a prototype evidence notebook—not a shared official register and not a structural-safety assessment.
+
 ## 3. Human-made and infrastructure contributors: accountability module proposal
 
 Floods are often multi-causal. Rainfall and river flow interact with land use, drainage, reservoir operations, infrastructure condition and settlement exposure. FloodWatch should record evidence and timelines—not infer negligence from a flood map.
