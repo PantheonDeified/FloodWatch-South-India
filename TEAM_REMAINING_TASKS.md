@@ -13,7 +13,7 @@ The project lead is handling the tasks that were originally split between teamma
 - FastAPI backend source with health/status, weather proxy, GloFAS river-flow proxy, paginated water-observation/nearby-station API, and model-readiness endpoint. Dockerfile, systemd template, deployment notes and automated backend tests exist. The newest backend source is in GitHub; it still must be deployed to the Linux host before the new routes are available there.
 - The cyclone overlay now calls GDACS when selected, and a spatial wind overlay has been added to the frontend. These new changes still need a browser end-to-end test after GitHub Pages publishes them.
 - Water snapshot now reports source/resource errors, unit counts, state coverage and timestamp quality. Latest successful collector run published 407 records from 37 resources; eight resources had no usable records, with zero source-page/resource errors in that run.
-- Historical CWC discharge/rainfall downloader, raw-archive checksum manifest, schema inspection script, and a manual GitHub Actions workflow that uploads an archive artifact for seven days.
+- Historical CWC discharge/rainfall downloader, raw-archive checksum manifest, schema inspection script, station-level quality audit, unverified-coordinate station catalogue, common observation-schema adapter, and a manual GitHub Actions workflow that uploads raw/processed artifacts for seven days. A research-readiness queue now ranks stations for manual review and deliberately blocks coordinate-based weather joins until the coordinate and source URL are independently verified.
 - Research ML path includes a single-gauge PyTorch LSTM, persistence-baseline comparison, guarded inference, per-station readiness audit, and a separately labelled event classifier. No trained/validated FloodWatch model artifact exists.
 
 ## Highest priority: verify the complete experience
@@ -28,7 +28,7 @@ The project lead is handling the tasks that were originally split between teamma
 
 ## Longer-term engineering work — not yet completed
 
-- Run the [historical archive workflow](https://github.com/PantheonDeified/FloodWatch-South-India/actions/workflows/download-historical-hydrology.yml), inspect the artifact schemas, and build a curated historical gauge dataset with documented units and source provenance.
+- Re-run the [historical archive workflow](https://github.com/PantheonDeified/FloodWatch-South-India/actions/workflows/download-historical-hydrology.yml) after the latest review-queue update, download the new artifact, inspect the station audit/readiness queue and curate a gauge dataset with documented units and source provenance. The earlier archive run passed, but it predates the new queue step.
 - Validate station-to-catchment and upstream/downstream river connections using reviewed geographic data.
 - Establish baseline streamflow forecasts and only then train/evaluate an LSTM or other local model on suitable discharge data and aligned weather inputs.
 - Build a separately validated flood-event or flash-flood model with reviewed positive/negative labels.
