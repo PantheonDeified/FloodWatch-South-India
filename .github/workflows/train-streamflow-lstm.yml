@@ -1,0 +1,113 @@
+name: Train and evaluate streamflow LSTM
+
+on:
+  workflow_dispatch:
+    inputs:
+      features_path:
+        description: "Path to a reviewed daily feature CSV committed to the repository"
+        required: true
+        default: "data_pipeline/training_data/features.csv"
+        type: string
+      station_id:
+        description: "Exact verified station_id from the feature CSV"
+        required: true
+        type: string
+      lookback_days:
+        description: "Number of historical days supplied to the LSTM"
+        required: true
+        default: "90"
+        type: string
+      lead_days:
+        description: "Forecast horizon in days"
+        required: true
+        default: "7"
+        type: string
+      epochs:
+        description: "Maximum training epochs"
+        required: true
+        default: "100"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: floodwatch-lstm-${{ inputs.station_id }}
+  cancel-in-progress: false
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: data_pipeline/requirements-ml.txt
+
+      - name: Install ML dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r data_pipeline/requirements-ml.txt
+
+      - name: Verify reviewed feature file exists
+        env:
+          FEATURES_PATH: ${{ inputs.features_path }}
+          STATION_ID: ${{ inputs.station_id }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          p = Path(os.environ["FEATURES_PATH"])
+          if not p.is_file():
+              raise SystemExit(
+                  f"Feature CSV not found: {p}. Build and review the daily feature table, "
+                  "then commit it or choose its repository-relative path."
+              )
+          if p.is_absolute() or ".." in p.parts:
+              raise SystemExit("features_path must be a safe repository-relative path.")
+          print(f"Using reviewed feature file: {p}")
+          print(f"Requested station: {os.environ['STATION_ID']}")
+          PY
+
+      - name: Audit station readiness
+        run: |
+          python data_pipeline/scripts/assess_streamflow_readiness.py \
+            --features "${{ inputs.features_path }}" \
+            --lookback-days "${{ inputs.lookback_days }}" \
+            --lead-days "${{ inputs.lead_days }}" \
+            --out data_pipeline/output/streamflow-readiness.json
+
+      - name: Train LSTM and compare with persistence baseline
+        run: |
+          python data_pipeline/scripts/train_streamflow_lstm.py \
+            --features "${{ inputs.features_path }}" \
+            --station-id "${{ inputs.station_id }}" \
+            --output-dir data_pipeline/output/models \
+            --lookback-days "${{ inputs.lookback_days }}" \
+            --lead-days "${{ inputs.lead_days }}" \
+            --epochs "${{ inputs.epochs }}"
+
+      - name: Apply model review gate
+        run: |
+          python data_pipeline/scripts/review_streamflow_model.py \
+            --report "data_pipeline/output/models/streamflow_lstm_${{ inputs.station_id }}.report.json" \
+            --model "data_pipeline/output/models/streamflow_lstm_${{ inputs.station_id }}.pt" \
+            --scalers "data_pipeline/output/models/streamflow_lstm_${{ inputs.station_id }}.scalers.npz" \
+            --out data_pipeline/output/models/review-gate.json
+
+      - name: Upload training report and model artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: floodwatch-lstm-${{ inputs.station_id }}-${{ github.run_number }}
+          path: |
+            data_pipeline/output/streamflow-readiness.json
+            data_pipeline/output/models/
+          if-no-files-found: warn
+          retention-days: 14
