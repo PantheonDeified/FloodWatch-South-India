@@ -51,6 +51,7 @@
 <a href="https://nwdp.nwic.gov.in/hi/dataset/reservoir-data-karnataka" target="_blank" rel="noopener noreferrer" style="display:block;padding:9px;border:1px solid #30445e;border-radius:9px;color:#7fc8ff;text-decoration:none">↗ NWDP reservoir data — Karnataka</a>
 <a href="https://ffs.india-water.gov.in/" target="_blank" rel="noopener noreferrer" style="display:block;padding:9px;border:1px solid #30445e;border-radius:9px;color:#7fc8ff;text-decoration:none">↗ CWC Flood Forecasting System — official station forecasts and thresholds</a>
 <a href="https://github.com/PantheonDeified/FloodWatch-South-India/actions/workflows/refresh-water-observations.yml" target="_blank" rel="noopener noreferrer" style="display:block;padding:9px;border:1px solid #30445e;border-radius:9px;color:#7fc8ff;text-decoration:none">↗ Water-data collector run history — check whether ingestion succeeded</a>
+<a href="docs/water-pipeline-report.md" target="_blank" rel="noopener noreferrer" style="display:block;padding:9px;border:1px solid #30445e;border-radius:9px;color:#7fc8ff;text-decoration:none">↗ Water data-quality report — source errors, units and coverage caveats</a>
 </div>
 </section>
 <section class="section" id="historicalSection"><h2>Historical analysis & river-flow outlook</h2>
@@ -563,8 +564,10 @@ async function setOverlay(kind){
    const data=await r.json(),frames=[...(data.radar?.past||[])];
    if(!frames.length)throw Error('No recent radar frames returned');
    const frame=frames[frames.length-1];if(!frame.time)throw Error('Radar response did not provide a frame timestamp');
-   const ageMinutes=Math.max(0,Math.round((Date.now()-frame.time*1000)/60000));
+   const rawAgeMinutes=Math.round((Date.now()-frame.time*1000)/60000);
+   const ageMinutes=Math.max(0,rawAgeMinutes);
    const sourceTime=new Date(frame.time*1000).toISOString().replace('T',' ').replace('.000Z',' UTC');
+   if(rawAgeMinutes < -5){$('overlayStatus').textContent='Radar frame rejected: source timestamp '+sourceTime+' is in the future by about '+Math.abs(rawAgeMinutes)+' minutes. Check provider clock/timezone; no radar layer displayed.';return}
    if(ageMinutes>120){$('overlayStatus').textContent='Radar frame rejected as stale: source timestamp '+sourceTime+'; age '+ageMinutes+' minutes. No radar layer displayed.';return}
    overlay=L.tileLayer('https://tilecache.rainviewer.com'+frame.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:.62,maxNativeZoom:7,maxZoom:19,attribution:'Radar tiles © RainViewer'}).addTo(map);
    $('overlayStatus').textContent='RainViewer radar frame timestamp: '+sourceTime+' · age about '+ageMinutes+' min. Coverage varies; this is not a station rainfall measurement.';
