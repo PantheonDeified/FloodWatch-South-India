@@ -1,81 +1,47 @@
-# FloodWatch South India — Remaining Tasks for the Team
+# FloodWatch South India — Single-Owner Remaining Tasks
 
-This is a short task list for tonight. You can do the work yourself or paste your task into an AI coding assistant. Do not invent data, and do not overwrite other people's work.
+The project lead is handling the tasks that were originally split between teammates. Use this file as the integrated checklist; do not wait for separate teammate reports.
 
-## What is already built
+## Implemented in the repository
 
-- Interactive Leaflet map for South India with street, terrain, and satellite map layers.
-- Place search, map-click selection, coordinate entry, and optional browser location.
-- Open-Meteo weather and hourly forecast.
-- RainViewer radar layer.
-- Historical rainfall comparisons using ERA5-Land.
-- Modelled river-discharge context using Open-Meteo Flood API/GloFAS.
-- Water-observation table interface, filters, and a rainfall-to-river evidence chain.
-- GitHub Pages project and a FastAPI backend on IBM LinuxONE. Version 0.2.0 is running; `/health`, `/api/v1/status`, and `/api/v1/weather` returned responses, and the HTTPS developer checker confirmed the weather proxy is available. Automated backend tests and the syntax check now pass in GitHub Actions. The tunnel URL remains temporary.
+- Interactive Leaflet map with street, terrain and satellite basemaps.
+- Place search, map-click selection, coordinate entry, and optional browser geolocation.
+- Open-Meteo current conditions and hourly forecast; ERA5-Land historical rainfall comparisons; Open-Meteo Flood API/GloFAS modelled river-discharge context.
+- RainViewer radar and Open-Meteo spatial cloud-cover overlay.
+- Public NWDP/NWIC observation collector, source registry, six-hour GitHub Actions workflow, snapshot validator, tests, and frontend table/map reader.
+- Successful water collector run produced 407 records from 37 resource files across 20 configured source pages. This is not proof every source is fresh or complete.
+- FastAPI backend source, health/status/weather routes, deployment notes, and an automated backend test workflow.
+- The cyclone overlay now calls GDACS when selected, and a spatial wind overlay has been added to the frontend. These new changes still need a browser end-to-end test after GitHub Pages publishes them.
+- Documentation now states that the water snapshot contains records rather than incorrectly describing it as empty.
 
-These features still need end-to-end testing. A feature in the code does not automatically mean every live data source is currently working.
+## Highest priority: verify the complete experience
 
-## Person 1 — Test weather and rainfall data
+1. **Check the live website after GitHub Pages deployment.** Confirm the map, all five-state location search, station table and freshness labels work. Test at least one location in Andhra Pradesh, Telangana, Karnataka, Kerala and Tamil Nadu.
+2. **Check the backend.** Test /health, /api/v1/status, and /api/v1/weather?latitude=19.15&longitude=77.30. The API previously worked, but the latest check from the current execution environment got connection refused on 148.100.98.93:8000; the temporary Quick Tunnel could not be resolved from that environment. Treat backend availability as unresolved until tested from the user's computer.
+3. **Check every overlay in a browser.** Test RainViewer freshness/rejection, spatial cloud cover, the new spatial wind arrows/tooltips, and GDACS cyclone events. If a third-party feed blocks browser requests or returns a different schema, keep the overlay error explicit and use official IMD links as the fallback.
+4. **Test backend integration.** In the developer tools view, enter the current HTTPS tunnel address (only if the tunnel is running). Check health, status and weather. On the selected map points, verify the weather source says FloodWatch API → Open-Meteo rather than direct fallback.
+5. **Audit source quality.** For the 407 water records, verify units, station identifiers, timestamps/time zones, coordinates, state labels and freshness. Do not guess locations, rewrite source timestamps without evidence, turn missing values into zero, or equate water level with discharge.
+6. **Fix any issues found and retest.** Keep an observed/forecast/modelled label and source timestamp visible. Do not present the current contextual evidence chain as a validated flood warning.
+7. **Prepare stable deployment.** A Quick Tunnel hostname is temporary. Before public reliance, deploy behind stable HTTPS, restart the Linux service on server updates, and remove the developer-only connection panel from the final user experience.
 
-**Goal:** Find out which existing weather layers actually work.
+## Longer-term engineering work — not yet completed
 
-1. Test the weather, hourly forecast, radar, historical rainfall, and river-discharge requests already used by the site.
-2. Test at least one location in each of Karnataka, Kerala, Tamil Nadu, Telangana, and Andhra Pradesh.
-3. Record whether each request works, the source, units, timestamps, and whether the data is observed, forecast, or modelled.
-4. Report broken or stale sources and suggest fixes. Do not redesign the map or edit `index.html` without asking the project lead.
+- Build a curated historical gauge dataset with documented units and source provenance.
+- Validate station-to-catchment and upstream/downstream river connections using reviewed geographic data.
+- Establish baseline streamflow forecasts and only then train/evaluate an LSTM or other local model on suitable discharge data and aligned weather inputs.
+- Build a separately validated flood-event or flash-flood model with reviewed positive/negative labels.
+- Add inundation extent/depth mapping only when a suitable validated hydrology/hydraulics model and flood footprints are available.
+- Add alerts/notifications only after thresholds, reliability, delivery and official-warning handoff are designed and tested.
 
-**Deliver:** `docs/live-data-test-report.md` and, if useful, `docs/weather-api-examples.md`.
+## Source links
 
-**Simple AI prompt:**  
-“Review the existing FloodWatch South India repository. Identify the weather, rainfall, radar, historical rainfall, and river-discharge data requests already present. Test or inspect them without inventing results. Create a report with source URLs, units, timestamps/freshness, whether each is observed/forecast/modelled, five-state test coverage, errors, and practical fixes. Do not change index.html.”
+- [Website](https://pantheondeified.github.io/FloodWatch-South-India/)
+- [Repository](https://github.com/PantheonDeified/FloodWatch-South-India)
+- [Water pipeline run report](docs/water-pipeline-run-report.md)
+- [Live-data test report](docs/live-data-test-report.md)
+- [Model status card](data_pipeline/SUBMISSION_MODEL_CARD.md)
+- [Flood Hub gap analysis](FLOOD_HUB_GAP_ANALYSIS.md)
 
-## Person 2 — Validate and improve water-observation quality
+## Safety and operational notes
 
-**Goal:** Make the existing source-linked water data safer and easier to interpret. A successful collector run produced 407 records from 37 resource files; the problem is now coverage, freshness, metadata and repeatable validation rather than a completely empty dataset.
-
-1. Read `docs/water-pipeline-run-report.md` and inspect the latest `data/water-observations.json` snapshot.
-2. Audit missing station coordinates, missing state/district fields, source timestamps, units and rows with suspicious jumps or implausible values. Do not guess coordinates or silently delete source values; record each issue and its rationale.
-3. Confirm source timezone semantics for each dataset, or leave them explicitly unspecified. Distinguish hourly telemetry from manual/daily observations.
-4. Review and extend `data_pipeline/scripts/validate_water_snapshot.py` and its unit tests. The water workflow now runs these tests and checks the snapshot before publishing. Test the collector and confirm it does not trigger itself solely from its generated output file.
-5. Document source/resource errors, coverage gaps, and safe fixes. Never fabricate readings.
-
-**Deliver:** `docs/water-pipeline-report.md` with a repeatable quality audit and tests/checks where feasible. The reusable structural validator and unit tests are in `data_pipeline/scripts/validate_water_snapshot.py` and `data_pipeline/tests/test_validate_water_snapshot.py`. Use `docs/water-pipeline-run-report.md` as the first run summary.
-
-**Simple AI prompt:**  
-“Review the existing FloodWatch South India water snapshot (407 records generated from 37 resources), collector and report. Audit source timestamps/timezones, units, missing coordinates/state fields, out-of-core-area records, and suspicious values. Do not fabricate or silently alter source readings. Add safe validation/tests for issues that can be reliably checked, preserve source provenance, and document unresolved issues in docs/water-pipeline-report.md. Do not edit index.html.”
-
-## Project lead — Frontend, map, and backend
-
-1. Open the [developer tools view](https://pantheondeified.github.io/FloodWatch-South-India/?devtools=1), paste the current HTTPS tunnel URL into the hidden-by-default panel, and confirm `/health`, `/api/v1/status`, and `/api/v1/weather` all report success; the checker has already reported `weather_proxy.available: true`.
-2. Select map points in all five states and confirm the weather status says `FloodWatch API → Open-Meteo`, not the direct-provider fallback. Test browser console errors, the hourly panel, and the location search/geolocation controls. Also toggle **Show stations on map** and verify that only geolocated records inside the core map area appear, that different measurement types have distinct colors, and that popups show the source time/link.
-3. Review `docs/water-pipeline-run-report.md` and verify the station table loads the 407-record published snapshot. Check map locations and freshness labels; do not describe the snapshot as uniformly real-time.
-4. Keep the Linux API and Quick Tunnel running during the demo; the temporary URL is not a permanent deployment.
-5. Integrate teammates’ verified outputs only after reviewing their pull requests; then prepare a demo that distinguishes measured/public source observations, model estimates and forecasts.
-
-**Important:** Do not hardcode a temporary Cloudflare URL as a permanent endpoint. A Quick Tunnel URL only works while the tunnel is running and is not a reliable production deployment.
-
-**Before final public release:** remove the developer-only backend testing panel from `index.html`, deploy the API to a stable HTTPS address, configure the frontend to use that stable address, and verify that no temporary tunnel URL is embedded in the public code.
-
-## GitHub handoff
-
-Each teammate should:
-
-1. Pull the latest `main`.
-2. Work on a separate branch:
-   - Person 1: `feature/live-data-validation`
-   - Person 2: `fix/water-observation-pipeline`
-3. Commit only their own changes and push the branch.
-4. Open a pull request into `main`.
-5. The project lead reviews and tests before merging.
-
-Do not let both teammates edit `index.html`. Never commit SSH keys, API secrets, or private/patient data.
-
-## Tonight's definition of done
-
-- Weather/rainfall data has a clear source, units, and freshness report.
-- The water-data pipeline produces source-linked records; timestamp timezone, freshness and station-coverage limitations are documented and tested.
-- The published map and existing layers have been tested.
-- The backend's HTTPS integration status is stated accurately.
-- The demo clearly distinguishes measurements, forecasts, and model estimates.
-
-**Prototype limitation:** FloodWatch is a monitoring and situational-awareness prototype, not a validated flood-prediction or official-warning system.
+FloodWatch is an independent research/situational-awareness prototype, not Google Flood Hub and not an official warning system. Never publish a flood probability without validation. Do not commit SSH keys, credentials, or private data. Treat public source timestamps and freshness as source-specific.
