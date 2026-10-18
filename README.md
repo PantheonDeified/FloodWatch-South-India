@@ -10,9 +10,15 @@ Expected GitHub Pages URL: https://pantheondeified.github.io/FloodWatch-South-In
 
 The FastAPI backend is in `backend/`. It includes health/status endpoints, the Open-Meteo weather proxy, a paginated `/api/v1/water-observations` endpoint, and `/api/v1/models/status`. The water endpoint can read a local snapshot or fetch the public repository snapshot. Updating files in GitHub does **not** automatically update the separately running Linux API service; follow [backend deployment notes](backend/README.md).
 
-Research ML scripts are in `data_pipeline/scripts/`: `train_streamflow_lstm.py` (PyTorch single-gauge LSTM) and `train_event_ml.py` (scikit-learn event baseline). The LSTM report now compares out-of-time results against a persistence baseline. These are training implementations, not a deployed trained model. There is currently no verified local South India flood-forecast model artifact; the model-status endpoint states this explicitly. The current operational forecast context comes from separately labelled external model products.
+### Verified experimental model status (18 October 2026)
 
-Before training, provide verified gauge discharge with units and station IDs, aligned weather data, reviewed basin mapping and sufficient continuous history. River water level must not be relabelled as discharge, and days without an event record must not be assumed flood-free. Model evaluation must remain chronological and be compared against a simple baseline.
+A **single-station discharge LSTM has successfully trained and completed a chronological holdout evaluation** using CWC/NWDP-derived daily maximum discharge for the Yadgir station in Karnataka. Its downloadable weights, scaler file, and JSON evaluation report are attached to [GitHub Actions training run #39114067094](https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39114067094) as artifact `floodwatch-discharge-lstm-4` (artifact retention is temporary). The report shows overall test RMSE **1,043.61 m³/s** versus **1,274.75 m³/s** for persistence, an 18.1% reduction. High-flow subset NSE is **−0.013**, so extreme-flow skill remains weak. This is one station only, not a South India-wide forecast.
+
+The separate [regional multi-station LSTM workflow](https://github.com/PantheonDeified/FloodWatch-South-India/actions/workflows/train-regional-lstm.yml) is experimental and must be evaluated from its own final report before any regional metric is claimed. Its training settings use a 90-day lookback, 7-day forecast horizon and a seven-day stride to bound memory use. The model currently uses historical discharge, observation masks, calendar seasonality and station coordinates; it does **not** ingest rainfall/weather forecasts or produce flood probabilities, depth or inundation extent.
+
+**These trained weights are not yet integrated into the live website/API.** The website's river-flow outlook is separately labelled external Open-Meteo Flood API/GloFAS model data. Do not confuse that feed with the local LSTM.
+
+See [verified ML metrics and code tests](docs/ML_VALIDATION_SNAPSHOT.md), [ML upgrade plan](docs/ML_UPGRADE_PLAN.md), and the [model card](data_pipeline/SUBMISSION_MODEL_CARD.md).
 
 ## Current frontend capabilities
 
@@ -45,7 +51,9 @@ To run it manually, open the repository's **Actions** tab, choose **Refresh offi
 - `data_pipeline/scripts/inspect_cwc_csv.py` and `normalize_cwc_levels.py`: inspect and normalize downloaded official CWC/NWDP CSVs while preserving source provenance and units.
 - `data_pipeline/scripts/assign_gauges_to_basins.py`: candidate gauge-to-HydroBASINS mapping using verified coordinates and upstream/downstream basin IDs. Results require human river-network validation.
 - `data_pipeline/scripts/build_event_features.py`: builds lagged rainfall and river-response features without filling missing observations with zero.
-- `data_pipeline/scripts/train_streamflow_lstm.py`: research-only single-station streamflow LSTM pilot; requires actual discharge data, not water-level values mislabeled as discharge.
+- `data_pipeline/scripts/train_discharge_lstm.py`: trained single-station daily-discharge LSTM with chronological holdout evaluation against persistence; artifact available from the linked Actions run above.
+- `data_pipeline/scripts/train_regional_lstm.py`: experimental multi-station, multi-horizon LSTM; report is accepted only after the regional workflow finishes and its own artifact is inspected.
+- `data_pipeline/scripts/train_streamflow_lstm.py`: earlier research-only single-station streamflow LSTM pilot; requires actual discharge data, not water-level values mislabeled as discharge.
 - `data_pipeline/scripts/train_event_ml.py`: baseline classifier for source-linked, reviewed flood-event labels; no reliable model can be trained without a suitable labelled dataset.
 - `MODEL_ADAPTATION.md`: model architecture and adaptation/evaluation plan.
 - `FLOOD_HUB_GAP_ANALYSIS.md`: comparison against Google's published Flood Hub capabilities and the remaining work.
@@ -83,7 +91,8 @@ The Quick Tunnel URL may change and has no uptime guarantee; do not treat it as 
 ## ML and neural-network status — important for demos
 
 - **Model code exists:** a PyTorch LSTM training/inference path with persistence-baseline evaluation, a per-station readiness audit, and a scikit-learn flood-event classifier with validation-only threshold selection.
-- **Not yet operational:** no published trained South India model weights or validated local forecasts; the water-observation data exists, but source freshness, station coverage and historical inputs still require quality checks.
+- **Training verified:** one Karnataka station LSTM has trained and been evaluated against persistence on a chronological holdout. See the linked training artifact and validation snapshot above.
+- **Not yet operational:** the trained station model is not served by the live website/API, and no validated South India-wide forecast is claimed; source freshness, station coverage and historical inputs still require quality checks.
 - **Current river-flow outlook:** the website can request modelled GloFAS flow estimates via Open-Meteo. This is an external forecast, not a FloodWatch-trained neural network or a live CWC gauge reading.
 - **No validated local flood probabilities or depth maps are currently claimed.**
 
