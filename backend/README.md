@@ -31,6 +31,26 @@ python -m uvicorn main:app --host 0.0.0.0 --port 8000
 
 4. Keep the Linux terminal running Uvicorn while testing. Run the Cloudflare Quick Tunnel separately in the Windows PowerShell window where you launch `cloudflared`. If compilation fails, do not replace the running source; share the error and restore the backup if needed. Updating GitHub does not automatically update the Linux server.
 
+## Recommended: keep the API running with systemd
+
+The included service file assumes the server account is `linux1` and the application directory is `/home/linux1/floodwatch-api`. It restarts Uvicorn if it crashes and starts the API at boot. Updating code in GitHub still requires pulling/downloading the latest `main.py` onto the server.
+
+After updating `main.py` and compiling it successfully, use these steps on the Linux server. First inspect any existing Uvicorn process; if one is still running from an earlier `nohup` command, stop only that process before enabling the service so port 8000 is not already occupied.
+
+```bash
+pgrep -af 'uvicorn main:app' || true
+# If the command above shows an old Uvicorn PID, stop that specific PID:
+# kill <PID>
+curl -fL "https://raw.githubusercontent.com/PantheonDeified/FloodWatch-South-India/main/backend/floodwatch-api.service" -o /tmp/floodwatch-api.service
+sudo install -m 644 /tmp/floodwatch-api.service /etc/systemd/system/floodwatch-api.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now floodwatch-api
+sudo systemctl status --no-pager floodwatch-api
+curl --max-time 10 http://127.0.0.1:8000/health
+```
+
+If it does not start, inspect the logs with `sudo journalctl -u floodwatch-api -n 60 --no-pager`. Keep the Cloudflare Quick Tunnel running separately on your Windows computer when you need HTTPS access during the demo.
+
 ## Install dependencies and run backend tests
 
 For a clean development environment, install runtime requirements with:
