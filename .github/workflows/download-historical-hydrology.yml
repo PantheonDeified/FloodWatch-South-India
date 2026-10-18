@@ -47,13 +47,21 @@ jobs:
           PY
       - name: Test discharge normalization safeguards
         run: python -m unittest discover -s data_pipeline/tests -p 'test_normalize_cwc_discharge.py' -v
+      - name: Test CWC station catalogue safeguards
+        run: python -m unittest discover -s data_pipeline/tests -p 'test_build_cwc_station_catalog.py' -v
       - name: Normalize CWC discharge and produce quality report
         run: |
           python data_pipeline/scripts/normalize_cwc_discharge.py \
             --input-dir data_pipeline/raw/nwdp_history \
             --output data_pipeline/processed/cwc_discharge_normalized.csv \
             --report data_pipeline/processed/cwc_discharge_quality_report.json
-      - name: Upload raw sources, normalized data, and reports
+      - name: Build station catalogue for manual review
+        run: |
+          python data_pipeline/scripts/build_cwc_station_catalog.py \
+            --input data_pipeline/processed/cwc_discharge_normalized.csv \
+            --output data_pipeline/processed/cwc_station_catalog_review.csv \
+            --report data_pipeline/processed/cwc_station_catalog_review.json
+      - name: Upload raw sources, normalized data, and review reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -62,5 +70,7 @@ jobs:
             data_pipeline/raw/nwdp_history/
             data_pipeline/processed/cwc_discharge_normalized.csv
             data_pipeline/processed/cwc_discharge_quality_report.json
+            data_pipeline/processed/cwc_station_catalog_review.csv
+            data_pipeline/processed/cwc_station_catalog_review.json
           if-no-files-found: warn
           retention-days: 7
