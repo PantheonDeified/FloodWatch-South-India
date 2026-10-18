@@ -1,0 +1,36 @@
+name: Test regional LSTM model
+
+on:
+  push:
+    paths:
+      - 'data_pipeline/scripts/train_regional_lstm.py'
+      - 'data_pipeline/tests/test_regional_lstm.py'
+      - '.github/workflows/test-regional-lstm.yml'
+  pull_request:
+    paths:
+      - 'data_pipeline/scripts/train_regional_lstm.py'
+      - 'data_pipeline/tests/test_regional_lstm.py'
+      - '.github/workflows/test-regional-lstm.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regional-lstm-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install ML test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "numpy>=1.26,<3"
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple "torch==2.10.0+cpu"
+      - name: Run regional LSTM smoke tests
+        run: python -m unittest discover -s data_pipeline/tests -p "test_regional_lstm.py" -v
+      - name: Compile regional LSTM script
+        run: python -m py_compile data_pipeline/scripts/train_regional_lstm.py
