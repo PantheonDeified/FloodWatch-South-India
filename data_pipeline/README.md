@@ -50,9 +50,9 @@ The inference script refuses incomplete recent history instead of silently filli
 The official CWC telemetry portal currently lists historical archive resources for some South Indian river groups, including 1961–1990, 1991–2020, 2021–2025 and new 2026–2030 resources. The public portal's dataset metadata may be updated even when individual rows are missing or incomplete. Use the archive downloader to make a checksum-tracked local copy of the raw CSVs before analysis:
 
     python -m pip install -r data_pipeline/requirements.txt
-    python data_pipeline/scripts/download_nwdp_history.py --out-dir data_pipeline/raw/nwdp_history
+    python data_pipeline/scripts/download_nwdp_history.py --out-dir data_pipeline/raw/nwdp_history --max-resources 100
 
-By default it selects South India-relevant CWC river-group resources across all available periods. It records the dataset page, each resource page, exact download URL, byte count and SHA-256 in a local `manifest.json`. Add other official NWDP dataset pages with repeated `--source-url` arguments. Raw archives are intentionally not committed to Git; they may be large and have their own metadata/usage conditions.
+By default it searches the official CWC water-level telemetry, daily river-discharge, and daily rainfall dataset pages for South India state/basin resources across available historical periods. The portal lists older archive periods for daily discharge in Andhra Pradesh, Karnataka, Kerala, Tamil Nadu and Telangana, plus newer 2021–2025 and 2026–2030 resources; each file still requires inspection for actual station coverage and valid rows. It records the dataset page, each resource page, exact download URL, byte count and SHA-256 in a local `manifest.json`. Add other official NWDP dataset pages with repeated `--source-url` arguments. Raw archives are intentionally not committed to Git; they may be large and have their own metadata/usage conditions.
 
 After downloading, inspect a specific file before deciding which columns and units to normalize:
 
