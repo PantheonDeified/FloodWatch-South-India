@@ -1,0 +1,34 @@
+name: Validate FloodWatch frontend JavaScript
+
+on:
+  push:
+    paths:
+      - 'index.html'
+      - 'scripts/validate_frontend_js.py'
+      - '.github/workflows/frontend-tests.yml'
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'scripts/validate_frontend_js.py'
+      - '.github/workflows/frontend-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend-js:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax-check inline frontend JavaScript
+        run: python scripts/validate_frontend_js.py
