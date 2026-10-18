@@ -11,7 +11,7 @@ This is a short task list for tonight. You can do the work yourself or paste you
 - Historical rainfall comparisons using ERA5-Land.
 - Modelled river-discharge context using Open-Meteo Flood API/GloFAS.
 - Water-observation table interface, filters, and a rainfall-to-river evidence chain.
-- GitHub Pages project and a FastAPI backend on IBM LinuxONE. The health and status endpoints returned JSON through the temporary HTTPS tunnel. The versioned `backend/main.py` now includes a South-India-bounded Open-Meteo weather proxy; it still needs to be deployed to the running Linux server and tested.
+- GitHub Pages project and a FastAPI backend on IBM LinuxONE. Version 0.2.0 is running; `/health`, `/api/v1/status`, and `/api/v1/weather` returned responses, and the HTTPS developer checker confirmed the weather proxy is available. Automated backend tests and the syntax check now pass in GitHub Actions. The tunnel URL remains temporary.
 
 These features still need end-to-end testing. A feature in the code does not automatically mean every live data source is currently working.
 
