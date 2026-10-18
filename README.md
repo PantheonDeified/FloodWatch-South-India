@@ -27,7 +27,7 @@ See [Water pipeline run report](docs/water-pipeline-run-report.md) for the obser
 
 Workflow: `.github/workflows/refresh-water-observations.yml`
 
-To run it manually, open the repository's **Actions** tab, choose **Refresh official water observations**, and select **Run workflow**. Scheduled runs are configured every six hours. The workflow now refuses to publish an empty or inconsistent observation snapshot and no longer triggers itself solely because it committed the generated snapshot. A successful job still requires checking source timestamps, units, coordinates and resource-level errors.
+To run it manually, open the repository's **Actions** tab, choose **Refresh official water observations**, and select **Run workflow**. Scheduled runs are configured every six hours. The workflow now refuses to publish an empty or inconsistent observation snapshot and no longer triggers itself solely because it committed the generated snapshot. A successful job still requires checking source timestamps, units, coordinates and resource-level errors. The workflow also runs unit tests for `data_pipeline/scripts/validate_water_snapshot.py` and uses that validator to check record IDs, values, units, HTTPS source links, coordinates and timestamp warnings. Run the validator locally with `python data_pipeline/scripts/validate_water_snapshot.py --snapshot data/water-observations.json`.
 
 
 ## Historical data and model research
