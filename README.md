@@ -12,6 +12,7 @@ Expected GitHub Pages URL: https://pantheondeified.github.io/FloodWatch-South-In
 - Place search, map-click selection, coordinate entry and optional browser geolocation.
 - Point weather conditions and an hourly forecast from Open-Meteo. These are gridded model estimates, not direct observations at every location.
 - RainViewer radar overlay with a displayed source timestamp and a freshness check.
+- Spatial wind-direction/speed overlay sourced from Open-Meteo, and a GDACS tropical-cyclone event overlay with official IMD links as the warning fallback; these overlays require live browser verification after deployment.
 - Historical rainfall comparisons using ERA5-Land reanalysis, including a 1991–2020 baseline, latest complete monthly totals, a rolling 7-day seasonal percentile and a month-to-date anomaly where records are complete.
 - Modelled river-discharge context and short-range outlook from the Open-Meteo Flood API / GloFAS. This is modelled discharge, not a CWC gauge reading or a measured river height.
 - Official river/reservoir observation table interface, filters, and a rainfall-to-river evidence chain. An optional water-station map overlay plots only source records with usable coordinates inside the core map area, labels measurement types by color, and shows the source timestamp/link in each popup. The interface reads `data/water-observations.json`; markers are off by default and are not flood alerts.
@@ -27,7 +28,7 @@ See [Water pipeline run report](docs/water-pipeline-run-report.md) for the obser
 
 Workflow: `.github/workflows/refresh-water-observations.yml`
 
-To run it manually, open the repository's **Actions** tab, choose **Refresh official water observations**, and select **Run workflow**. Scheduled runs are configured every six hours. The workflow now refuses to publish an empty or inconsistent observation snapshot and no longer triggers itself solely because it committed the generated snapshot. A successful job still requires checking source timestamps, units, coordinates and resource-level errors. The workflow also runs unit tests for `data_pipeline/scripts/validate_water_snapshot.py` and uses that validator to check record IDs, values, units, HTTPS source links, coordinates and timestamp warnings. Run the validator locally with `python data_pipeline/scripts/validate_water_snapshot.py --snapshot data/water-observations.json`.
+To run it manually, open the repository's **Actions** tab, choose **Refresh official water observations**, and select **Run workflow**. Scheduled runs are configured every six hours. The workflow now refuses to publish an empty or inconsistent observation snapshot and no longer triggers itself solely because it committed the generated snapshot. A successful job still requires checking source timestamps, units, coordinates and resource-level errors. The workflow also regenerates `docs/water-pipeline-report.md` with counts, per-source timestamp strings, and data-quality indicators. The workflow also runs unit tests for `data_pipeline/scripts/validate_water_snapshot.py` and uses that validator to check record IDs, values, units, HTTPS source links, coordinates and timestamp warnings. Run the validator locally with `python data_pipeline/scripts/validate_water_snapshot.py --snapshot data/water-observations.json`.
 
 
 ## Historical data and model research
