@@ -42,25 +42,61 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip"
       - name: Install research model dependencies
         run: python -m pip install --upgrade pip numpy pandas torch
-      - name: Confirm input data exists
+      - name: Validate training parameters and input path
         env:
           FEATURES_PATH: ${{ inputs.features_path }}
+          LOOKBACK_DAYS: ${{ inputs.lookback_days }}
+          LEAD_DAYS: ${{ inputs.lead_days }}
+          EPOCHS: ${{ inputs.epochs }}
         run: |
           test -f "$FEATURES_PATH" || {
             echo "::error::Feature CSV not found: $FEATURES_PATH"
             echo "Download the historical hydrology archive, inspect its schema, and prepare a verified daily feature CSV first."
             exit 1
           }
+          [[ "$LOOKBACK_DAYS" =~ ^[0-9]+$ ]] && (( LOOKBACK_DAYS >= 14 && LOOKBACK_DAYS <= 730 )) || {
+            echo "::error::lookback_days must be an integer from 14 to 730"; exit 1;
+          }
+          [[ "$LEAD_DAYS" =~ ^[0-9]+$ ]] && (( LEAD_DAYS >= 1 && LEAD_DAYS <= 30 )) || {
+            echo "::error::lead_days must be an integer from 1 to 30"; exit 1;
+          }
+          [[ "$EPOCHS" =~ ^[0-9]+$ ]] && (( EPOCHS >= 1 && EPOCHS <= 500 )) || {
+            echo "::error::epochs must be an integer from 1 to 500"; exit 1;
+          }
       - name: Audit streamflow training readiness
         env:
           FEATURES_PATH: ${{ inputs.features_path }}
+          LOOKBACK_DAYS: ${{ inputs.lookback_days }}
+          LEAD_DAYS: ${{ inputs.lead_days }}
         run: |
           python data_pipeline/scripts/assess_streamflow_readiness.py \
             --features "$FEATURES_PATH" \
+            --lookback-days "$LOOKBACK_DAYS" \
+            --lead-days "$LEAD_DAYS" \
             --out data_pipeline-readiness-report.json
+      - name: Require selected station to pass the readiness audit
+        env:
+          STATION_ID: ${{ inputs.station_id }}
+        run: |
+          python - <<'PY'
+          import json, os, sys
+          from pathlib import Path
+          report = json.loads(Path("data_pipeline-readiness-report.json").read_text(encoding="utf-8"))
+          station_id = os.environ["STATION_ID"]
+          station = next((item for item in report["station_reports"]
+                          if str(item.get("station_id")) == station_id), None)
+          if station is None:
+              print(f"::error::Station ID {station_id!r} was not found in the readiness report.")
+              print("Available IDs:", ", ".join(str(x.get("station_id")) for x in report["station_reports"][:30]))
+              sys.exit(1)
+          if not station.get("eligible_for_training_attempt", False):
+              print(f"::error::Station {station_id!r} failed the structural readiness gate.")
+              print("Reasons:", "; ".join(station.get("reasons", [])))
+              sys.exit(1)
+          print(f"Station {station_id!r} passes structural checks. This is not proof of forecast skill or source/unit correctness.")
+          PY
       - name: Train and evaluate LSTM against persistence baseline
         env:
           FEATURES_PATH: ${{ inputs.features_path }}
