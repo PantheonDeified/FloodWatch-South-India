@@ -119,3 +119,53 @@ The basin layer must contain HydroBASINS-style HYBAS_ID and NEXT_DOWN fields (th
 The published OpenHydroNet implementation uses streamflow as the prediction target. CWC hourly water-level CSVs are not automatically streamflow records. To adapt an LSTM appropriately we need suitable discharge observations (or approved station rating curves with valid periods), verified basin attributes and meteorological forcing data aligned to each gauge. The production-like configuration also uses multiple forcing products; not all operational input feeds are necessarily freely reusable in the same way. The code is a research/engineering starting point, not a ready-made South India model.
 
 See [MODEL_ADAPTATION.md](../MODEL_ADAPTATION.md) for the evaluation plan.
+
+
+## Historical CWC station catalogue review (added 2026-10-18)
+
+The historical NWDP download currently normalizes daily discharge into
+`data_pipeline/processed/cwc_discharge_normalized.csv`. The pipeline can now
+build a station inventory from that normalized file:
+
+```bash
+python data_pipeline/scripts/build_cwc_station_catalog.py \
+  --input data_pipeline/processed/cwc_discharge_normalized.csv \
+  --output data_pipeline/processed/cwc_station_catalog_review.csv \
+  --report data_pipeline/processed/cwc_station_catalog_review.json
+```
+
+The catalogue summarizes each station's state, river/basin labels, reported
+coordinates, number of records, observed date range and source URLs. It flags
+conflicting coordinates for the same station name/state and invalid coordinate
+ranges. Crucially, every station is emitted with `coordinate_verified=false`
+and a blank `coordinate_source_url`. Coordinates appearing in a source CSV
+are not automatically treated as independently verified, so these rows must
+not be fed into the weather-fetch or basin-mapping scripts until a reviewer
+checks the location against a reliable source and records that source URL.
+
+The `Download historical South India hydrology data` GitHub Actions workflow
+runs unit tests for both discharge normalization and station-catalogue
+guardrails, creates the catalogue, and attaches it to the
+`floodwatch-south-india-historical-hydrology` artifact. Run it manually from
+the repository's Actions tab. The artifact expires after seven days, so
+download and retain the review CSV/report if needed.
+
+## Current evidence vs. next gate
+
+The 2026-10-18 successful run retrieved 10 NWDP resources, normalized
+1,876,509 rows from 1,876,539 input rows, rejected 30 negative discharge
+values, and represented 241 station IDs across Andhra Pradesh, Karnataka,
+Kerala, Tamil Nadu and Telangana (source date range 1965-01-01 to
+2025-12-31). This confirms ingestion and basic normalization, not complete
+station continuity, validated station coordinates, rainfall/discharge
+alignment, or forecast skill.
+
+Next gates, in order:
+1. Review the station catalogue and verify coordinates/provenance manually.
+2. Inspect data quality by station: timestamp duplicates, gaps, record frequency,
+   plausible extremes and station identity changes.
+3. Obtain/normalize suitable rainfall observations or document the limitations
+   of gridded reanalysis; align rainfall to verified gauge coordinates/basins.
+4. Build a station-specific daily feature table only after the above checks.
+5. Train a research-only baseline and LSTM using chronological splits; keep
+   flood-event labels and independent evaluation separate from discharge prediction.
