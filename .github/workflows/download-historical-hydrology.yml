@@ -49,12 +49,19 @@ jobs:
         run: python -m unittest discover -s data_pipeline/tests -p 'test_normalize_cwc_discharge.py' -v
       - name: Test CWC station catalogue safeguards
         run: python -m unittest discover -s data_pipeline/tests -p 'test_build_cwc_station_catalog.py' -v
+      - name: Test station-level discharge audit
+        run: python -m unittest discover -s data_pipeline/tests -p 'test_audit_cwc_discharge.py' -v
       - name: Normalize CWC discharge and produce quality report
         run: |
           python data_pipeline/scripts/normalize_cwc_discharge.py \
             --input-dir data_pipeline/raw/nwdp_history \
             --output data_pipeline/processed/cwc_discharge_normalized.csv \
             --report data_pipeline/processed/cwc_discharge_quality_report.json
+      - name: Audit discharge gaps, duplicates and extremes by station
+        run: |
+          python data_pipeline/scripts/audit_cwc_discharge.py \
+            --input data_pipeline/processed/cwc_discharge_normalized.csv \
+            --output data_pipeline/processed/cwc_discharge_station_audit.json
       - name: Build station catalogue for manual review
         run: |
           python data_pipeline/scripts/build_cwc_station_catalog.py \
@@ -70,6 +77,7 @@ jobs:
             data_pipeline/raw/nwdp_history/
             data_pipeline/processed/cwc_discharge_normalized.csv
             data_pipeline/processed/cwc_discharge_quality_report.json
+            data_pipeline/processed/cwc_discharge_station_audit.json
             data_pipeline/processed/cwc_station_catalog_review.csv
             data_pipeline/processed/cwc_station_catalog_review.json
           if-no-files-found: warn
