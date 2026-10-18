@@ -474,9 +474,98 @@ async function loadSpatialCloudOverlay(){
   $('overlayStatus').textContent='Spatial cloud cover from Open-Meteo · '+plotted+' model grid points · '+(times[0]||'provider timestamp unavailable')+' UTC. Model estimates, not satellite imagery; refreshes when the map moves.';
  }catch(e){if(requestId===cloudRequestId)$('overlayStatus').textContent='Cloud-cover overlay unavailable: '+e.message+'. Point cloud cover remains in current conditions.'}
 }
-map.on('moveend',()=>{if(activeOverlay==='cloud')loadSpatialCloudOverlay()});
-async function setOverlay(kind){activeOverlay=kind;updateZoomStatus();document.querySelectorAll('[data-overlay]').forEach(b=>b.classList.toggle('active',b.dataset.overlay===kind));if(overlay){map.removeLayer(overlay);overlay=null}if(cycloneLayer&&kind!=='cyclone'){map.removeLayer(cycloneLayer);cycloneLayer=null}if(kind==='cyclone'){$('overlayStatus').innerHTML='For verified cyclone tracks, warnings and intensity, open the official <a href="https://dss.imd.gov.in/dwr_img/GIS/marine.php" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">IMD Cyclone Warning Decision Support System</a> or <a href="https://mausam.imd.gov.in/imd_latest/contents/cyclone.php" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">IMD cyclone bulletins</a>. This prototype does not yet ingest and validate an official cyclone feed, so it will not draw unverified alerts on the map.';return}if(kind==='rain'){try{$('overlayStatus').textContent='Loading latest available RainViewer radar frame…';const r=await fetch('https://api.rainviewer.com/public/weather-maps.json');if(!r.ok)throw Error('Radar metadata unavailable');const data=await r.json();const frames=[...(data.radar?.past||[])];if(!frames.length)throw Error('No recent radar frames returned');const frame=frames[frames.length-1];if(!frame.time)throw Error('Radar response did not provide a frame timestamp');const ageMinutes=Math.max(0,Math.round((Date.now()-frame.time*1000)/60000));const sourceTime=new Date(frame.time*1000).toISOString().replace('T',' ').replace('.000Z',' UTC');if(ageMinutes>120){$('overlayStatus').textContent='Radar frame rejected as stale: source timestamp '+sourceTime+'; age '+ageMinutes+' minutes. No radar layer displayed.';return}overlay=L.tileLayer('https://tilecache.rainviewer.com'+frame.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:.62,maxNativeZoom:7,maxZoom:19,attribution:'Radar tiles © RainViewer'}).addTo(map);$('overlayStatus').textContent='RainViewer radar frame timestamp: '+sourceTime+' · age about '+ageMinutes+' min. Coverage varies; this is not a station rainfall measurement.'}catch(e){$('overlayStatus').textContent='Radar unavailable right now: '+e.message+'. Current point rainfall remains available from Open-Meteo.'}return}if(kind==='cloud'){loadSpatialCloudOverlay()}else{$('overlayStatus').textContent='Wind speed and gusts at the selected point are shown in current conditions; a spatial wind overlay is not connected yet.'}}
-async function loadCyclones(){try{if(cycloneLayer)map.removeLayer(cycloneLayer);const r=await fetch('https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventtype=TC&alertlevel=Green;Orange;Red');if(!r.ok)throw Error('GDACS feed unavailable');const data=await r.json();cycloneLayer=L.geoJSON(data,{pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:7,color:'#ffb347',fillColor:'#ff5b5b',fillOpacity:.8}),onEachFeature:(f,l)=>l.bindPopup((f.properties?.name||'Tropical cyclone')+'<br>Public GDACS event feed')}).addTo(map);$('overlayStatus').textContent='GDACS event layer loaded if events are currently reported.'}catch(e){$('overlayStatus').textContent='Cyclone feed unavailable right now. Check official IMD cyclone bulletins.'}}
+async function loadSpatialWindOverlay(){
+ const requestId=++cloudRequestId;
+ if(overlay){map.removeLayer(overlay);overlay=null}
+ const b=map.getBounds(),south=Math.max(7.5,b.getSouth()),north=Math.min(21.5,b.getNorth()),west=Math.max(73.5,b.getWest()),east=Math.min(86.5,b.getEast());
+ if(south>=north||west>=east){$('overlayStatus').textContent='Wind overlay is available within the South India map extent.';return}
+ $('overlayStatus').textContent='Loading spatial wind estimates from Open-Meteo…';
+ try{
+  const rows=5,cols=5,lats=[],lons=[];
+  for(let yi=0;yi<rows;yi++){const lat=south+(north-south)*(yi+.5)/rows;for(let xi=0;xi<cols;xi++){lats.push(lat.toFixed(3));lons.push((west+(east-west)*(xi+.5)/cols).toFixed(3));}}
+  const url='https://api.open-meteo.com/v1/forecast?latitude='+lats.join(',')+'&longitude='+lons.join(',')+'&current=wind_speed_10m,wind_direction_10m&forecast_days=1&timezone=UTC';
+  const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw Error('Open-Meteo returned HTTP '+response.status);
+  const payload=await response.json();if(requestId!==cloudRequestId||activeOverlay!=='wind')return;
+  const points=Array.isArray(payload)?payload:[payload];if(!points.length)throw Error('No wind grid returned');
+  const layer=L.layerGroup();let plotted=0;const times=[];
+  points.forEach(point=>{
+   const speed=Number(point.current?.wind_speed_10m),direction=Number(point.current?.wind_direction_10m),lat=Number(point.latitude),lon=Number(point.longitude);
+   if(!Number.isFinite(speed)||!Number.isFinite(direction)||!Number.isFinite(lat)||!Number.isFinite(lon))return;
+   if(point.current?.time)times.push(point.current.time);
+   // Meteorological direction is where the wind comes FROM; the arrow points TO.
+   const bearing=(direction+180)%360;
+   const icon=L.divIcon({className:'wind-arrow-icon',html:'<div aria-label="Wind direction" style="width:28px;height:28px;display:grid;place-items:center;border-radius:50%;background:rgba(8,22,39,.82);border:1px solid rgba(170,215,255,.85);color:#f5fbff;font-size:22px;line-height:1;text-shadow:0 1px 3px #000;transform:rotate('+bearing+'deg)">↑</div>',iconSize:[28,28],iconAnchor:[14,14]});
+   const marker=L.marker([lat,lon],{icon,keyboard:false});
+   marker.bindTooltip('Wind '+speed.toFixed(1)+' km/h · from '+Math.round(direction)+'°',{direction:'top',offset:[0,-10]});
+   marker.addTo(layer);plotted++;
+  });
+  if(requestId!==cloudRequestId||activeOverlay!=='wind')return;
+  if(!plotted)throw Error('No valid wind grid points returned');
+  overlay=layer.addTo(map);
+  const time=[...new Set(times)][0]||'time not supplied';
+  $('overlayStatus').textContent='Open-Meteo spatial wind estimates · '+plotted+' grid points · arrows point with the wind; hover an arrow for speed and direction · model time '+time+' UTC. Not a station measurement.';
+ }catch(e){if(requestId!==cloudRequestId||activeOverlay!=='wind')return;$('overlayStatus').textContent='Wind overlay unavailable: '+e.message+'. Point wind speed and gusts remain available in current conditions.'}
+}
+map.on('moveend',()=>{if(activeOverlay==='cloud')loadSpatialCloudOverlay();else if(activeOverlay==='wind')loadSpatialWindOverlay()});
+async function setOverlay(kind){
+ activeOverlay=kind;updateZoomStatus();
+ document.querySelectorAll('[data-overlay]').forEach(b=>b.classList.toggle('active',b.dataset.overlay===kind));
+ if(overlay){map.removeLayer(overlay);overlay=null}
+ if(cycloneLayer&&kind!=='cyclone'){map.removeLayer(cycloneLayer);cycloneLayer=null}
+ if(kind==='cyclone'){await loadCyclones();return}
+ if(kind==='rain'){
+  try{
+   $('overlayStatus').textContent='Loading latest available RainViewer radar frame…';
+   const r=await fetch('https://api.rainviewer.com/public/weather-maps.json',{cache:'no-store'});
+   if(!r.ok)throw Error('Radar metadata unavailable');
+   const data=await r.json(),frames=[...(data.radar?.past||[])];
+   if(!frames.length)throw Error('No recent radar frames returned');
+   const frame=frames[frames.length-1];if(!frame.time)throw Error('Radar response did not provide a frame timestamp');
+   const ageMinutes=Math.max(0,Math.round((Date.now()-frame.time*1000)/60000));
+   const sourceTime=new Date(frame.time*1000).toISOString().replace('T',' ').replace('.000Z',' UTC');
+   if(ageMinutes>120){$('overlayStatus').textContent='Radar frame rejected as stale: source timestamp '+sourceTime+'; age '+ageMinutes+' minutes. No radar layer displayed.';return}
+   overlay=L.tileLayer('https://tilecache.rainviewer.com'+frame.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:.62,maxNativeZoom:7,maxZoom:19,attribution:'Radar tiles © RainViewer'}).addTo(map);
+   $('overlayStatus').textContent='RainViewer radar frame timestamp: '+sourceTime+' · age about '+ageMinutes+' min. Coverage varies; this is not a station rainfall measurement.';
+  }catch(e){$('overlayStatus').textContent='Radar unavailable right now: '+e.message+'. Current point rainfall remains available from Open-Meteo.'}
+  return;
+ }
+ if(kind==='cloud'){await loadSpatialCloudOverlay();return}
+ if(kind==='wind'){await loadSpatialWindOverlay();return}
+ $('overlayStatus').textContent='Choose a supported map overlay.';
+}
+async function loadCyclones(){
+ try{
+  $('overlayStatus').textContent='Loading tropical-cyclone events from GDACS…';
+  const url='https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventtype=TC&alertlevel=Green;Orange;Red';
+  const r=await fetch(url,{cache:'no-store',headers:{Accept:'application/json'}});
+  if(!r.ok)throw Error('GDACS returned HTTP '+r.status);
+  const data=await r.json();
+  if(!data||!Array.isArray(data.features))throw Error('GDACS response was not a GeoJSON feature collection');
+  const features=data.features.filter(f=>f&&f.geometry&&f.properties);
+  const layer=L.geoJSON({type:'FeatureCollection',features},{
+   pointToLayer:(feature,latlng)=>{
+    const level=String(feature.properties?.alertlevel||'Green').toLowerCase();
+    const color=level==='red'?'#ff4b55':level==='orange'?'#ff9f43':'#f4d35e';
+    return L.circleMarker(latlng,{radius:8,color:'#fff3f3',weight:1.5,fillColor:color,fillOpacity:.9});
+   },
+   onEachFeature:(feature,marker)=>{
+    const p=feature.properties||{},box=document.createElement('div');
+    const title=document.createElement('strong');title.textContent=p.name||p.eventname||'Tropical cyclone';box.appendChild(title);
+    const detail=document.createElement('div');
+    const parts=[p.alertlevel?'Alert: '+p.alertlevel:null,p.fromdate?'Start: '+p.fromdate:null,p.todate?'End: '+p.todate:null,p.country?'Area: '+p.country:null].filter(Boolean);
+    detail.textContent=parts.join(' · ')||'Details are available in the GDACS event record.';
+    box.appendChild(detail);marker.bindPopup(box);
+   }
+  });
+  cycloneLayer=layer.addTo(map);
+  $('overlayStatus').textContent=features.length
+   ?'GDACS cyclone-event layer loaded: '+features.length+' event features. Colours reflect GDACS alert level where supplied. This global event feed is not a substitute for official IMD alerts.'
+   :'GDACS responded successfully; no tropical-cyclone event features were returned for this query. Check official IMD bulletins as well.';
+ }catch(e){
+  if(cycloneLayer){map.removeLayer(cycloneLayer);cycloneLayer=null}
+  $('overlayStatus').textContent='GDACS cyclone feed unavailable: '+e.message+'. Use the official IMD <a href="https://dss.imd.gov.in/dwr_img/GIS/marine.php" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">Cyclone Warning Decision Support System</a> and <a href="https://mausam.imd.gov.in/imd_latest/contents/cyclone.php" target="_blank" rel="noopener noreferrer" style="color:#7fc8ff">cyclone bulletins</a>.';
+ }
+}
 document.querySelectorAll('[data-overlay]').forEach(b=>b.addEventListener('click',()=>setOverlay(b.dataset.overlay)));
 $('searchForm').addEventListener('submit',async e=>{e.preventDefault();const q=$('search').value.trim();if(!q)return;$('overlayStatus').textContent='Searching OpenStreetMap…';try{const u='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&countrycodes=in&q='+encodeURIComponent(q+', South India');const r=await fetch(u,{headers:{Accept:'application/json'}});if(!r.ok)throw Error('Search service unavailable');const results=await r.json();const south=results.find(x=>{const a=Number(x.lat),b=Number(x.lon);return a>=7&&a<=21.8&&b>=73&&b<=87});if(!south)throw Error('No matching South India location found. Try adding the district or state.');const lat=Number(south.lat),lon=Number(south.lon);map.setView([lat,lon],11);selectLocation(lat,lon,south.display_name.split(',').slice(0,3).join(','));$('overlayStatus').textContent='Found '+south.display_name}catch(err){$('overlayStatus').textContent=err.message}});
 $('goCoords').addEventListener('click',()=>{const lat=Number($('latInput').value),lon=Number($('lonInput').value);if(!Number.isFinite(lat)||!Number.isFinite(lon)||$('latInput').value.trim()===''||$('lonInput').value.trim()===''||lat < -90||lat>90||lon < -180||lon>180){$('overlayStatus').textContent='Enter valid coordinates: latitude −90 to 90 and longitude −180 to 180.';return}map.setView([lat,lon],11);selectLocation(lat,lon,'Manually entered coordinates')});
