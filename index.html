@@ -870,7 +870,7 @@ function addHistoricalFloodHazard(){
  // Use the official service legend rather than hand-assigning hazard colours.
  addNRSCOfficialLegendImage();
 }
-async 
+
 // FloodWatch's own gridded triage score. It uses raw forecasts and station history,
 // never upstream websites' red/amber/green labels. It is not a calibrated probability.
 const FLOODWATCH_RISK_GRID = {
@@ -1090,7 +1090,7 @@ async function setComputedRiskGrid(requestId){
  }
 }
 
-function addRiskCycloneThreat(){
+async function addRiskCycloneThreat(){
  const requestId=++riskCycloneRequest;
  try{
   $('riskLegendNote').textContent='Loading current/recent GDACS tropical-cyclone event records. No storm buffer or future path is invented.';
