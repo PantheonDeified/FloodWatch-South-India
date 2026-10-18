@@ -28,6 +28,11 @@ jobs:
             --start-year 1950 --end-year 2025 \
             --max-resources 20 \
             --out-dir data_pipeline/raw/nwdp_history
+      - name: Inspect downloaded CSV schemas and sample rows
+        run: |
+          python data_pipeline/scripts/inspect_nwdp_archive.py \
+            --directory data_pipeline/raw/nwdp_history \
+            --out data_pipeline/raw/nwdp_history/inspection-report.json
       - name: Confirm discharge targets were retrieved
         run: |
           python - <<'PY'
