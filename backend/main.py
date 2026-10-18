@@ -73,7 +73,7 @@ def api_status():
         "water_observations_endpoint": "/api/v1/water-observations?limit=100",
         "model_readiness_endpoint": "/api/v1/models/status",
         "water_observations": "Published GitHub Pages JSON snapshot; collector runs every six hours when scheduled execution succeeds; observation freshness varies by source",
-        "flood_forecast_model": "Not yet deployed or locally validated",
+        "flood_forecast_model": "External Open-Meteo Flood API/GloFAS proxy available; local FloodWatch model not yet trained or validated",
         "last_checked": datetime.now(timezone.utc).isoformat(),
     }
 
