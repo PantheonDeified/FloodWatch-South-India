@@ -190,6 +190,70 @@ def main():
     skill=1-m["rmse_m3s"]/b["rmse_m3s"] if b["rmse_m3s"]>0 else None
     per_horizon=[{"lead_day":h+1,"model":metrics(actual[:,h],pred[:,h]),
                   "persistence":metrics(actual[:,h],base[:,h])} for h in range(args.lead_days)]
+
+    # A pooled score can hide stations where the LSTM fails. Report every held-out
+    # station separately, and assess station-relative high flows using thresholds
+    # fitted only to that station's training-period observations (not official alerts).
+    test_station_ids = np.asarray([row[4] for row in data["test"]], dtype=str)
+    per_station_metrics = {}
+    station_high_flow_skill = []
+    for sid in sorted(set(test_station_ids.tolist())):
+        mask_station = test_station_ids == sid
+        station_actual = actual[mask_station]
+        station_pred = pred[mask_station]
+        station_base = base[mask_station]
+        station_model_metrics = metrics(station_actual, station_pred)
+        station_baseline_metrics = metrics(station_actual, station_base)
+        station_baseline_rmse = station_baseline_metrics["rmse_m3s"]
+        station_model_rmse = station_model_metrics["rmse_m3s"]
+        station_skill = (
+            float(1 - station_model_rmse / station_baseline_rmse)
+            if station_baseline_rmse is not None and station_baseline_rmse > 0 else None
+        )
+        threshold = station_peak_thresholds.get(sid)
+        high_flow_report = None
+        high_flow_count = 0
+        high_flow_skill = None
+        if threshold is not None and np.isfinite(threshold):
+            high_mask = station_actual >= threshold
+            high_flow_count = int(high_mask.sum())
+            if high_flow_count:
+                high_actual = station_actual[high_mask]
+                high_pred = station_pred[high_mask]
+                high_base = station_base[high_mask]
+                high_model_metrics = metrics(high_actual, high_pred)
+                high_baseline_metrics = metrics(high_actual, high_base)
+                baseline_high_rmse = high_baseline_metrics["rmse_m3s"]
+                model_high_rmse = high_model_metrics["rmse_m3s"]
+                if baseline_high_rmse is not None and baseline_high_rmse > 0:
+                    high_flow_skill = float(1 - model_high_rmse / baseline_high_rmse)
+                    station_high_flow_skill.append(high_flow_skill)
+                high_flow_report = {
+                    "model": high_model_metrics,
+                    "persistence": high_baseline_metrics,
+                    "rmse_skill_vs_persistence": high_flow_skill,
+                }
+        per_station_metrics[sid] = {
+            "test_metrics": station_model_metrics,
+            "persistence_baseline_test_metrics": station_baseline_metrics,
+            "rmse_skill_vs_persistence": station_skill,
+            "training_period_90th_percentile_discharge_m3s": threshold,
+            "high_flow_target_points": high_flow_count,
+            "high_flow_test_metrics": high_flow_report,
+        }
+    station_skills = [
+        value["rmse_skill_vs_persistence"] for value in per_station_metrics.values()
+        if value["rmse_skill_vs_persistence"] is not None
+    ]
+    per_station_summary = {
+        "stations_evaluated": len(per_station_metrics),
+        "stations_beating_persistence_on_rmse": sum(value > 0 for value in station_skills),
+        "stations_with_comparable_baseline": len(station_skills),
+        "high_flow_stations_with_comparable_baseline": len(station_high_flow_skill),
+        "high_flow_stations_beating_persistence_on_rmse": sum(value > 0 for value in station_high_flow_skill),
+        "note": "High-flow means the station's training-period 90th-percentile discharge, not an official flood-warning threshold.",
+    }
+
     args.output_dir.mkdir(parents=True,exist_ok=True)
     model_path=args.output_dir/"regional_discharge_lstm.pt"
     report_path=args.output_dir/"regional_discharge_lstm.report.json"
@@ -206,13 +270,17 @@ def main():
         "training":"uniform time coverage plus up to one-third of each station's cap from high-flow target horizons; station threshold is the 90th percentile of training-period observed discharge"},
       "split":{"train_before":str(dates[tr].date()),"validation_before":str(dates[va].date()),"test_from":str(dates[va].date())},
       "test_metrics":m,"persistence_baseline_test_metrics":b,"rmse_skill_vs_persistence":skill,
-      "beats_persistence_baseline_on_rmse":bool(skill is not None and skill>0),"per_horizon_metrics":per_horizon,
+      "beats_persistence_baseline_on_rmse":bool(skill is not None and skill>0),
+      "per_station_summary":per_station_summary,
+      "per_station_metrics":per_station_metrics,
+      "per_horizon_metrics":per_horizon,
       "training_history":history,"model_file":str(model_path),"created_at_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
       "weather_forecast_inputs_available":False,"operational_status":"not_validated_for_public_warnings",
       "limitations":["No rainfall/weather forecast forcing or static basin descriptors.",
       "Window counts are bounded per station/split for CPU/RAM; validation/test windows are evenly time-sampled rather than exhaustive.",
-      "High-flow training sampling uses each station's training-period 90th percentile, not an official flood danger threshold.",
-      "No flood probability, water depth, or inundation extent.","Compare station-wise and flood-event metrics before any operational use."]}
+      "High-flow training sampling and high-flow evaluation use each station's training-period 90th percentile, not an official flood danger threshold.",
+      "Some stations may have too few held-out high-flow targets for a stable metric; inspect counts before comparing stations.",
+      "No flood probability, water depth, or inundation extent.","This research run does not by itself justify public warnings; review per-station and high-flow metrics first."]}
     report_path.write_text(json.dumps(report,indent=2),encoding="utf-8")
     print(json.dumps({k:v for k,v in report.items() if k!="training_history"},indent=2))
     return 0
