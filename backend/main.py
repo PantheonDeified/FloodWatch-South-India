@@ -347,7 +347,15 @@ def model_status():
             "high_flow_nse": -0.0129,
             "note": "The single-station pilot's overall metric improved but high-flow performance remains weak."
         },
+        "inference_endpoint_available": True,
         "inference_endpoint": "/api/v1/models/regional-discharge/forecast",
+        "trained_model_artifact": (
+            "Local model weights, scalers and report are present; run on-demand inference to verify runtime compatibility."
+            if assets_ready else
+            "not available as local server artifacts; the GitHub Actions artifact is temporary and may expire"
+        ),
+        "live_inference_available": False,
+        "local_runtime_note": "On-demand inference is distinct from verified live sensor data; source-history age must be inspected.",
         "on_demand_inference_available": assets_ready,
         "model_served_by_api": assets_ready,
         "live_sensor_data_verified": False,
