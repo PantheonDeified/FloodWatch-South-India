@@ -122,10 +122,15 @@ def main() -> int:
     predicted = np.expm1(np.maximum(prediction_scaled * sd + mu, 0.0))
     last_observed = float(values[mask][-1])
     valid_dates = [(end + pd.Timedelta(days=i)).date().isoformat() for i in range(1, horizon + 1)]
+    history_age_days = max(0, (pd.Timestamp.now(tz="UTC").date() - end.date()).days)
+    history_freshness = "recent_source_history" if history_age_days <= 3 else "stale_historical_replay"
     output = {
         "model_type": report.get("model_type", "regional discharge LSTM"),
         "status": "experimental_research_only",
         "operational_status": "not_validated_for_public_warnings",
+        "forecast_is_live": bool(history_age_days <= 3),
+        "history_freshness": history_freshness,
+        "history_age_days": int(history_age_days),
         "station_id": station_id,
         "state": state,
         "forecast_origin_date": end.date().isoformat(),
@@ -142,7 +147,7 @@ def main() -> int:
         "model_artifact": str(args.model_file),
         "scalers_artifact": str(args.scalers_file),
         "created_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "warning": "Historical discharge-only inference; inspect forecast_origin_date before interpreting. This is not a real-time forecast unless source observations are current.",
+        "warning": "Historical discharge-only inference; forecast_is_live is true only if the latest station observation is no more than 3 days old. A successful smoke test may emit a stale historical replay and does not establish real-time forecast ability.",
         "limitations": [
             "Uses historical discharge only; no future rainfall/weather forcing.",
             "Prediction is discharge, not river level, flood probability, depth, inundation extent, or official alert.",
