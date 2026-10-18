@@ -252,20 +252,33 @@ def get_river_flow(
 
 @app.get("/api/v1/models/status")
 def model_status():
-    """Report model readiness honestly; a source-code architecture is not a trained model."""
+    """Report trained research artifacts separately from models actually served by this API."""
     return {
-        "status": "research_pipeline_only",
-        "streamflow_lstm_code": "research script in repository; not part of live inference service",
-        "event_classifier_code": "research script in repository; not part of live inference service",
-        "trained_model_artifact": "not_deployed",
+        "status": "experimental_single_station_model_trained_not_deployed",
+        "streamflow_lstm_code": "PyTorch single-station LSTM is implemented and training has completed for one Karnataka gauge",
+        "event_classifier_code": "scikit-learn event baseline exists; reliable reviewed event labels are still required",
+        "trained_model_artifact": "available_as_temporary_github_actions_artifact_not_loaded_by_this_api",
+        "training_run_url": "https://github.com/PantheonDeified/FloodWatch-South-India/actions/runs/39114067094",
+        "evaluation_report_url": "https://github.com/PantheonDeified/FloodWatch-South-India/blob/main/docs/ML_VALIDATION_SNAPSHOT.md",
+        "single_station_test_metrics": {
+            "station": "Yadgir, Karnataka",
+            "target": "daily maximum river discharge in m3/s",
+            "lstm_rmse_m3s": 1043.61,
+            "persistence_rmse_m3s": 1274.75,
+            "overall_rmse_skill_vs_persistence": 0.1813,
+            "high_flow_nse": -0.0129,
+            "high_flow_performance_warning": "Extreme-flow skill remains weak; not suitable for public warning use."
+        },
+        "live_inference_available": False,
         "validated_south_india_flood_forecast": False,
-        "required_before_inference": [
-            "verified historical discharge series with units and station identifiers",
-            "weather features aligned to the same gauge and dates",
-            "chronological train/validation/test evaluation against persistence baseline",
-            "reviewed catchment mapping and published model card",
+        "required_before_operational_inference": [
+            "persist and load a versioned model artifact plus matching scalers in the deployed service",
+            "validate predictions on independent gauges and flood events across the target region",
+            "align observed discharge and weather forecast inputs with station/catchment metadata",
+            "report per-station and per-horizon skill, uncertainty and missing-data behavior",
+            "reviewed catchment mapping, monitoring, rollback and published model card"
         ],
-        "message": "No FloodWatch-trained flood prediction is available. External modelled products must remain separately labelled.",
+        "message": "A one-station experimental LSTM has trained and beaten persistence on overall holdout RMSE, but high-flow skill is weak and this API does not serve its predictions. External Open-Meteo/GloFAS products remain separate and must not be presented as FloodWatch-trained forecasts."
     }
 
 
