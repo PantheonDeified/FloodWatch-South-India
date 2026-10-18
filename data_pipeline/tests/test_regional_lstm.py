@@ -4,14 +4,22 @@ import pathlib
 import unittest
 
 import numpy as np
-import torch
 
-SCRIPT = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "train_regional_lstm.py"
-SPEC = importlib.util.spec_from_file_location("train_regional_lstm", SCRIPT)
-MODULE = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(MODULE)
+try:
+    import torch
+except ImportError:
+    torch = None
+
+if torch is not None:
+    SCRIPT = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "train_regional_lstm.py"
+    SPEC = importlib.util.spec_from_file_location("train_regional_lstm", SCRIPT)
+    MODULE = importlib.util.module_from_spec(SPEC)
+    SPEC.loader.exec_module(MODULE)
+else:
+    MODULE = None
 
 
+@unittest.skipIf(torch is None, "regional LSTM smoke tests require PyTorch; run test-regional-lstm workflow")
 class RegionalLSTMTests(unittest.TestCase):
     def test_forward_shape_and_finite_output(self):
         model = MODULE.RegionalLSTM(horizon=7)
