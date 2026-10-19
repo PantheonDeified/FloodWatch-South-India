@@ -160,10 +160,10 @@ details.card[open] summary:after{content:'−'}
 
     <details class="card" id="lstmCard">
       <summary><b>🧠 Regional LSTM risk contribution</b> <span class="badge" id="lstmBadge">Not connected</span></summary>
-      <p class="note">Connect the live FloodWatch API to include station-aware, seven-day LSTM discharge outlooks in nearby map-cell colours. The model modifies an experimental risk score; it does not output calibrated flood probability or official warnings.</p>
+      <p class="note">FloodWatch automatically loads the latest scheduled regional LSTM station forecast. An optional HTTPS backend URL enables on-demand inference; the published forecast snapshot is the fallback. LSTM output is discharge, not calibrated flood probability or an official warning.</p>
       <form id="lstmForm" class="infra">
-        <label>Live backend HTTPS base URL<input id="lstmApiBase" type="url" maxlength="500" placeholder="https://your-live-api.example.com" autocomplete="url"></label>
-        <div class="row"><button type="submit">Connect &amp; load LSTM</button><button type="button" id="lstmDisconnect">Disconnect</button></div>
+        <label>Optional live backend HTTPS base URL<input id="lstmApiBase" type="url" maxlength="500" placeholder="https://your-live-api.example.com" autocomplete="url"></label>
+        <div class="row"><button type="submit">Connect &amp; load LSTM</button><button type="button" id="lstmDisconnect">Use scheduled snapshot</button></div>
       </form>
       <div class="status" id="lstmStatus" aria-live="polite">Loading the latest scheduled regional LSTM forecast…</div>
       <p class="note">Only forecasts with recent source-history timestamps, usable coordinates and a station-relative historic-discharge rank can contribute. Influence fades to zero beyond 65 km from a station; this distance is an approximation, not proof of river-network connectivity.</p>
@@ -858,7 +858,15 @@ try{
 $('lstmForm').addEventListener('submit',async e=>{
   e.preventDefault();
   try{
-    const normalized=normalizeLstmApiBase($('lstmApiBase').value);
+    const rawBase=$('lstmApiBase').value.trim();
+    if(!rawBase){
+      try{localStorage.removeItem(LSTM_STORAGE_KEY)}catch(x){}
+      lstmStations=[];lstmLoadedAt=0;
+      await refreshLstmForecast(true);
+      if($('riskMode').value==='contours')await setMode('contours');
+      return;
+    }
+    const normalized=normalizeLstmApiBase(rawBase);
     $('lstmApiBase').value=normalized;
     try{localStorage.setItem(LSTM_STORAGE_KEY,normalized)}catch(x){throw Error('Browser could not save this URL. Allow site storage and reconnect.')}
     lstmStations=[];lstmLoadedAt=0;
@@ -870,11 +878,11 @@ $('lstmForm').addEventListener('submit',async e=>{
     }
   }
 });
-$('lstmDisconnect').addEventListener('click',()=>{
+$('lstmDisconnect').addEventListener('click',async()=>{
   try{localStorage.removeItem(LSTM_STORAGE_KEY)}catch(e){}
   $('lstmApiBase').value='';lstmStations=[];lstmLoadedAt=0;
-  lstmStatus('Disconnected. Map colours use forecast rainfall and GloFAS river context only.',false);
-  if($('riskMode').value==='contours')setMode('contours');
+  try{await refreshLstmForecast(true);if($('riskMode').value==='contours')await setMode('contours')}
+  catch(e){if($('riskMode').value==='contours')setMode('contours')}
 });
 
 // Colour-coded city pins from one batched request; recolour when fresh LSTM stations arrive.
