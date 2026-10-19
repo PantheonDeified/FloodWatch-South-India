@@ -45,15 +45,14 @@ jobs:
           # Pages deployment and this smoke-check workflow start on the same push.
           # Retry the page fetch until the new commit is actually visible via GitHub Pages/CDN.
           expected_markers = (
-              "FloodWatch", "leaflet", "water-observations.json",
-              'data-overlay="rain"', 'data-overlay="cloud"',
-              'data-overlay="wind"', 'data-overlay="nasa-imerg"', 'data-overlay="cyclone"',
-              "ERA5-Land", "waterRows", "dischargeInterpretation", "hourly",
-              "riskLayer", "riskMapLegend", "setRiskMapLayer", "setComputedRiskGrid", "FLOODWATCH_RISK_GRID", "fw-risk-contours-20261018-v1", "flood-api.open-meteo.com", "NRSC_HAZARD_WMS",
-              "agg_karnataka", "agg_kerala", "agg_tamilnadu", "loadCyclones",
-              "addRiskCycloneThreat", "buildRiskContourField", "buildRiskContourPolylines", "basinRoutingRelation", "loadSouthIndiaBasins", "checkOfficialFeeds", 'id="regionalMlStatus"', 'id="ibmZDatathonBanner"', "infraEvidenceForm", "initInfrastructureRegister",
-              "floodwatch.infrastructureEvidence.v1", "cwc.gov.in/national-register-large-dams",
-              "sachet.ndma.gov.in",
+              "FloodWatch", "leaflet", "hourly", "flood-api.open-meteo.com",
+              "south-india-states.geojson", "NRSC_WMS", "agg_karnataka",
+              "agg_kerala", "agg_tamilnadu", "addCyclone", "riskMode",
+              "ovLegend", "runContours", "gridCells", "buildField", "contourSegs",
+              'id="lstmForm"', 'id="lstmStatus"', "all_stations=true",
+              "applyLstmCellScore", "nearestLstmSignal", "LSTM_RADIUS_KM=65",
+              "floodwatch.regionalLstmApiBase.v1", "infraForm",
+              "floodwatch.infrastructureEvidence.v1", "sachet.ndma.gov.in",
           )
           for name, url in checks:
               max_attempts = 10 if name == "site" else 1
@@ -95,7 +94,7 @@ jobs:
                       raise
 
           html = responses["site"][0].decode("utf-8", errors="replace")
-          print("PASS deployed page contains all previous feature markers and new risk-map markers")
+          print("PASS deployed page contains current main-branch map and LSTM-overlay markers")
 
           # Parse every inline JavaScript block with the runner's Node.js parser.
           scripts = re.findall(r"<script\b(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S)
