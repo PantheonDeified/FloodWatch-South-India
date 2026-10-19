@@ -401,3 +401,72 @@ def test_river_flow_survives_optional_reservoir_snapshot_failure(monkeypatch):
     assert data["_floodwatch"]["reservoir"]["storage_pct"] is None
     assert "river-flow data are still available" in data["_floodwatch"]["reservoir"]["reason"]
 
+def test_reservoir_status_uses_nearest_usable_storage_record(monkeypatch):
+    monkeypatch.setattr(
+        main,
+        "load_water_snapshot",
+        lambda: {
+            "observations": [
+                {
+                    "kind": "reservoir_storage",
+                    "station_name": "Example Dam",
+                    "latitude": 19.16,
+                    "longitude": 77.31,
+                    "storage_pct": 72.5,
+                    "observed_at": "2026-10-18T12:00:00+00:00",
+                    "source_name": "Example public source",
+                    "source_url": "https://example.gov.in/water",
+                },
+                {
+                    "kind": "reservoir_storage",
+                    "station_name": "Far Dam",
+                    "latitude": 20.0,
+                    "longitude": 80.0,
+                    "storage_pct": 90.0,
+                },
+            ]
+        },
+    )
+
+    response = client.get(
+        "/api/v1/reservoir-status",
+        params={"latitude": 19.15, "longitude": 77.30},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["available"] is True
+    assert data["reservoir_name"] == "Example Dam"
+    assert data["storage_pct"] == 72.5
+    assert 0 < data["distance_km"] < 2
+    assert data["not_a_dam_safety_rating"] is True
+
+
+def test_reservoir_status_reports_unknown_when_storage_is_missing(monkeypatch):
+    monkeypatch.setattr(
+        main,
+        "load_water_snapshot",
+        lambda: {
+            "observations": [
+                {
+                    "kind": "reservoir_storage",
+                    "station_name": "No storage value",
+                    "latitude": 19.16,
+                    "longitude": 77.31,
+                    "value": None,
+                }
+            ]
+        },
+    )
+
+    response = client.get(
+        "/api/v1/reservoir-status",
+        params={"latitude": 19.15, "longitude": 77.30},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["available"] is False
+    assert data["storage_pct"] is None
+    assert data["distance_km"] is None
+
