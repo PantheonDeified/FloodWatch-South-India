@@ -32,6 +32,7 @@ def main() -> int:
     parser.add_argument("--output-file", required=True, type=pathlib.Path)
     parser.add_argument("--station-id", default="", help="Optional exact station ID to forecast.")
     parser.add_argument("--lookback-days", type=int, default=90)
+    parser.add_argument("--all-stations", action="store_true", help="Forecast every station with enough recent history; include source coordinates and station-relative peak-flow percentiles.")
     args = parser.parse_args()
 
     if args.lookback_days < 14:
@@ -92,18 +93,13 @@ def main() -> int:
         suffix = f" for station {args.station_id}" if args.station_id else ""
         raise SystemExit(f"No station has at least 80% valid discharge days in the latest {lookback}-day window{suffix}.")
 
-    end, station_id, state, dates, values, mask, lat, lon, valid_days = max(candidates, key=lambda row: (row[0], row[8]))
-    log_values = np.full(lookback, np.nan, dtype=np.float32)
-    log_values[mask] = np.log1p(values[mask]).astype(np.float32)
-    scaled = (log_values - mu) / sd
-    scaled[~mask] = 0.0
-    angle = 2 * np.pi * dates.dayofyear.to_numpy(dtype=float) / 365.25
-    x = np.column_stack([
-        scaled, mask.astype(float), np.sin(angle), np.cos(angle),
-        np.full(lookback, lat), np.full(lookback, lon),
-    ]).astype(np.float32)
-    if x.shape != (lookback, 6) or not np.isfinite(x).all():
-        raise SystemExit(f"Invalid model input tensor: shape={x.shape}; non-finite values={int((~np.isfinite(x)).sum())}.")
+    if not candidates:
+        suffix = f" for station {args.station_id}" if args.station_id else ""
+        raise SystemExit(f"No station has at least 80% valid discharge days in the latest {lookback}-day window{suffix}.")
+
+    chosen = sorted(candidates, key=lambda row: (row[0], row[8], row[1]), reverse=True)
+    if not args.all_stations:
+        chosen = chosen[:1]
 
     architecture = report.get("architecture", {})
     model = RegionalLSTM(
@@ -117,61 +113,104 @@ def main() -> int:
         weights = torch.load(args.model_file, map_location="cpu")
     model.load_state_dict(weights, strict=True)
     model.eval()
-    with torch.inference_mode():
-        prediction_scaled = model(torch.from_numpy(x[None, :, :])).cpu().numpy().reshape(-1)
-    lstm_prediction = np.expm1(np.maximum(prediction_scaled * sd + mu, 0.0))
-    last_observed = float(values[mask][-1])
-    # The trainer selects this blend weight on the chronological validation period only.
-    # Missing metadata from an older model artifact defaults to the raw LSTM prediction.
+
+    # Match the validation-selected blend saved by the training pipeline.
     blend_alpha = float(scalers.get("validation_blend_alpha", 1.0))
     if not np.isfinite(blend_alpha) or blend_alpha < 0.0 or blend_alpha > 1.0:
         raise SystemExit("Model scaler metadata has an invalid validation_blend_alpha; expected [0,1].")
-    persistence = np.full(horizon, last_observed, dtype=float)
-    predicted = np.maximum((1.0 - blend_alpha) * persistence + blend_alpha * lstm_prediction, 0.0)
-    selected_model_type = (
-        "persistence_baseline_selected_by_validation"
-        if blend_alpha <= 1e-12 else
-        "validation_selected_lstm_persistence_blend"
-        if blend_alpha < 1.0 - 1e-12 else
-        "regional_discharge_lstm"
-    )
-    valid_dates = [(end + pd.Timedelta(days=i)).date().isoformat() for i in range(1, horizon + 1)]
-    history_age_days = max(0, (pd.Timestamp.now(tz="UTC").date() - end.date()).days)
-    history_freshness = "recent_source_history" if history_age_days <= 3 else "stale_historical_replay"
+
+    station_forecasts = []
+    for end, station_id, state, dates, values, mask, lat, lon, valid_days in chosen:
+        log_values = np.full(lookback, np.nan, dtype=np.float32)
+        log_values[mask] = np.log1p(values[mask]).astype(np.float32)
+        scaled = (log_values - mu) / sd
+        scaled[~mask] = 0.0
+        angle = 2 * np.pi * dates.dayofyear.to_numpy(dtype=float) / 365.25
+        x = np.column_stack([
+            scaled, mask.astype(float), np.sin(angle), np.cos(angle),
+            np.full(lookback, lat), np.full(lookback, lon),
+        ]).astype(np.float32)
+        if x.shape != (lookback, 6) or not np.isfinite(x).all():
+            raise SystemExit(f"Invalid model input tensor for station {station_id}.")
+
+        with torch.inference_mode():
+            prediction_scaled = model(torch.from_numpy(x[None, :, :])).cpu().numpy().reshape(-1)
+        lstm_prediction = np.expm1(np.maximum(prediction_scaled * sd + mu, 0.0))
+        last_observed = float(values[mask][-1])
+        persistence = np.full(horizon, last_observed, dtype=float)
+        predicted = np.maximum((1.0 - blend_alpha) * persistence + blend_alpha * lstm_prediction, 0.0)
+        valid_dates = [(end + pd.Timedelta(days=i)).date().isoformat() for i in range(1, horizon + 1)]
+        history_age_days = max(0, (pd.Timestamp.now(tz="UTC").date() - end.date()).days)
+        history_freshness = "recent_source_history" if history_age_days <= 3 else "stale_historical_replay"
+
+        # This is a station-relative discharge rank, NOT a calibrated flood probability.
+        station_rows = frame.loc[frame["station_id"].astype(str).eq(station_id)]
+        hist_values = station_rows.loc[station_rows["observed_at"] < end, "discharge_m3_s"].to_numpy(dtype=float)
+        hist_values = hist_values[np.isfinite(hist_values) & (hist_values >= 0)]
+        peak = float(np.max(predicted)) if len(predicted) else float("nan")
+        peak_percentile = (
+            float(100.0 * (np.sum(hist_values < peak) + 0.5 * np.sum(hist_values == peak)) / len(hist_values))
+            if len(hist_values) >= 30 and np.isfinite(peak) else None
+        )
+
+        station_forecasts.append({
+            "station_id": station_id,
+            "state": state,
+            "station_latitude": float(lat * 90.0) if np.isfinite(lat) else None,
+            "station_longitude": float(lon * 180.0) if np.isfinite(lon) else None,
+            "coordinates_available": bool(np.isfinite(lat) and np.isfinite(lon) and abs(lat * 90.0) <= 21.8 and 73.0 <= lon * 180.0 <= 87.0),
+            "model_type": (
+                "persistence_baseline_selected_by_validation"
+                if blend_alpha <= 1e-12 else
+                "validation_selected_lstm_persistence_blend"
+                if blend_alpha < 1.0 - 1e-12 else
+                "regional_discharge_lstm"
+            ),
+            "validation_blend_alpha": blend_alpha,
+            "forecast_is_live": bool(history_age_days <= 3),
+            "history_freshness": history_freshness,
+            "history_age_days": int(history_age_days),
+            "forecast_origin_date": end.date().isoformat(),
+            "history_window_start": dates[0].date().isoformat(),
+            "history_window_end": dates[-1].date().isoformat(),
+            "valid_history_days": int(valid_days),
+            "history_days_required": lookback,
+            "last_observed_discharge_m3_s": last_observed,
+            "predicted_peak_discharge_m3_s": peak,
+            "peak_discharge_percentile_all_available_history": peak_percentile,
+            "history_discharge_sample_count": int(len(hist_values)),
+            "forecast": [
+                {"date": date, "predicted_discharge_m3_s": float(selected_value),
+                 "lstm_discharge_m3_s": float(lstm_value),
+                 "persistence_baseline_discharge_m3_s": last_observed}
+                for date, selected_value, lstm_value in zip(valid_dates, predicted.tolist(), lstm_prediction.tolist())
+            ],
+        })
+
+    if not station_forecasts:
+        raise SystemExit("No stations produced valid regional forecasts.")
+    primary = station_forecasts[0]
     output = {
-        "model_type": selected_model_type,
+        **primary,
+        "station_forecasts": station_forecasts if args.all_stations else None,
+        "forecast_station_count": len(station_forecasts),
+        "forecast_mode": "all_eligible_stations" if args.all_stations else "single_latest_eligible_station",
+        "model_type": "regional_discharge_lstm_with_validation_selected_persistence_blend",
         "raw_neural_network_model_type": report.get("model_type", "regional discharge LSTM"),
-        "validation_blend_alpha": blend_alpha,
         "validation_blend_selection": scalers.get("validation_blend_selection", "Older artifact: no validation blend metadata; raw LSTM output selected."),
         "status": "experimental_research_only",
         "operational_status": "not_validated_for_public_warnings",
-        "forecast_is_live": bool(history_age_days <= 3),
-        "history_freshness": history_freshness,
-        "history_age_days": int(history_age_days),
-        "station_id": station_id,
-        "state": state,
-        "forecast_origin_date": end.date().isoformat(),
-        "history_window_start": dates[0].date().isoformat(),
-        "history_window_end": dates[-1].date().isoformat(),
-        "valid_history_days": valid_days,
-        "history_days_required": lookback,
-        "last_observed_discharge_m3_s": last_observed,
-        "forecast": [
-            {"date": date, "predicted_discharge_m3_s": float(selected_value),
-             "lstm_discharge_m3_s": float(lstm_value),
-             "persistence_baseline_discharge_m3_s": last_observed}
-            for date, selected_value, lstm_value in zip(valid_dates, predicted.tolist(), lstm_prediction.tolist())
+        "model_created_at_utc": report.get("created_at_utc"),
+        "created_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "warning": "This is a historical-discharge-only forecast. Source-history age is not proof of a live sensor feed. Station-relative discharge percentiles are not calibrated flood probabilities or official warnings.",
+        "limitations": [
+            "Uses historical discharge only; no future rainfall/weather forcing.",
+            "Output is discharge and a station-relative historic discharge rank, not flood probability, water level, depth, inundation extent, or official alert.",
+            "Station coordinates, station identity, river routing, source timestamps and catchment transfer require independent review.",
+            "Do not use this artifact alone for public warnings or evacuation decisions.",
         ],
         "model_artifact": str(args.model_file),
         "scalers_artifact": str(args.scalers_file),
-        "created_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "warning": "Historical discharge-only inference; forecast_is_live is true only if the latest station observation is no more than 3 days old. A successful smoke test may emit a stale historical replay and does not establish real-time forecast ability.",
-        "limitations": [
-            "Uses historical discharge only; no future rainfall/weather forcing.",
-            "Prediction is discharge, not river level, flood probability, depth, inundation extent, or official alert.",
-            "Station coordinates and source timestamps require independent review; a smoke test is not hydrological validation.",
-            "Do not use this artifact alone for public warnings or evacuation decisions.",
-        ],
     }
     args.output_file.parent.mkdir(parents=True, exist_ok=True)
     args.output_file.write_text(json.dumps(output, indent=2), encoding="utf-8")
