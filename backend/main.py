@@ -21,7 +21,7 @@ from urllib.request import Request, urlopen
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-APP_VERSION = "0.5.0"
+APP_VERSION = "0.6.0"
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SNAPSHOT = REPO_ROOT / "data" / "water-observations.json"
 SNAPSHOT_URL = "https://raw.githubusercontent.com/PantheonDeified/FloodWatch-South-India/main/data/water-observations.json"
@@ -233,6 +233,52 @@ def water_observations(
     }
 
 
+
+
+def _number_from_record(row: dict, *keys):
+    for key in keys:
+        try:
+            value=float(row.get(key))
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(value):
+            return value
+    return None
+
+def _reservoir_storage_pct(row: dict):
+    direct=_number_from_record(row,"storage_pct","storage_percent","percent_full","live_storage_pct","live_storage_percent","capacity_pct","capacity_percent")
+    if direct is not None and 0 <= direct <= 100:
+        return direct
+    live=_number_from_record(row,"live_storage","live_storage_bcm","storage")
+    capacity=_number_from_record(row,"live_storage_capacity","live_capacity","capacity")
+    if live is not None and capacity is not None and capacity > 0:
+        pct=100.0*live/capacity
+        if 0 <= pct <= 120:
+            return max(0.0,min(100.0,pct))
+    return None
+
+@app.get("/api/v1/reservoir-status")
+def reservoir_status(latitude: float=Query(...,ge=7.0,le=21.8), longitude: float=Query(...,ge=73.0,le=87.0)):
+    snapshot=load_water_snapshot()
+    candidates=[]
+    for row in snapshot.get("observations",[]):
+        if not isinstance(row,dict): continue
+        kind=" ".join(str(row.get(k) or "") for k in ("kind","station_name","asset_type","metric"))
+        if not any(term in kind.casefold() for term in ("reservoir","dam","storage")): continue
+        try: rlat,rlon=float(row.get("latitude")),float(row.get("longitude"))
+        except (TypeError,ValueError): continue
+        storage_pct=_reservoir_storage_pct(row)
+        if storage_pct is None: continue
+        lat1,lat2=math.radians(latitude),math.radians(rlat)
+        dlat,dlon=lat2-lat1,math.radians(rlon-longitude)
+        a=math.sin(dlat/2)**2+math.cos(lat1)*math.cos(lat2)*math.sin(dlon/2)**2
+        distance_km=6371.0*2*math.atan2(math.sqrt(min(1.0,a)),math.sqrt(max(0.0,1.0-a)))
+        candidates.append((distance_km,row,storage_pct))
+    if not candidates:
+        return {"available":False,"storage_pct":None,"distance_km":None,"source":"CWC/NWIC published water-observation snapshot","reason":"No reservoir record with a usable storage percentage was found near this location."}
+    distance_km,row,storage_pct=min(candidates,key=lambda item:item[0])
+    return {"available":True,"storage_pct":round(storage_pct,2),"distance_km":round(distance_km,2),"reservoir_name":row.get("station_name") or row.get("reservoir_name") or row.get("name"),"observed_at":row.get("observed_at") or row.get("observed_at_raw"),"source":row.get("source_name") or "CWC/NWIC published water-observation snapshot","source_url":row.get("source_url"),"stress_score":round(max(0.0,min(1.0,(storage_pct-50.0)/50.0)),4),"not_a_dam_safety_rating":True}
+
 @app.get("/api/v1/river-flow")
 def get_river_flow(
     latitude: float = Query(..., ge=7.0, le=21.8, description="Latitude within the supported South India region"),
@@ -266,10 +312,12 @@ def get_river_flow(
         raise HTTPException(status_code=502, detail="The river-flow provider did not return a valid daily discharge series.")
     if len(daily["time"]) != len(daily["river_discharge"]) or not daily["time"]:
         raise HTTPException(status_code=502, detail="The river-flow provider returned mismatched or empty series.")
+    reservoir_context=reservoir_status(latitude=latitude,longitude=longitude)
     payload["_floodwatch"] = {
         "backend_version": APP_VERSION,
         "provider": "Open-Meteo Flood API / GloFAS",
         "fetched_at_utc": datetime.now(timezone.utc).isoformat(),
+        "reservoir": reservoir_context,
         "data_type": "modelled river-discharge context, not a gauge observation or FloodWatch-trained prediction",
         "forecast_horizon_days": 7,
         "historical_context_days": 90,

@@ -240,6 +240,17 @@ async function fetchBundle(pts){
   return pts.map((_,i)=>({w:wa[i],f:fa[i]||null}));
 }
 
+function calculateFloodHazardScore(rainfall24hMm,riverPercentile,damStoragePct){
+  const rainScore=clamp(rainfall24hMm/200);
+  const riverScore=Number.isFinite(riverPercentile)?clamp(riverPercentile/100):null;
+  const damScore=Number.isFinite(damStoragePct)?clamp((damStoragePct-50)/50):null;
+  let composite,weights;
+  if(riverScore!=null&&damScore!=null){composite=.40*rainScore+.35*riverScore+.25*damScore;weights='40% rainfall + 35% river + 25% reservoir';}
+  else if(riverScore!=null){composite=(.40*rainScore+.35*riverScore)/.75;weights='57% rainfall + 43% river (reservoir unavailable; weights renormalized)';}
+  else{composite=rainScore;weights='100% rainfall (river and reservoir unavailable)';}
+  return {score:100*clamp(composite),rainScore,riverScore,damScore,weights};
+}
+
 function score(b){
   const h=b.w.hourly||{},times=h.time||[],cutoff=Date.now()-30*60*1000;
   const idx=times.map((t,i)=>[i,Date.parse(t+'Z')]).filter(x=>x[1]>=cutoff).map(x=>x[0]);
@@ -248,21 +259,13 @@ function score(b){
   const pr=Math.max(0,...idx.slice(0,24).map(i=>+h.precipitation_probability?.[i]||0));
   const cur=+b.w.current?.precipitation||0;
   if(idx.length<24)return {level:'unk',score:null,hours:[]};
-  let s=40*clamp(r24/100)+30*clamp(r72/150)+15*clamp(pr/100)+15*clamp(cur/20);
-  let pct=null,peak=null;
-  const d=b.f?.daily;
-  if(d&&d.time){
-    const today=new Date().toISOString().slice(0,10),hist=[],fut=[];
-    d.time.forEach((t,i)=>{const v=d.river_discharge[i];if(v==null)return;if(t<today)hist.push(v);else if(t>today)fut.push(v)});
-    if(hist.length>=20&&fut.length){
-      peak=Math.max(...fut.slice(0,7));
-      const lo=hist.filter(v=>v<peak).length,eq=hist.filter(v=>v===peak).length;
-      pct=100*(lo+eq/2)/hist.length;
-      s=.75*s+.25*100*clamp((pct-50)/50);
-    }
-  }
-  const level=s>=65?'red':s>=35?'amber':'green';
-  return {level,score:s,r24,r72,pr,cur,pct,peak,hours:idx.slice(0,24).map(rain)};
+  let pct=null,peak=null; const d=b.f?.daily;
+  if(d&&d.time){const today=new Date().toISOString().slice(0,10),hist=[],fut=[];d.time.forEach((t,i)=>{const v=d.river_discharge[i];if(v==null)return;if(t<today)hist.push(v);else if(t>today)fut.push(v)});if(hist.length>=20&&fut.length){peak=Math.max(...fut.slice(0,7));const lo=hist.filter(v=>v<peak).length,eq=hist.filter(v=>v===peak).length;pct=100*(lo+eq/2)/hist.length;}}
+  const reservoir=b.f?._floodwatch?.reservoir||null;
+  const damStoragePct=Number.isFinite(Number(reservoir?.storage_pct))?Number(reservoir.storage_pct):null;
+  const hazard=calculateFloodHazardScore(r24,pct,damStoragePct);
+  const s=hazard.score,level=s>=70?'red':s>=45?'amber':'green';
+  return {level,score:s,r24,r72,pr,cur,pct,peak,damStoragePct,riverScore:hazard.riverScore,damScore:hazard.damScore,weights:hazard.weights,reservoir,hours:idx.slice(0,24).map(rain)};
 }
 
 let pin=null,token=0;
@@ -302,6 +305,9 @@ function render(b){
     why.push('🌧️ '+r.r24.toFixed(0)+' mm of rain expected in 24 hours');
     why.push('📅 '+r.r72.toFixed(0)+' mm over the next 72 hours');
     why.push('☔ Up to '+Math.round(r.pr)+'% chance of rain');
+    why.push(r.pct!=null?'🏞️ River factor: '+Math.round(r.pct)+'th percentile':'🏞️ River factor: unavailable here');
+    why.push(r.damStoragePct!=null?'🏗️ Reservoir storage: '+Math.round(r.damStoragePct)+'%'+(r.reservoir?.reservoir_name?' — '+r.reservoir.reservoir_name:''):'🏗️ Reservoir factor: no verified nearby storage record');
+    why.push('⚖️ Score weights: '+r.weights);
   }
   $('why').innerHTML=why.map(t=>'<li>'+t+'</li>').join('');
   $('summary').textContent='🤖 '+summarize(r,$('place').textContent);
