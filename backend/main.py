@@ -100,7 +100,7 @@ def api_status():
         "model_readiness_endpoint": "/api/v1/models/status",
         "regional_discharge_forecast_endpoint": "/api/v1/models/regional-discharge/forecast",
         "water_observations": "Published GitHub Pages JSON snapshot; collector runs every six hours when scheduled execution succeeds; observation freshness varies by source",
-        "flood_forecast_model": "External Open-Meteo Flood API/GloFAS proxy available; the five-state regional discharge LSTM has completed a historical holdout evaluation and can be invoked on demand at /api/v1/models/regional-discharge/forecast when local ML assets are installed. Outputs are discharge research forecasts, not flood probabilities or official warnings.",
+        "flood_forecast_model": "External Open-Meteo Flood API/GloFAS context is available. The trained five-state regional discharge LSTM supports on-demand single-station or all-eligible-station inference when local ML assets are installed. Station-relative discharge ranks can contribute to an explicitly configured frontend risk score, but are not calibrated flood probabilities or official warnings.",
         "last_checked": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -408,6 +408,7 @@ def model_status():
         "model_served_by_api": assets_ready,
         "live_sensor_data_verified": False,
         "runtime_assets": runtime,
+        "station_aware_frontend_overlay_supported": True,
         "connected_to_frontend_risk_score": False,
         "validated_south_india_flood_forecast": False,
         "required_before_public_warning_use": [
@@ -418,9 +419,9 @@ def model_status():
             "complete operational review, monitoring, rollback and publish the model card"
         ],
         "message": (
-            "The API can run the saved regional LSTM on demand when the local ML virtualenv, normalized observations, weights, scalers and report are present. The returned value is discharge, not flood probability, water level or inundation. "
-            "A chronological validation-selected 25% LSTM / 75% persistence blend improved pooled test RMSE by 7.3%, while raw LSTM predictions were worse than persistence. "
-            "Inference is not used to colour the map or issue public warnings."
+            "The API can run the saved regional LSTM on demand when the local ML virtualenv, normalized observations, weights, scalers and report are present. Its output is discharge, not flood probability, water level or inundation. "
+            "A configured frontend can use recent station forecasts as a distance-faded, at-most-25% modifier to an experimental rainfall/GloFAS risk score; station-relative discharge ranks are not flood probabilities. "
+            "This overlay is optional, requires the frontend to be configured with the HTTPS API URL, and is not validated for public warnings."
         )
     }
 
