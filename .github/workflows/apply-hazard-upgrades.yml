@@ -1,0 +1,141 @@
+name: Apply FloodWatch hazard upgrades
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply scoring upgrade
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old = '''function score(b){
+  const h=b.w.hourly||{},times=h.time||[],cutoff=Date.now()-30*60*1000;
+  const idx=times.map((t,i)=>[i,Date.parse(t+'Z')]).filter(x=>x[1]>=cutoff).map(x=>x[0]);
+  const rain=i=>+h.precipitation?.[i]||0;
+  const r24=idx.slice(0,24).reduce((s,i)=>s+rain(i),0),r72=idx.slice(0,72).reduce((s,i)=>s+rain(i),0);
+  const pr=Math.max(0,...idx.slice(0,24).map(i=>+h.precipitation_probability?.[i]||0));
+  const cur=+b.w.current?.precipitation||0;
+  if(idx.length<24)return {level:'unk',score:null,hours:[]};
+  let s=40*clamp(r24/100)+30*clamp(r72/150)+15*clamp(pr/100)+15*clamp(cur/20);
+  let pct=null,peak=null;
+  const d=b.f?.daily;
+  if(d&&d.time){
+    const today=new Date().toISOString().slice(0,10),hist=[],fut=[];
+    d.time.forEach((t,i)=>{const v=d.river_discharge[i];if(v==null)return;if(t<today)hist.push(v);else if(t>today)fut.push(v)});
+    if(hist.length>=20&&fut.length){
+      peak=Math.max(...fut.slice(0,7));
+      const lo=hist.filter(v=>v<peak).length,eq=hist.filter(v=>v===peak).length;
+      pct=100*(lo+eq/2)/hist.length;
+      s=.75*s+.25*100*clamp((pct-50)/50);
+    }
+  }
+  const level=s>=65?'red':s>=35?'amber':'green';
+  return {level,score:s,r24,r72,pr,cur,pct,peak,hours:idx.slice(0,24).map(rain)};
+}'''
+
+          new = '''function calculateFloodHazardScore(rainfall24hMm, riverPercentile, damStoragePct){
+  // Rain + river + reservoir. Reservoir is optional until a verified CWC
+  // storage feed is connected; never invent a storage value.
+  const rainScore=clamp(rainfall24hMm/200);
+  const riverScore=Number.isFinite(riverPercentile)?clamp(riverPercentile/100):null;
+  const damScore=Number.isFinite(damStoragePct)?clamp((damStoragePct-50)/50):null;
+  let composite;
+  if(riverScore!=null && damScore!=null){
+    composite=.40*rainScore+.35*riverScore+.25*damScore;
+  }else if(riverScore!=null){
+    // Do not silently treat missing reservoir data as zero risk.
+    composite=(.40*rainScore+.35*riverScore)/.75;
+  }else{
+    composite=rainScore;
+  }
+  return {score:100*composite,rainScore,riverScore,damScore};
+}
+
+function score(b){
+  const h=b.w.hourly||{},times=h.time||[],cutoff=Date.now()-30*60*1000;
+  const idx=times.map((t,i)=>[i,Date.parse(t+'Z')]).filter(x=>x[1]>=cutoff).map(x=>x[0]);
+  const rain=i=>+h.precipitation?.[i]||0;
+  const r24=idx.slice(0,24).reduce((s,i)=>s+rain(i),0),r72=idx.slice(0,72).reduce((s,i)=>s+rain(i),0);
+  const pr=Math.max(0,...idx.slice(0,24).map(i=>+h.precipitation_probability?.[i]||0));
+  const cur=+b.w.current?.precipitation||0;
+  if(idx.length<24)return {level:'unk',score:null,hours:[]};
+  let pct=null,peak=null;
+  const d=b.f?.daily;
+  if(d&&d.time){
+    const today=new Date().toISOString().slice(0,10),hist=[],fut=[];
+    d.time.forEach((t,i)=>{const v=d.river_discharge[i];if(v==null)return;if(t<today)hist.push(v);else if(t>today)fut.push(v)});
+    if(hist.length>=20&&fut.length){
+      peak=Math.max(...fut.slice(0,7));
+      const lo=hist.filter(v=>v<peak).length,eq=hist.filter(v=>v===peak).length;
+      pct=100*(lo+eq/2)/hist.length;
+    }
+  }
+  const damStoragePct=Number.isFinite(Number(b.reservoir?.storage_pct))?Number(b.reservoir.storage_pct):null;
+  const hazard=calculateFloodHazardScore(r24,pct,damStoragePct);
+  // Rain-probability/current-rain are secondary context, not double-counted.
+  const secondary=.10*clamp(pr/100)+.10*clamp(cur/20);
+  const s=100*clamp((hazard.score/100)*.80+secondary);
+  const level=s>=70?'red':s>=45?'amber':'green';
+  return {level,score:s,r24,r72,pr,cur,pct,peak,damStoragePct,riverScore:hazard.riverScore,damScore:hazard.damScore,hours:idx.slice(0,24).map(rain)};
+}'''
+
+          if old not in s:
+              raise SystemExit('Expected score() implementation was not found; refusing a blind edit.')
+          s=s.replace(old,new,1)
+
+          old_render = """  if(r.score!=null){
+    why.push('🌧️ '+r.r24.toFixed(0)+' mm of rain expected in 24 hours');
+    why.push('📅 '+r.r72.toFixed(0)+' mm over the next 72 hours');
+    why.push('☔ Up to '+Math.round(r.pr)+'% chance of rain');
+  }"""
+          new_render = """  if(r.score!=null){
+    why.push('🌧️ '+r.r24.toFixed(0)+' mm of rain expected in 24 hours');
+    why.push('📅 '+r.r72.toFixed(0)+' mm over the next 72 hours');
+    why.push('☔ Up to '+Math.round(r.pr)+'% chance of rain');
+    why.push(r.pct!=null?'🏞️ River signal: '+Math.round(r.pct)+'th percentile of recent modelled flow':'🏞️ River signal: unavailable at this spot');
+    why.push(r.damStoragePct!=null?'🏗️ Reservoir storage: '+Math.round(r.damStoragePct)+'% (verified input)':'🏗️ Reservoir factor: awaiting verified storage data');
+  }"""
+          if old_render not in s:
+              raise SystemExit('Expected render() factor list was not found; refusing a blind edit.')
+          s=s.replace(old_render,new_render,1)
+          p.write_text(s,encoding='utf-8')
+
+      - name: Verify
+        run: |
+          grep -q "function calculateFloodHazardScore" index.html
+          grep -q "Reservoir factor: awaiting verified storage data" index.html
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          assert 'https://api.open-meteo.com/v1/forecast' in s
+          assert 'flood-api.open-meteo.com/v1/flood' in s
+          print('FloodWatch hazard upgrade checks passed')
+          PY
+
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'feat: add multi-factor flood hazard scoring'
+          git push
+
+      - name: Remove one-time workflow
+        run: |
+          git rm .github/workflows/apply-hazard-upgrades.yml
+          git commit -m 'chore: remove one-time hazard upgrade workflow'
+          git push
