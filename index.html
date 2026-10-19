@@ -468,6 +468,91 @@ const HIST_SRC=['https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/floo
 let ovLayers=[],ovTok=0,maskPromise=null,contourState=null,infraRecords=[];
 const LSTM_STORAGE_KEY='floodwatch.regionalLstmApiBase.v1',LSTM_RADIUS_KM=65;
 let lstmStations=[],lstmLoadPromise=null,lstmLoadedAt=0;
+function getLstmApiBase(){
+  let raw=($('lstmApiBase')?.value||'').trim();
+  if(!raw){try{raw=localStorage.getItem(LSTM_STORAGE_KEY)||''}catch(e){}}
+  return raw.replace(/\/+$/,'');
+}
+function normalizeLstmApiBase(raw){
+  const u=new URL(String(raw||'').trim());
+  if(u.protocol!=='https:')throw Error('Use a public HTTPS backend URL (for example, your running Cloudflare tunnel).');
+  if(u.username||u.password||u.search||u.hash)throw Error('Enter only the HTTPS backend base URL, without credentials, query parameters or a fragment.');
+  return u.origin+u.pathname.replace(/\/+$/,'');
+}
+function lstmStatus(message,connected){
+  $('lstmStatus').textContent=message;
+  $('lstmBadge').textContent=connected?'Connected':'Not connected';
+  $('lstmBadge').classList.toggle('on',!!connected);
+}
+async function refreshLstmForecast(force){
+  const base=getLstmApiBase();
+  if(!base){lstmStations=[];lstmStatus('Not connected. Map colours currently use forecast rainfall and GloFAS river context only.',false);return []}
+  if(!force&&lstmStations.length&&Date.now()-lstmLoadedAt<600000)return lstmStations;
+  if(lstmLoadPromise)return lstmLoadPromise;
+  lstmLoadPromise=(async()=>{
+    lstmStatus('Checking the live API and regional LSTM assets…',false);
+    const statusResponse=await fetch(base+'/api/v1/models/status',{cache:'no-store',headers:{Accept:'application/json'}});
+    const modelStatus=await statusResponse.json().catch(()=>({}));
+    if(!statusResponse.ok)throw Error('Model status request returned HTTP '+statusResponse.status);
+    if(modelStatus.on_demand_inference_available!==true){
+      const checks=modelStatus.runtime_assets?.asset_checks||{};
+      const missing=Object.keys(checks).filter(k=>checks[k]!==true);
+      throw Error('Backend is reachable, but its local LSTM runtime/assets are not ready'+(missing.length?' ('+missing.join(', ')+')':'')+'. Run the model setup, preflight and training steps on the backend host.');
+    }
+    const response=await fetch(base+'/api/v1/models/regional-discharge/forecast?all_stations=true',{cache:'no-store',headers:{Accept:'application/json'}});
+    const payload=await response.json().catch(()=>({}));
+    if(!response.ok){
+      const detail=typeof payload.detail==='string'?payload.detail:payload.detail?.message;
+      throw Error(detail||('Station forecast returned HTTP '+response.status));
+    }
+    if(!Array.isArray(payload.station_forecasts))throw Error('Backend returned no station_forecasts. Update the backend to the current FloodWatch main branch and restart it.');
+    const eligible=payload.station_forecasts.filter(s=>
+      s&&s.forecast_is_live===true&&s.coordinates_available===true&&
+      Number.isFinite(Number(s.station_latitude))&&Number.isFinite(Number(s.station_longitude))&&
+      s.peak_discharge_percentile_all_available_history!=null&&
+      Number.isFinite(Number(s.peak_discharge_percentile_all_available_history))&&
+      Array.isArray(s.forecast)&&s.forecast.length>0&&
+      Number(s.station_latitude)>=7&&Number(s.station_latitude)<=21.8&&
+      Number(s.station_longitude)>=73&&Number(s.station_longitude)<=87
+    );
+    lstmStations=eligible.map(s=>({...s,station_latitude:Number(s.station_latitude),station_longitude:Number(s.station_longitude),peak_discharge_percentile_all_available_history:Math.max(0,Math.min(100,Number(s.peak_discharge_percentile_all_available_history)))}));
+    lstmLoadedAt=Date.now();
+    if(lstmStations.length){
+      lstmStatus('Loaded '+lstmStations.length+' recent station forecasts. LSTM contributes at most 25% to nearby risk scores; colours remain experimental estimates, not calibrated flood probabilities.',true);
+    }else{
+      lstmStatus('API responded, but no station had all of: recent source history, usable coordinates and a historical discharge rank. Map colours remain based on rainfall/GloFAS only.',false);
+    }
+    return lstmStations;
+  })().catch(e=>{
+    lstmStations=[];lstmLoadedAt=0;
+    lstmStatus('LSTM not applied: '+e.message+' Map colours remain based on rainfall/GloFAS only.',false);
+    throw e;
+  }).finally(()=>{lstmLoadPromise=null});
+  return lstmLoadPromise;
+}
+function nearestLstmSignal(lat,lon,stations){
+  if(!Number.isFinite(+lat)||!Number.isFinite(+lon))return null;
+  let best=null;
+  for(const station of (stations||[])){
+    if(station.forecast_is_live!==true||station.coordinates_available!==true)continue;
+    const raw=station.peak_discharge_percentile_all_available_history;
+    if(raw==null||!Number.isFinite(Number(raw)))continue;
+    const distanceKm=kmBetween(+lat,+lon,station.station_latitude,station.station_longitude);
+    if(!Number.isFinite(distanceKm)||distanceKm>LSTM_RADIUS_KM)continue;
+    if(!best||distanceKm<best.distanceKm)best={station,percentile:Math.max(0,Math.min(100,Number(raw))),distanceKm};
+  }
+  return best;
+}
+function applyLstmToPointScore(result,lat,lon,stations){
+  if(!result||!Number.isFinite(result.score))return result;
+  const signal=nearestLstmSignal(lat,lon,stations);
+  if(!signal)return result;
+  const blendWeight=0.25*clamp(1-signal.distanceKm/LSTM_RADIUS_KM);
+  if(blendWeight<=0)return result;
+  const original=result.score,adjusted=100*clamp(((1-blendWeight)*original+blendWeight*signal.percentile)/100);
+  return {...result,score:adjusted,level:adjusted>=65?'red':adjusted>=35?'amber':'green',lstmSignal:signal,lstmOriginalScore:original,lstmBlendWeight:blendWeight};
+}
+
 function clearOverlay(){ovTok++;ovLayers.forEach(l=>{try{map.removeLayer(l)}catch(e){}});ovLayers=[]}
 function addOv(l){l.addTo(map);ovLayers.push(l);return l}
 function showLegend(title,rows,note,src){
