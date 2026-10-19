@@ -74,6 +74,9 @@ h2{font-size:17px;font-weight:700;margin:0 0 8px}
 select{font:inherit;color:var(--ink);border:3px solid var(--line);border-radius:999px;padding:8px 14px;background:#fff;font-weight:600;cursor:pointer;max-width:100%}
 .ovlegend{position:absolute;left:12px;bottom:58px;z-index:900;max-width:340px;max-height:50%;overflow:auto;background:#fff;border:3px solid var(--line);border-radius:18px;padding:10px 12px;font-size:13px;line-height:1.35;box-shadow:3px 3px 0 var(--line)}
 .ovlegend[hidden]{display:none}
+.ovlegend.progress-only{max-width:190px;max-height:none;overflow:hidden;padding:8px 12px;pointer-events:none}
+.ovlegend.progress-only #ovRows,.ovlegend.progress-only .ovnote,.ovlegend.progress-only #ovSrc{display:none}
+.ovlegend.progress-only #ovTitle{display:block;margin:0;font-size:14px;white-space:nowrap}
 .ovlegend b{font-size:15px}
 .ovrow{display:flex;gap:6px;align-items:flex-start;margin-top:4px}
 .ovrow .dot{flex:none;margin-top:3px}
@@ -453,7 +456,9 @@ let ovLayers=[],ovTok=0,maskPromise=null,contourState=null,infraRecords=[];
 function clearOverlay(){ovTok++;ovLayers.forEach(l=>{try{map.removeLayer(l)}catch(e){}});ovLayers=[]}
 function addOv(l){l.addTo(map);ovLayers.push(l);return l}
 function showLegend(title,rows,note,src){
-  $('ovLegend').hidden=!title;if(!title)return;
+  $('ovLegend').hidden=!title;
+  $('ovLegend').classList.toggle('progress-only',String(title||'').startsWith('Loading data ·'));
+  if(!title)return;
   $('ovTitle').textContent=title;
   $('ovRows').innerHTML=rows.map(r=>'<div class="ovrow">'+(r.c?'<i class="dot" style="background:'+r.c+'"></i>':'')+'<span>'+esc(r.t)+'</span></div>').join('');
   $('ovNote').textContent=note;
@@ -515,12 +520,10 @@ function contourSegs(grid,th,st,minLat,minLon){
   return segs;
 }
 async function runContours(tok){
-  const title='Live risk contours';
-  const rows=[{c:LEVELS.green.color,t:'Chill: score under 35'},{c:LEVELS.amber.color,t:'Heads up: 35 to 64'},{c:LEVELS.red.color,t:'High signal: 65 and up'},{t:'Clear areas: not enough data, not safe. Lines mark scores 35 and 65.'}];
-  showLegend(title,rows,'Loading state outline…');
+  showLegend('Loading data · 0%',[],'');
   let mask;
   try{mask=await loadMask()}
-  catch(e){if(tok===ovTok)showLegend(title,[],'Could not load '+MASK_URL+' ('+e.message+'). Put floodwatch-lite.html in the repo root, next to the data folder, and open it through the local server.');return}
+  catch(e){if(tok===ovTok)showLegend('Loading data · 0%',[],'');return}
   if(tok!==ovTok)return;
   const cells=gridCells(mask),batches=[],res=new Array(cells.length).fill(null);
   for(let i=0;i<cells.length;i+=35)batches.push(cells.slice(i,i+35));
@@ -533,7 +536,7 @@ async function runContours(tok){
         try{const bs=await fetchBundle(bt.map(c=>[c.lat,c.lon]));bs.forEach((b,j)=>{res[bi*35+j]=score(b).score});break}
         catch(e){lastErr=e.message;if(attempt===0)await new Promise(r=>setTimeout(r,2500));else failed++}
       }
-      done++;if(tok===ovTok)$('ovNote').textContent='Reading rain and river data… '+done+'/'+batches.length;
+      done++;if(tok===ovTok)$('ovTitle').textContent='Loading data · '+Math.floor(done/batches.length*100)+'%';
     }
   }
   await Promise.all([worker(),worker(),worker()]);
@@ -542,6 +545,8 @@ async function runContours(tok){
   drawContours(tok);
 }
 function drawContours(tok){
+  $('ovTitle').textContent='Loading data · 100%';
+  $('ovNote').textContent='';
   const {cells,mask}=contourState,scores=adjustedScores(),f=buildField(cells,scores,mask);
   addOv(L.imageOverlay(f.url,[[GRID.s,GRID.w],[GRID.n,GRID.e]],{interactive:false,opacity:1}));
   addOv(L.geoJSON(mask,{style:{color:'#10294a',weight:1,opacity:.45,fillOpacity:0},interactive:false}));
