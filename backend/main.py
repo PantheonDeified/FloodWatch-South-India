@@ -312,7 +312,23 @@ def get_river_flow(
         raise HTTPException(status_code=502, detail="The river-flow provider did not return a valid daily discharge series.")
     if len(daily["time"]) != len(daily["river_discharge"]) or not daily["time"]:
         raise HTTPException(status_code=502, detail="The river-flow provider returned mismatched or empty series.")
-    reservoir_context=reservoir_status(latitude=latitude,longitude=longitude)
+    # Reservoir context is optional: a missing/stale snapshot must not break
+    # the independent river-flow provider response.
+    try:
+        reservoir_context = reservoir_status(latitude=latitude, longitude=longitude)
+    except HTTPException as exc:
+        logger.warning(
+            "Optional reservoir context unavailable for river-flow response (HTTP %s).",
+            exc.status_code,
+        )
+        reservoir_context = {
+            "available": False,
+            "storage_pct": None,
+            "distance_km": None,
+            "source": "CWC/NWIC published water-observation snapshot",
+            "reason": "Reservoir context is temporarily unavailable; river-flow data are still available.",
+            "not_a_dam_safety_rating": True,
+        }
     payload["_floodwatch"] = {
         "backend_version": APP_VERSION,
         "provider": "Open-Meteo Flood API / GloFAS",
