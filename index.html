@@ -29,6 +29,9 @@
 #riskLayer{flex:0 1 235px;min-width:170px;max-width:280px}
 .risk-legend{position:absolute;z-index:1001;left:12px;bottom:14px;max-width:min(330px,calc(100% - 24px));padding:12px 13px;border:1px solid #48617b;border-radius:10px;background:rgba(8,18,32,.94);box-shadow:0 5px 18px rgba(0,0,0,.36);color:#edf5ff;font-size:11px;line-height:1.5;pointer-events:auto}
 .risk-legend[hidden]{display:none}
+.risk-legend.risk-loading-only{max-width:190px;padding:8px 11px;text-align:center;pointer-events:none}
+.risk-legend.risk-loading-only .risk-legend-content,.risk-legend.risk-loading-only #riskLegendNote,.risk-legend.risk-loading-only #riskLegendSource{display:none}
+.risk-legend.risk-loading-only strong{margin:0;font-size:12px;font-weight:600}
 .risk-legend strong{display:block;font-size:12px;margin-bottom:5px}
 .risk-legend-content{margin:6px 0;display:grid;gap:5px}
 .risk-legend-row{display:flex;align-items:flex-start;gap:7px}
@@ -870,6 +873,7 @@ function clearRiskLayers(){
 }
 function riskLegend(mode,title,rows,note,sourceUrl){
  $('riskMapLegend').hidden=mode==='off';
+  $('riskMapLegend').classList.toggle('risk-loading-only',mode==='computed-risk');
  $('riskLegendTitle').textContent=title;
  $('riskLegendContent').innerHTML=rows.map(r=>'<div class="risk-legend-row">'+
    (r.color?'<span class="risk-swatch" style="background:'+escapeHtml(r.color)+'"></span>':'')+
@@ -1340,15 +1344,7 @@ function drawComputedRiskCells(cells,weatherRows,requestId,mask){
   }).addTo(layer);
  }
  riskGridLayer=layer.addTo(map);
- riskLegend('computed-risk','Continuous FloodWatch risk contours',[
-  {color:'#22c55e',text:'GREEN · Lower signal (score below 35)'},
-  {color:'#f59e0b',text:'AMBER · Elevated (35–64)'},
-  {color:'#ef4444',text:'RED · High signal (65–100)'},
-  {color:'#64748b',text:'Transparent · insufficient numerical coverage / outside supported area'},
-  {color:'#ffe08a',text:'Amber contour line · score 35'},
-  {color:'#fff1f2',text:'Light contour line · score 65'}
- ],'Smooth interpolation of FloodWatch’s own numerical risk score; contours are not probabilities or official warnings. Transparent areas mean unknown, not safe.','https://open-meteo.com/en/docs/flood-api');
- $('riskLegendNote').textContent+=' Sample points: '+cells.length+' · red '+counts.red+' · amber '+counts.amber+' · green '+counts.green+' · unknown '+counts.unknown+'.';
+ riskLegend('computed-risk','Loading data · 100%',[],'','https://open-meteo.com/en/docs/flood-api');
  updateBasinRiskContext();
 }
 function redrawCachedRiskLayer(){
@@ -1388,12 +1384,7 @@ function updateBasinRiskContext(){
 }
 async function setComputedRiskGrid(requestId){
  $('riskMapLegend').hidden=false;
- riskLegend('computed-risk','Continuous FloodWatch risk contours',[
-  {color:'#ef4444',text:'RED · High signal'},
-  {color:'#f59e0b',text:'AMBER · Elevated'},
-  {color:'#22c55e',text:'GREEN · Lower signal'},
-  {color:'#64748b',text:'GREY · Unknown'}
- ],'Calculating from raw forecast fields; no external risk colours are copied.','https://open-meteo.com/en/docs');
+ riskLegend('computed-risk','Loading data · 0%',[],'','https://open-meteo.com/en/docs');
  try{
   const maskResponse=await fetch(FLOODWATCH_RISK_GRID.statesFile,{cache:'force-cache'});
   if(!maskResponse.ok)throw Error('Regional state mask returned HTTP '+maskResponse.status);
@@ -1440,19 +1431,17 @@ async function setComputedRiskGrid(requestId){
      };
     });
     completed++;
-    $('riskLegendNote').textContent='Analysing raw rainfall and river-flow data '+completed+'/'+batches.length+' regional batches…';
+    const percent=Math.min(99,Math.floor(completed/batches.length*100));
+     $('riskLegendTitle').textContent='Loading data · '+percent+'%';
    }
   }
   await Promise.all([worker(),worker(),worker()]);
   if(requestId!==riskLayerRequest||$('riskLayer').value!=='computed-risk')return;
   drawComputedRiskCells(cells,weatherRows,requestId,geo);
-  if(failedBatches)$('riskLegendNote').textContent+=' Some weather batches failed; grey cells indicate unavailable data, not safety.';
-  if(flowFailedBatches)$('riskLegendNote').textContent+=' GloFAS was unavailable or incomplete for '+flowFailedBatches+' batch(es); rainfall-only scores may be shown.';
+   $('riskLegendTitle').textContent='Loading data · 100%';
  }catch(e){
   if(requestId!==riskLayerRequest)return;
-  riskLegend('computed-risk','FloodWatch calculated grid',[
-   {color:'#64748b',text:'GREY · Unknown / unavailable'}
-  ],'Could not calculate the regional grid: '+e.message,'https://open-meteo.com/en/docs');
+  riskLegend('computed-risk','Loading data · 0%',[],'','https://open-meteo.com/en/docs');
  }
 }
 
