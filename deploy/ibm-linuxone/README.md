@@ -68,6 +68,7 @@ From the repository root:
 bash deploy/ibm-linuxone/run-regional-lstm.sh setup
 bash deploy/ibm-linuxone/run-regional-lstm.sh preflight
 bash deploy/ibm-linuxone/run-regional-lstm.sh train
+systemctl --user restart floodwatch-api
 ```
 
 - `setup` creates a separate ML virtual environment and installs NumPy, pandas, and the pinned CPU PyTorch wheel.
@@ -79,16 +80,17 @@ Do not skip a failed preflight. If installation/import fails on `s390x`, keep th
 
 ### Call the trained model through the API
 
-After `train` succeeds, the existing API process can discover the newly created files on the next request:
+After `train` succeeds, restart the API so it loads the current route implementation, then check readiness:
 
 ```bash
 curl -fsS http://127.0.0.1:8000/api/v1/models/status
 curl -fsS --max-time 45 http://127.0.0.1:8000/api/v1/models/regional-discharge/forecast
+curl -fsS --max-time 60 "http://127.0.0.1:8000/api/v1/models/regional-discharge/forecast?all_stations=true" > /tmp/floodwatch-station-forecasts.json
 ```
 
 The second endpoint runs the saved-weight predictor on demand. To target one particular station, add `?station_id=` and a **real ID from the normalized source file**; leaving it empty lets the predictor choose its default eligible station. Repeated requests for the same station are cached for 10 minutes to avoid repeatedly consuming the VM's 3 vCPUs.
 
-The API returns seven daily discharge predictions when the pipeline's required local files and Python runtime are present. Check `station_id`, `state`, `history_window_end`, `history_freshness`, `forecast_is_live`, and the source/model warning in every response. The freshness field is a timestamp-age heuristic, not proof of current sensor transmission. A forecast that works in the API is still not a flood probability or official warning, and it is **not** automatically fed into the frontend risk colours.
+The API returns seven daily discharge predictions when the pipeline's required local files and Python runtime are present. The `all_stations=true` form returns eligible station coordinates plus a station-relative percentile of predicted peak discharge against available station history. Check `station_id`, coordinates, `history_window_end`, `history_freshness`, `forecast_is_live`, and the source/model warning. Freshness is a timestamp-age heuristic, not proof of current sensor transmission. The optional frontend integration uses these percentiles as a distance-faded, at-most-25% modifier to its experimental risk score—not as flood probability or an official warning.
 
 If the endpoint responds with HTTP 503, inspect `/api/v1/models/status`, run `preflight`, check that `data_pipeline/output/cwc_discharge_normalized.csv` and all model artifacts exist, then read the service journal. The API runtime is deliberately separate from the ML virtual environment.
 
