@@ -165,7 +165,7 @@ details.card[open] summary:after{content:'−'}
         <label>Live backend HTTPS base URL<input id="lstmApiBase" type="url" maxlength="500" placeholder="https://your-live-api.example.com" autocomplete="url"></label>
         <div class="row"><button type="submit">Connect &amp; load LSTM</button><button type="button" id="lstmDisconnect">Disconnect</button></div>
       </form>
-      <div class="status" id="lstmStatus" aria-live="polite">Not connected. Map colours currently use forecast rainfall and GloFAS river context only.</div>
+      <div class="status" id="lstmStatus" aria-live="polite">Loading the latest scheduled regional LSTM forecast…</div>
       <p class="note">Only forecasts with recent source-history timestamps, usable coordinates and a station-relative historic-discharge rank can contribute. Influence fades to zero beyond 65 km from a station; this distance is an approximation, not proof of river-network connectivity.</p>
     </details>
 
@@ -481,59 +481,93 @@ function normalizeLstmApiBase(raw){
   if(u.username||u.password||u.search||u.hash)throw Error('Enter only the HTTPS backend base URL, without credentials, query parameters or a fragment.');
   return u.origin+u.pathname.replace(/\/+$/,'');
 }
-function lstmStatus(message,connected){
+function lstmStatus(message,connected,badgeLabel){
   $('lstmStatus').textContent=message;
-  $('lstmBadge').textContent=connected?'Connected':'Not connected';
+  $('lstmBadge').textContent=badgeLabel||(connected?'Connected':'Not connected');
   $('lstmBadge').classList.toggle('on',!!connected);
+}
+const LSTM_STATIC_FORECAST_URL='https://raw.githubusercontent.com/PantheonDeified/FloodWatch-South-India/main/data/regional-lstm-forecast.json';
+function sourceHistoryAgeDays(station){
+  const date=String(station?.history_window_end||station?.forecast_origin_date||'').slice(0,10);
+  const stamp=Date.parse(date+'T00:00:00Z');
+  if(!Number.isFinite(stamp))return Infinity;
+  return Math.max(0,Math.floor((Date.now()-stamp)/86400000));
+}
+async function fetchStaticLstmPayload(){
+  const response=await fetch(LSTM_STATIC_FORECAST_URL,{cache:'no-store',headers:{Accept:'application/json'}});
+  if(!response.ok)throw Error('No scheduled station snapshot is published yet (HTTP '+response.status+'). The automated inference workflow must finish successfully first.');
+  const payload=await response.json();
+  const created=Date.parse(String(payload.created_at_utc||''));
+  if(!Number.isFinite(created)||created>Date.now()+60*60*1000||Date.now()-created>36*60*60*1000){
+    throw Error('The scheduled LSTM snapshot is missing a valid timestamp or is older than 36 hours.');
+  }
+  if(!Array.isArray(payload.station_forecasts))throw Error('Scheduled snapshot has no station_forecasts array.');
+  return payload;
 }
 async function refreshLstmForecast(force){
   const base=getLstmApiBase();
-  if(!base){lstmStations=[];lstmStatus('Not connected. Map colours currently use forecast rainfall and GloFAS river context only.',false);return []}
   if(!force&&lstmStations.length&&Date.now()-lstmLoadedAt<600000)return lstmStations;
   if(lstmLoadPromise)return lstmLoadPromise;
   lstmLoadPromise=(async()=>{
-    lstmStatus('Checking the live API and regional LSTM assets…',false);
-    const statusResponse=await fetch(base+'/api/v1/models/status',{cache:'no-store',headers:{Accept:'application/json'}});
-    const modelStatus=await statusResponse.json().catch(()=>({}));
-    if(!statusResponse.ok)throw Error('Model status request returned HTTP '+statusResponse.status);
-    if(modelStatus.on_demand_inference_available!==true){
-      const checks=modelStatus.runtime_assets?.asset_checks||{};
-      const missing=Object.keys(checks).filter(k=>checks[k]!==true);
-      throw Error('Backend is reachable, but its local LSTM runtime/assets are not ready'+(missing.length?' ('+missing.join(', ')+')':'')+'. Run the model setup, preflight and training steps on the backend host.');
+    let payload=null,sourceLabel='scheduled GitHub Actions snapshot',apiError='';
+    if(base){
+      try{
+        lstmStatus('Checking the live API and regional LSTM assets…',false);
+        const statusResponse=await fetch(base+'/api/v1/models/status',{cache:'no-store',headers:{Accept:'application/json'}});
+        const modelStatus=await statusResponse.json().catch(()=>({}));
+        if(!statusResponse.ok)throw Error('Model status request returned HTTP '+statusResponse.status);
+        if(modelStatus.on_demand_inference_available!==true){
+          const checks=modelStatus.runtime_assets?.asset_checks||{};
+          const missing=Object.keys(checks).filter(k=>checks[k]!==true);
+          throw Error('Backend is reachable, but its local LSTM runtime/assets are not ready'+(missing.length?' ('+missing.join(', ')+')':'')+'. Run setup, preflight and training on the backend host.');
+        }
+        const response=await fetch(base+'/api/v1/models/regional-discharge/forecast?all_stations=true',{cache:'no-store',headers:{Accept:'application/json'}});
+        const result=await response.json().catch(()=>({}));
+        if(!response.ok){
+          const detail=typeof result.detail==='string'?result.detail:result.detail?.message;
+          throw Error(detail||('Station forecast returned HTTP '+response.status));
+        }
+        if(!Array.isArray(result.station_forecasts))throw Error('Backend returned no station_forecasts. Update the backend to current main and restart it.');
+        payload=result;
+        sourceLabel='live backend inference API';
+      }catch(e){apiError=e.message}
     }
-    const response=await fetch(base+'/api/v1/models/regional-discharge/forecast?all_stations=true',{cache:'no-store',headers:{Accept:'application/json'}});
-    const payload=await response.json().catch(()=>({}));
-    if(!response.ok){
-      const detail=typeof payload.detail==='string'?payload.detail:payload.detail?.message;
-      throw Error(detail||('Station forecast returned HTTP '+response.status));
+    if(!payload){
+      payload=await fetchStaticLstmPayload();
+      sourceLabel='scheduled GitHub Actions inference snapshot';
     }
-    if(!Array.isArray(payload.station_forecasts))throw Error('Backend returned no station_forecasts. Update the backend to the current FloodWatch main branch and restart it.');
-    const eligible=payload.station_forecasts.filter(s=>
-      s&&s.forecast_is_live===true&&s.coordinates_available===true&&
-      Number.isFinite(Number(s.station_latitude))&&Number.isFinite(Number(s.station_longitude))&&
-      s.peak_discharge_percentile_all_available_history!=null&&
-      Number.isFinite(Number(s.peak_discharge_percentile_all_available_history))&&
-      Array.isArray(s.forecast)&&s.forecast.length>0&&
-      Number(s.station_latitude)>=7&&Number(s.station_latitude)<=21.8&&
-      Number(s.station_longitude)>=73&&Number(s.station_longitude)<=87
-    );
-    lstmStations=eligible.map(s=>({...s,station_latitude:Number(s.station_latitude),station_longitude:Number(s.station_longitude),peak_discharge_percentile_all_available_history:Math.max(0,Math.min(100,Number(s.peak_discharge_percentile_all_available_history)))}));
+    const eligible=(payload.station_forecasts||[]).filter(s=>{
+      const actualAge=sourceHistoryAgeDays(s);
+      return s&&s.coordinates_available===true&&
+        Number.isFinite(Number(s.station_latitude))&&Number.isFinite(Number(s.station_longitude))&&
+        s.peak_discharge_percentile_all_available_history!=null&&
+        Number.isFinite(Number(s.peak_discharge_percentile_all_available_history))&&
+        Array.isArray(s.forecast)&&s.forecast.length>0&&actualAge<=3&&
+        Number(s.station_latitude)>=7&&Number(s.station_latitude)<=21.8&&
+        Number(s.station_longitude)>=73&&Number(s.station_longitude)<=87;
+    });
+    lstmStations=eligible.map(s=>{
+      const age=sourceHistoryAgeDays(s);
+      return {...s,history_age_days:age,forecast_is_live:age<=3,station_latitude:Number(s.station_latitude),station_longitude:Number(s.station_longitude),peak_discharge_percentile_all_available_history:Math.max(0,Math.min(100,Number(s.peak_discharge_percentile_all_available_history)))};
+    });
     lstmLoadedAt=Date.now();
     if(lstmStations.length){
-      lstmStatus('Loaded '+lstmStations.length+' recent station forecasts. LSTM contributes at most 25% to nearby risk scores; colours remain experimental estimates, not calibrated flood probabilities.',true);
+      const prefix=apiError?'Live API unavailable ('+apiError+'); using the scheduled snapshot. ':'';
+      lstmStatus(prefix+'Loaded '+lstmStations.length+' recent station forecasts from '+sourceLabel+'. The LSTM modifies nearby risk scores by at most 25%; colours are experimental estimates, not calibrated flood probabilities.',true,base&&!apiError?'Connected':'Snapshot loaded');
       recolorCityPins();
       if(lastSelectedBundle&&selectedLatLon)render(lastSelectedBundle,selectedLatLon.lat,selectedLatLon.lon);
     }else{
-      lstmStatus('API responded, but no station had all of: recent source history, usable coordinates and a historical discharge rank. Map colours remain based on rainfall/GloFAS only.',false);
+      lstmStatus('Loaded the '+sourceLabel+', but no station had recent (≤3-day) source history, usable coordinates and a historical discharge rank. Map colours remain based on rainfall/GloFAS only.',false,sourceLabel.includes('snapshot')?'Snapshot stale':'Not available');
     }
     return lstmStations;
   })().catch(e=>{
     lstmStations=[];lstmLoadedAt=0;
-    lstmStatus('LSTM not applied: '+e.message+' Map colours remain based on rainfall/GloFAS only.',false);
+    lstmStatus('LSTM not applied: '+(apiErrorForDisplay(e)||e.message)+' Map colours remain based on rainfall/GloFAS only.',false,'Not available');
     throw e;
   }).finally(()=>{lstmLoadPromise=null});
   return lstmLoadPromise;
 }
+function apiErrorForDisplay(error){return String(error?.message||error)}
 function nearestLstmSignal(lat,lon,stations){
   if(!Number.isFinite(+lat)||!Number.isFinite(+lon))return null;
   let best=null;
@@ -632,9 +666,9 @@ async function runContours(tok){
   const cells=gridCells(mask),batches=[],res=new Array(cells.length).fill(null);
   for(let i=0;i<cells.length;i+=35)batches.push(cells.slice(i,i+35));
   let cur=0,done=0,failed=0,lastErr='',lstmForRun=[],progressDone=0;
-  const apiConfigured=!!getLstmApiBase(),totalWork=batches.length+(apiConfigured?1:0);
+  const totalWork=batches.length+1;
   const updateLoadProgress=()=>{if(tok===ovTok)$('ovTitle').textContent='Loading data · '+Math.min(100,Math.floor(progressDone/Math.max(1,totalWork)*100))+'%'};
-  const lstmPromise=apiConfigured?refreshLstmForecast(false).then(rows=>{lstmForRun=rows;progressDone++;updateLoadProgress();return rows}).catch(()=>{progressDone++;updateLoadProgress();return []}):Promise.resolve([]);
+  const lstmPromise=refreshLstmForecast(false).then(rows=>{lstmForRun=rows;progressDone++;updateLoadProgress();return rows}).catch(()=>{progressDone++;updateLoadProgress();return []});
   async function worker(){
     while(cur<batches.length){
       if(tok!==ovTok)return;
