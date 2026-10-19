@@ -121,7 +121,7 @@ test('Map overlay requires fresh source-history dates, coordinates and a station
 test('Map can load scheduled regional LSTM forecasts without a backend URL', () => {
   assert(html.includes('LSTM_STATIC_FORECAST_URL'));
   assert(html.includes('regional-lstm-forecast.json'));
-  assert(html.includes('Scheduled GitHub Actions inference snapshot'));
+  assert(html.includes('scheduled GitHub Actions inference snapshot'));
   assert(html.includes('all_stations=true'));
 });
 test('LSTM influence is distance limited and clearly not a calibrated probability', () => {
