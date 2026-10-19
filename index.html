@@ -158,6 +158,17 @@ details.card[open] summary:after{content:'−'}
       <div class="note" id="flow" style="margin-top:10px">River flow appears here once you pick a spot.</div>
     </div>
 
+    <details class="card" id="lstmCard">
+      <summary><b>🧠 Regional LSTM risk contribution</b> <span class="badge" id="lstmBadge">Not connected</span></summary>
+      <p class="note">Connect the live FloodWatch API to include station-aware, seven-day LSTM discharge outlooks in nearby map-cell colours. The model modifies an experimental risk score; it does not output calibrated flood probability or official warnings.</p>
+      <form id="lstmForm" class="infra">
+        <label>Live backend HTTPS base URL<input id="lstmApiBase" type="url" maxlength="500" placeholder="https://your-live-api.example.com" autocomplete="url"></label>
+        <div class="row"><button type="submit">Connect &amp; load LSTM</button><button type="button" id="lstmDisconnect">Disconnect</button></div>
+      </form>
+      <div class="status" id="lstmStatus" aria-live="polite">Not connected. Map colours currently use forecast rainfall and GloFAS river context only.</div>
+      <p class="note">Only forecasts with recent source-history timestamps, usable coordinates and a station-relative historic-discharge rank can contribute. Influence fades to zero beyond 65 km from a station; this distance is an approximation, not proof of river-network connectivity.</p>
+    </details>
+
     <details class="card" id="infraCard">
       <summary><b>🏗️ Infrastructure & human factors</b> <span class="badge" id="infraCount">0</span></summary>
       <p class="note">Dams, embankments, drains and slow warnings can change what a flood does. Log dated, source-linked facts here. FloodWatch never rates a dam safe or unsafe: missing records mean “safety status not verified”.</p>
@@ -267,17 +278,18 @@ function score(b){
   const reservoir=b.f?._floodwatch?.reservoir||null;
   const damStoragePct=Number.isFinite(Number(reservoir?.storage_pct))?Number(reservoir.storage_pct):null;
   const hazard=calculateFloodHazardScore(r24,pct,damStoragePct);
-  const s=hazard.score,level=s>=70?'red':s>=45?'amber':'green';
+  const s=hazard.score,level=s>=65?'red':s>=35?'amber':'green';
   return {level,score:s,r24,r72,pr,cur,pct,peak,damStoragePct,riverScore:hazard.riverScore,damScore:hazard.damScore,weights:hazard.weights,reservoir,hours:idx.slice(0,24).map(rain)};
 }
 
-let pin=null,token=0;
+let pin=null,token=0,selectedLatLon=null;
 function setPin(lat,lon){
   if(pin)map.removeLayer(pin);
   pin=L.marker([lat,lon]).addTo(map);
 }
 async function selectLocation(lat,lon,name){
   const my=++token;
+  selectedLatLon={lat:+lat,lon:+lon};
   setPin(lat,lon);
   $('place').textContent=name||'Finding place name…';
   $('coords').textContent=lat.toFixed(3)+', '+lon.toFixed(3);
@@ -286,15 +298,15 @@ async function selectLocation(lat,lon,name){
     const [[b],nm]=await Promise.all([fetchBundle([[lat,lon]]),name||reverseName(lat,lon)]);
     if(my!==token)return;
     $('place').textContent=nm||'Spot you picked';
-    render(b);
+    render(b,lat,lon);
     $('status').textContent='Updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
   }catch(e){
     if(my!==token)return;
     $('status').textContent='Could not load data: '+e.message+'. Try again in a moment.';
   }
 }
-function render(b){
-  const r=score(b),L1=LEVELS[r.level],c=b.w.current||{};
+function render(b,lat,lon){
+  const r=applyLstmToPointScore(score(b),lat,lon,lstmStations),L1=LEVELS[r.level],c=b.w.current||{};
   $('temp').textContent=c.temperature_2m!=null?Math.round(c.temperature_2m)+'°C':'—';
   $('rainNow').textContent=c.precipitation!=null?c.precipitation.toFixed(1)+' mm':'—';
   $('wind').textContent=c.wind_speed_10m!=null?Math.round(c.wind_speed_10m)+' km/h':'—';
@@ -308,7 +320,8 @@ function render(b){
     why.push('🌧️ '+r.r24.toFixed(0)+' mm of rain expected in 24 hours');
     why.push('📅 '+r.r72.toFixed(0)+' mm over the next 72 hours');
     why.push('☔ Up to '+Math.round(r.pr)+'% chance of rain');
-    why.push(r.pct!=null?'🏞️ River factor: '+Math.round(r.pct)+'th percentile':'🏞️ River factor: unavailable here');
+    why.push(r.pct!=null?'🏞️ GloFAS river factor: '+Math.round(r.pct)+'th percentile':'🏞️ GloFAS river factor: unavailable here');
+    if(r.lstmSignal)why.push('🧠 LSTM: predicted peak discharge is above '+Math.round(r.lstmSignal.percentile)+'% of historical observations at '+r.lstmSignal.station.station_id+' ('+Math.round(r.lstmSignal.distanceKm)+' km away). This is a discharge rank, not flood probability.');
     why.push(r.damStoragePct!=null?'🏗️ Reservoir storage: '+Math.round(r.damStoragePct)+'%'+(r.reservoir?.reservoir_name?' — '+r.reservoir.reservoir_name:''):'🏗️ Reservoir factor: no verified nearby storage record');
     why.push('⚖️ Score weights: '+r.weights);
   }
@@ -453,6 +466,8 @@ const HIST_ROWS=[{t:'Andhra Pradesh: flood-hazard zones from satellite floods, 1
 const CY_ROWS=[{c:'#ff4b55',t:'GDACS red alert'},{c:'#ff9f43',t:'GDACS orange alert'},{c:'#f4d35e',t:'GDACS green alert (lowest class, not “safe”)'}];
 const HIST_SRC=['https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty','Open NRSC flood atlas ↗'];
 let ovLayers=[],ovTok=0,maskPromise=null,contourState=null,infraRecords=[];
+const LSTM_STORAGE_KEY='floodwatch.regionalLstmApiBase.v1',LSTM_RADIUS_KM=65;
+let lstmStations=[],lstmLoadPromise=null,lstmLoadedAt=0;
 function clearOverlay(){ovTok++;ovLayers.forEach(l=>{try{map.removeLayer(l)}catch(e){}});ovLayers=[]}
 function addOv(l){l.addTo(map);ovLayers.push(l);return l}
 function showLegend(title,rows,note,src){
