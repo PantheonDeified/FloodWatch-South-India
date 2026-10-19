@@ -1,0 +1,236 @@
+name: Apply verified multi-factor hazard scoring
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply backend and frontend hazard scoring
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          # ---------------- Backend ----------------
+          p = Path('backend/main.py')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('APP_VERSION = "0.5.0"', 'APP_VERSION = "0.6.0"', 1)
+
+          marker = '@app.get("/api/v1/river-flow")'
+          if 'def reservoir_status(' not in s:
+              endpoint = r'''
+
+
+def _number_from_record(row: dict, *keys):
+    for key in keys:
+        value = row.get(key)
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(number):
+            return number
+    return None
+
+
+def _reservoir_storage_pct(row: dict):
+    direct = _number_from_record(
+        row,
+        "storage_pct", "storage_percent", "percent_full", "live_storage_pct",
+        "live_storage_percent", "capacity_pct", "capacity_percent",
+    )
+    if direct is not None and 0 <= direct <= 100:
+        return direct
+    live = _number_from_record(row, "live_storage", "live_storage_bcm", "storage")
+    capacity = _number_from_record(row, "live_storage_capacity", "live_capacity", "capacity")
+    if live is not None and capacity is not None and capacity > 0:
+        pct = 100.0 * live / capacity
+        if 0 <= pct <= 120:
+            return max(0.0, min(100.0, pct))
+    return None
+
+
+@app.get("/api/v1/reservoir-status")
+def reservoir_status(
+    latitude: float = Query(..., ge=7.0, le=21.8),
+    longitude: float = Query(..., ge=73.0, le=87.0),
+):
+    """Return the nearest published reservoir-storage record when the snapshot contains one.
+
+    The endpoint never invents a storage percentage. Missing/unusable storage remains null.
+    """
+    snapshot = load_water_snapshot()
+    candidates = []
+    for row in snapshot.get("observations", []):
+        if not isinstance(row, dict):
+            continue
+        kind = " ".join(str(row.get(k) or "") for k in ("kind", "station_name", "asset_type", "metric"))
+        low = kind.casefold()
+        if not any(term in low for term in ("reservoir", "dam", "storage")):
+            continue
+        try:
+            rlat, rlon = float(row.get("latitude")), float(row.get("longitude"))
+        except (TypeError, ValueError):
+            continue
+        if not (-90 <= rlat <= 90 and -180 <= rlon <= 180):
+            continue
+        storage_pct = _reservoir_storage_pct(row)
+        if storage_pct is None:
+            continue
+        lat1, lat2 = math.radians(latitude), math.radians(rlat)
+        dlat, dlon = lat2 - lat1, math.radians(rlon - longitude)
+        a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+        distance_km = 6371.0 * 2 * math.atan2(math.sqrt(min(1.0, a)), math.sqrt(max(0.0, 1.0 - a)))
+        candidates.append((distance_km, row, storage_pct))
+    if not candidates:
+        return {
+            "available": False,
+            "storage_pct": None,
+            "distance_km": None,
+            "source": "CWC/NWIC published water-observation snapshot",
+            "reason": "No reservoir record with a usable storage percentage was found near this location.",
+        }
+    distance_km, row, storage_pct = min(candidates, key=lambda item: item[0])
+    return {
+        "available": True,
+        "storage_pct": round(storage_pct, 2),
+        "distance_km": round(distance_km, 2),
+        "reservoir_name": row.get("station_name") or row.get("reservoir_name") or row.get("name"),
+        "observed_at": row.get("observed_at") or row.get("observed_at_raw"),
+        "source": row.get("source_name") or "CWC/NWIC published water-observation snapshot",
+        "source_url": row.get("source_url"),
+        "stress_score": round(max(0.0, min(1.0, (storage_pct - 50.0) / 50.0)), 4),
+        "not_a_dam_safety_rating": True,
+    }
+'''
+              if marker not in s:
+                  raise SystemExit('river-flow endpoint marker not found; refusing blind backend edit')
+              s = s.replace(marker, endpoint + '\n' + marker, 1)
+          p.write_text(s, encoding='utf-8')
+
+          # ---------------- Frontend ----------------
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          start = s.find('function score(b){')
+          end = s.find('let pin=null,token=0;', start)
+          if start < 0 or end < 0:
+              raise SystemExit('Could not locate frontend score() boundaries; refusing blind edit')
+
+          new_score = r'''function calculateFloodHazardScore(rainfall24hMm, riverPercentile, damStoragePct){
+  const rainScore=clamp(rainfall24hMm/200);
+  const riverScore=Number.isFinite(riverPercentile)?clamp(riverPercentile/100):null;
+  const damScore=Number.isFinite(damStoragePct)?clamp((damStoragePct-50)/50):null;
+  let composite;
+  let weights;
+  if(riverScore!=null && damScore!=null){
+    composite=.40*rainScore+.35*riverScore+.25*damScore;
+    weights='40% rainfall + 35% river + 25% reservoir';
+  }else if(riverScore!=null){
+    composite=(.40*rainScore+.35*riverScore)/.75;
+    weights='57% rainfall + 43% river (reservoir unavailable; weights renormalized)';
+  }else{
+    composite=rainScore;
+    weights='100% rainfall (river and reservoir unavailable)';
+  }
+  return {score:100*clamp(composite),rainScore,riverScore,damScore,weights};
+}
+
+function score(b){
+  const h=b.w.hourly||{},times=h.time||[],cutoff=Date.now()-30*60*1000;
+  const idx=times.map((t,i)=>[i,Date.parse(t+'Z')]).filter(x=>x[1]>=cutoff).map(x=>x[0]);
+  const rain=i=>+h.precipitation?.[i]||0;
+  const r24=idx.slice(0,24).reduce((s,i)=>s+rain(i),0),r72=idx.slice(0,72).reduce((s,i)=>s+rain(i),0);
+  const pr=Math.max(0,...idx.slice(0,24).map(i=>+h.precipitation_probability?.[i]||0));
+  const cur=+b.w.current?.precipitation||0;
+  if(idx.length<24)return {level:'unk',score:null,hours:[]};
+  let pct=null,peak=null;
+  const d=b.f?.daily;
+  if(d&&d.time){
+    const today=new Date().toISOString().slice(0,10),hist=[],fut=[];
+    d.time.forEach((t,i)=>{const v=d.river_discharge[i];if(v==null)return;if(t<today)hist.push(v);else if(t>today)fut.push(v)});
+    if(hist.length>=20&&fut.length){
+      peak=Math.max(...fut.slice(0,7));
+      const lo=hist.filter(v=>v<peak).length,eq=hist.filter(v=>v===peak).length;
+      pct=100*(lo+eq/2)/hist.length;
+    }
+  }
+  const reservoir=b.f?._floodwatch?.reservoir||null;
+  const damStoragePct=Number.isFinite(Number(reservoir?.storage_pct))?Number(reservoir.storage_pct):null;
+  const hazard=calculateFloodHazardScore(r24,pct,damStoragePct);
+  const s=hazard.score;
+  const level=s>=70?'red':s>=45?'amber':'green';
+  return {level,score:s,r24,r72,pr,cur,pct,peak,damStoragePct,riverScore:hazard.riverScore,damScore:hazard.damScore,weights:hazard.weights,reservoir,hours:idx.slice(0,24).map(rain)};
+}
+
+'''
+          s = s[:start] + new_score + s[end:]
+
+          # Make the backend river response carry the nearest reservoir context.
+          old_return = '''    payload["_floodwatch"] = {
+        "backend_version": APP_VERSION,
+        "provider": "Open-Meteo Flood API / GloFAS",
+        "fetched_at_utc": datetime.now(timezone.utc).isoformat(),'''
+          if old_return not in Path('backend/main.py').read_text(encoding='utf-8'):
+              raise SystemExit('Expected backend response marker missing after backend edit')
+          bp = Path('backend/main.py')
+          bs = bp.read_text(encoding='utf-8')
+          replacement = '''    reservoir_context = reservoir_status(latitude=latitude, longitude=longitude)
+    payload["_floodwatch"] = {
+        "backend_version": APP_VERSION,
+        "provider": "Open-Meteo Flood API / GloFAS",
+        "fetched_at_utc": datetime.now(timezone.utc).isoformat(),
+        "reservoir": reservoir_context,'''
+          bs = bs.replace(old_return, replacement, 1)
+          bp.write_text(bs, encoding='utf-8')
+
+          # Add transparent factor reporting to the existing render explanation.
+          old_render = """  if(r.score!=null){
+    why.push('🌧️ '+r.r24.toFixed(0)+' mm of rain expected in 24 hours');
+    why.push('📅 '+r.r72.toFixed(0)+' mm over the next 72 hours');
+    why.push('☔ Up to '+Math.round(r.pr)+'% chance of rain');
+  }"""
+          new_render = """  if(r.score!=null){
+    why.push('🌧️ '+r.r24.toFixed(0)+' mm of rain expected in 24 hours');
+    why.push('📅 '+r.r72.toFixed(0)+' mm over the next 72 hours');
+    why.push('☔ Up to '+Math.round(r.pr)+'% chance of rain');
+    why.push(r.pct!=null?'🏞️ River factor: '+Math.round(r.pct)+'th percentile':'🏞️ River factor: unavailable here');
+    why.push(r.damStoragePct!=null?'🏗️ Reservoir storage: '+Math.round(r.damStoragePct)+'%'+(r.reservoir?.reservoir_name?' — '+r.reservoir.reservoir_name:''):'🏗️ Reservoir factor: no verified nearby storage record');
+    why.push('⚖️ Score weights: '+r.weights);
+  }"""
+          if old_render not in s:
+              raise SystemExit('Expected render factor block not found')
+          s = s.replace(old_render,new_render,1)
+          p.write_text(s, encoding='utf-8')
+
+      - name: Verify syntax and scoring
+        run: |
+          python -m py_compile backend/main.py
+          grep -q "function calculateFloodHazardScore" index.html
+          grep -q "reservoir_status" backend/main.py
+          grep -q "40% rainfall + 35% river + 25% reservoir" index.html
+          grep -q "No reservoir record with a usable storage percentage" backend/main.py
+          echo "Multi-factor hazard upgrade checks passed"
+
+      - name: Commit implementation
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add backend/main.py index.html
+          git diff --cached --quiet || git commit -m 'feat: add verified reservoir-aware flood hazard score'
+          git push
+
+      - name: Remove one-time workflow
+        run: |
+          git rm .github/workflows/apply-multifactor-hazard.yml
+          git commit -m 'chore: remove one-time multifactor upgrade workflow'
+          git push
