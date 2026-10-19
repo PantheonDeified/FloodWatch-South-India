@@ -108,7 +108,7 @@ jobs:
               'station_forecasts_count': len(stations),
           }
           target = pathlib.Path('data/regional-lstm-forecast.json')
-          target.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + '\\n', encoding='utf-8')
+          target.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
           fresh = sum(1 for row in stations if row.get('forecast_is_live') is True)
           print(f'Validated {len(stations)} station forecasts; {fresh} have source history aged at most three days.')
           print(f'Wrote {target} ({target.stat().st_size} bytes).')
@@ -124,6 +124,8 @@ jobs:
             exit 0
           fi
           git commit -m 'Publish scheduled regional LSTM station forecasts'
+          git fetch origin main
+          git rebase origin/main
           git push origin HEAD:main
       - name: Upload data, model, inference output, and evaluation report
         if: always()
