@@ -2,6 +2,8 @@ name: Train FloodWatch regional discharge LSTM
 
 on:
   workflow_dispatch: {}
+  schedule:
+    - cron: "17 2 * * *"
   push:
     paths:
       - '.github/workflows/train-regional-lstm.yml'
@@ -11,7 +13,7 @@ on:
       - 'data_pipeline/scripts/download_nwdp_history.py'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: floodwatch-regional-discharge-lstm-${{ github.ref }}
@@ -55,15 +57,12 @@ jobs:
           restore-keys: |
             floodwatch-nwdp-v3-${{ runner.os }}-${{ hashFiles('data_pipeline/scripts/download_nwdp_history.py', 'data_pipeline/scripts/normalize_cwc_discharge.py') }}-
             floodwatch-nwdp-v2-${{ runner.os }}-${{ hashFiles('data_pipeline/scripts/download_nwdp_history.py', 'data_pipeline/scripts/normalize_cwc_discharge.py') }}-
-      - name: Download official CWC/NWDP discharge archives
-        if: steps.nwdp-cache.outputs.cache-hit != 'true'
+      - name: Refresh current-year and discover official CWC/NWDP discharge archives
         run: |
-          # Reuse only files whose URL/provenance and checksum are verified by the source manifest.
-          # A restored prefix cache is a warm start; the downloader still queries the source for current-year resources.
+          # Restore cached history to avoid repeatedly downloading old archives; refresh resources explicitly labelled for the current year.
           mkdir -p data_pipeline/raw/nwdp_history
-          python data_pipeline/scripts/download_nwdp_history.py --out-dir data_pipeline/raw/nwdp_history --keywords "river discharge" --start-year 1950 --end-year "$(date -u +%Y)" --max-resources 50
+          python data_pipeline/scripts/download_nwdp_history.py --out-dir data_pipeline/raw/nwdp_history --keywords "river discharge" --start-year 1950 --end-year "$(date -u +%Y)" --max-resources 50 --refresh-current-year
       - name: Normalize source observations
-        if: steps.nwdp-cache.outputs.cache-hit != 'true'
         run: |
           python data_pipeline/scripts/normalize_cwc_discharge.py --input-dir data_pipeline/raw/nwdp_history --output data_pipeline/output/cwc_discharge_normalized.csv --report data_pipeline/output/cwc_discharge_quality_report.json
       - name: Save validated same-day CWC/NWDP cache
@@ -78,9 +77,54 @@ jobs:
       - name: Train regional multi-station LSTM
         run: |
           python data_pipeline/scripts/train_regional_lstm.py --observations data_pipeline/output/cwc_discharge_normalized.csv --output-dir data_pipeline/output/regional_models --lookback-days 90 --lead-days 7 --window-stride 14 --epochs 6 --patience 2 --max-windows-per-station-split 70 --hidden-size 48 --num-layers 1 --batch-size 512
-      - name: Run inference smoke test with saved weights and scalers
+      - name: Run seven-day inference for all eligible stations
         run: |
-          python data_pipeline/scripts/predict_regional_lstm.py --observations data_pipeline/output/cwc_discharge_normalized.csv --model-file data_pipeline/output/regional_models/regional_discharge_lstm.pt --scalers-file data_pipeline/output/regional_models/regional_discharge_lstm.scalers.json --report-file data_pipeline/output/regional_models/regional_discharge_lstm.report.json --output-file data_pipeline/output/regional_models/latest_forecast_research.json --lookback-days 90
+          python data_pipeline/scripts/predict_regional_lstm.py --observations data_pipeline/output/cwc_discharge_normalized.csv --model-file data_pipeline/output/regional_models/regional_discharge_lstm.pt --scalers-file data_pipeline/output/regional_models/regional_discharge_lstm.scalers.json --report-file data_pipeline/output/regional_models/regional_discharge_lstm.report.json --output-file data_pipeline/output/regional_models/latest_forecast_research.json --lookback-days 90 --all-stations
+      - name: Validate and stage public station forecast snapshot
+        run: |
+          python - <<'PY'
+          import json
+          import pathlib
+          source = pathlib.Path('data_pipeline/output/regional_models/latest_forecast_research.json')
+          payload = json.loads(source.read_text(encoding='utf-8'))
+          stations = payload.get('station_forecasts')
+          if not isinstance(stations, list) or not stations:
+              raise SystemExit('Inference produced no regional station forecasts; refusing to publish an empty snapshot.')
+          for row in stations:
+              if not isinstance(row, dict) or not isinstance(row.get('forecast'), list) or not row['forecast']:
+                  raise SystemExit('Invalid station forecast row; refusing to publish a malformed snapshot.')
+              for item in row['forecast']:
+                  value = item.get('predicted_discharge_m3_s')
+                  if not isinstance(value, (int, float)) or value < 0:
+                      raise SystemExit('Invalid discharge prediction; refusing to publish.')
+              # Never publish the runner/VM filesystem paths embedded by the predictor.
+              row.pop('model_artifact', None)
+              row.pop('scalers_artifact', None)
+          payload.pop('model_artifact', None)
+          payload.pop('scalers_artifact', None)
+          payload['publication'] = {
+              'published_by': 'FloodWatch regional LSTM GitHub Actions workflow',
+              'publication_note': 'Scheduled station discharge inference; not a calibrated flood-probability forecast or official warning.',
+              'station_forecasts_count': len(stations),
+          }
+          target = pathlib.Path('data/regional-lstm-forecast.json')
+          target.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + '\\n', encoding='utf-8')
+          fresh = sum(1 for row in stations if row.get('forecast_is_live') is True)
+          print(f'Validated {len(stations)} station forecasts; {fresh} have source history aged at most three days.')
+          print(f'Wrote {target} ({target.stat().st_size} bytes).')
+          PY
+      - name: Publish station forecasts to main for the browser map
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/regional-lstm-forecast.json
+          if git diff --cached --quiet; then
+            echo 'The published station forecast snapshot did not change.'
+            exit 0
+          fi
+          git commit -m 'Publish scheduled regional LSTM station forecasts'
+          git push origin HEAD:main
       - name: Upload data, model, inference output, and evaluation report
         if: always()
         uses: actions/upload-artifact@v4
