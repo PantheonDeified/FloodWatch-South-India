@@ -370,11 +370,12 @@ function placeHover(pos){
   hShown=pos;
 }
 function hoverHtml(b,name,ll){
-  const r=score(b),c=b.w.current||{},lv=LEVELS[r.level];
+  const r=applyLstmToPointScore(score(b),ll.lat,ll.lng,lstmStations),c=b.w.current||{},lv=LEVELS[r.level];
   const f=(v,fn)=>v==null||!Number.isFinite(+v)?'—':fn(+v);
   const st=(k,v)=>'<div><span>'+k+'</span><b>'+v+'</b></div>';
   const src=['Open-Meteo forecast'];
   if(r.pct!=null)src.push('GloFAS river model');
+  if(r.lstmSignal)src.push('Regional LSTM discharge outlook');
   if(name)src.push('OpenStreetMap');
   const tm=c.time?c.time.slice(11,16)+' UTC':'time not supplied';
   return '<div class="hv-head"><div><b>'+esc(name||'Unnamed spot')+'</b><small>'+ll.lat.toFixed(3)+', '+ll.lng.toFixed(3)+'</small></div>'+
@@ -383,7 +384,7 @@ function hoverHtml(b,name,ll){
       st('Temp',f(c.temperature_2m,v=>Math.round(v)+'°C'))+st('Rain now',f(c.precipitation,v=>v.toFixed(1)+' mm'))+
       st('Wind',f(c.wind_speed_10m,v=>Math.round(v)+' km/h'))+st('Humidity',f(c.relative_humidity_2m,v=>Math.round(v)+'%'))+
       st('Next 24h',f(r.r24,v=>v.toFixed(0)+' mm'))+st('Next 72h',f(r.r72,v=>v.toFixed(0)+' mm'))+
-      st('Chance',f(r.pr,v=>Math.round(v)+'%'))+st('River',f(r.pct,v=>Math.round(v)+'th'))+
+      st('Chance',f(r.pr,v=>Math.round(v)+'%'))+st('River',f(r.lstmSignal?.percentile??r.pct,v=>Math.round(v)+'th'))+
     '</div>'+
     '<p class="hv-sum"><b>🤖 Auto summary:</b> '+esc(summarize(r,name))+'</p>'+
     '<div class="hv-src">Sources: '+src.join(', ')+'.<br>Model time '+tm+'. Click for the full panel.</div>';
@@ -468,7 +469,7 @@ const CY_ROWS=[{c:'#ff4b55',t:'GDACS red alert'},{c:'#ff9f43',t:'GDACS orange al
 const HIST_SRC=['https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty','Open NRSC flood atlas ↗'];
 let ovLayers=[],ovTok=0,maskPromise=null,contourState=null,infraRecords=[];
 const LSTM_STORAGE_KEY='floodwatch.regionalLstmApiBase.v1',LSTM_RADIUS_KM=65;
-let lstmStations=[],lstmLoadPromise=null,lstmLoadedAt=0;
+let lstmStations=[],lstmLoadPromise=null,lstmLoadedAt=0,cityPinMarkers=[];
 function getLstmApiBase(){
   let raw=($('lstmApiBase')?.value||'').trim();
   if(!raw){try{raw=localStorage.getItem(LSTM_STORAGE_KEY)||''}catch(e){}}
@@ -520,6 +521,7 @@ async function refreshLstmForecast(force){
     lstmLoadedAt=Date.now();
     if(lstmStations.length){
       lstmStatus('Loaded '+lstmStations.length+' recent station forecasts. LSTM contributes at most 25% to nearby risk scores; colours remain experimental estimates, not calibrated flood probabilities.',true);
+      recolorCityPins();
       if(lastSelectedBundle&&selectedLatLon)render(lastSelectedBundle,selectedLatLon.lat,selectedLatLon.lon);
     }else{
       lstmStatus('API responded, but no station had all of: recent source history, usable coordinates and a historical discharge rank. Map colours remain based on rainfall/GloFAS only.',false);
@@ -841,14 +843,22 @@ $('lstmDisconnect').addEventListener('click',()=>{
   if($('riskMode').value==='contours')setMode('contours');
 });
 
-// Colour-coded city pins from one batched request
+// Colour-coded city pins from one batched request; recolour when fresh LSTM stations arrive.
+function recolorCityPins(){
+  cityPinMarkers.forEach(({marker,bundle,city})=>{
+    const r=applyLstmToPointScore(score(bundle),city[1],city[2],lstmStations),col=LEVELS[r.level].color;
+    const icon=L.divIcon({className:'',html:'<div class="pin" style="background:'+col+'"></div>',iconSize:[26,26],iconAnchor:[13,13]});
+    marker.setIcon(icon);
+  });
+}
 (async()=>{
   try{
     const bundles=await fetchBundle(CITIES.map(c=>[c[1],c[2]]));
     bundles.forEach((b,i)=>{
-      const r=score(b),c=CITIES[i],col=LEVELS[r.level].color;
+      const c=CITIES[i],r=applyLstmToPointScore(score(b),c[1],c[2],lstmStations),col=LEVELS[r.level].color;
       const icon=L.divIcon({className:'',html:'<div class="pin" style="background:'+col+'"></div>',iconSize:[26,26],iconAnchor:[13,13]});
-      L.marker([c[1],c[2]],{icon}).addTo(map).on('click',()=>selectLocation(c[1],c[2],c[0]));
+      const marker=L.marker([c[1],c[2]],{icon}).addTo(map).on('click',()=>selectLocation(c[1],c[2],c[0]));
+      cityPinMarkers.push({marker,bundle:b,city:c});
     });
   }catch(e){}
 })();
