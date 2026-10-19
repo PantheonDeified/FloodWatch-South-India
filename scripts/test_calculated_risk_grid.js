@@ -111,10 +111,18 @@ test('Map box contains only loading and progress while contour data load', () =>
 });
 test('Frontend requests all station forecasts rather than one arbitrary gauge', () =>
   assert(html.includes('/api/v1/models/regional-discharge/forecast?all_stations=true')));
-test('Map overlay requires fresh history, coordinates and a station-relative percentile', () => {
-  assert(html.includes('forecast_is_live===true'));
+test('Map overlay requires fresh source-history dates, coordinates and a station-relative percentile', () => {
+  assert(html.includes('function sourceHistoryAgeDays('));
+  assert(html.includes('actualAge<=3'));
   assert(html.includes('coordinates_available===true'));
   assert(html.includes('peak_discharge_percentile_all_available_history'));
+  assert(html.includes('Date.now()-created>36*60*60*1000'));
+});
+test('Map can load scheduled regional LSTM forecasts without a backend URL', () => {
+  assert(html.includes('LSTM_STATIC_FORECAST_URL'));
+  assert(html.includes('regional-lstm-forecast.json'));
+  assert(html.includes('Scheduled GitHub Actions inference snapshot'));
+  assert(html.includes('all_stations=true'));
 });
 test('LSTM influence is distance limited and clearly not a calibrated probability', () => {
   assert(html.includes('LSTM_RADIUS_KM=65'));
