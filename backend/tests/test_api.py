@@ -372,3 +372,56 @@ def test_river_flow_rejects_malformed_provider_series(monkeypatch):
     )
     assert response.status_code == 502
     assert "valid daily discharge series" in response.json()["detail"]
+
+
+def test_regional_inference_returns_station_aware_forecasts_for_map(monkeypatch, tmp_path):
+    from types import SimpleNamespace
+
+    _install_fake_local_model_assets(monkeypatch, tmp_path)
+    calls = {"all_stations": False}
+
+    def fake_run(command, **kwargs):
+        calls["all_stations"] = "--all-stations" in command
+        output_path = Path(command[command.index("--output-file") + 1])
+        station = {
+            "station_id": "TEST-STATION",
+            "state": "Karnataka",
+            "station_latitude": 15.0,
+            "station_longitude": 76.0,
+            "coordinates_available": True,
+            "forecast_is_live": True,
+            "history_age_days": 1,
+            "peak_discharge_percentile_all_available_history": 91.0,
+            "forecast": [{"date": "2026-10-20", "predicted_discharge_m3_s": 18.0}],
+        }
+        output_path.write_text(json.dumps({
+            **station,
+            "station_forecasts": [station],
+            "forecast_station_count": 1,
+            "model_type": "validation_selected_lstm_persistence_blend",
+        }), encoding="utf-8")
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(main.subprocess, "run", fake_run)
+    response = client.get(
+        "/api/v1/models/regional-discharge/forecast",
+        params={"all_stations": "true"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert calls["all_stations"] is True
+    assert data["station_forecasts"][0]["station_id"] == "TEST-STATION"
+    assert data["station_forecasts"][0]["peak_discharge_percentile_all_available_history"] == 91.0
+    assert data["station_forecasts"][0]["coordinates_available"] is True
+    assert data["serving_metadata"]["forecast_mode"] == "all_eligible_stations"
+    assert data["serving_metadata"]["is_flood_probability"] is False
+
+
+def test_regional_inference_rejects_all_stations_with_specific_station_id():
+    response = client.get(
+        "/api/v1/models/regional-discharge/forecast",
+        params={"all_stations": "true", "station_id": "TEST-STATION"},
+    )
+    assert response.status_code == 422
+    assert "not both" in response.json()["detail"]
