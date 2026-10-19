@@ -11,6 +11,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import os
 import pathlib
 import re
 import sys
@@ -113,6 +114,10 @@ def main() -> int:
     ap.add_argument("--end-year", type=int, default=2030)
     ap.add_argument("--max-resources", type=int, default=100)
     ap.add_argument("--delay-seconds", type=float, default=0.5)
+    ap.add_argument(
+        "--refresh-current-year", action="store_true",
+        help="Refresh already cached resources whose title includes the current UTC year; older archives remain checksum-verified and reused."
+    )
     args = ap.parse_args()
 
     pages = args.source_url or DEFAULT_PAGES
@@ -191,8 +196,22 @@ def main() -> int:
                                 "verified as this exact resource. Use a clean output directory or "
                                 "remove the unverified local file before retrying."
                             )
-                        entry.update({"status": "already_downloaded", "local_path": str(destination),
-                                      "bytes": destination.stat().st_size, "sha256": existing_digest})
+                        current_year_refresh = args.refresh_current_year and dt.datetime.now(dt.timezone.utc).year in years
+                        if current_year_refresh:
+                            # Refresh only explicitly year-labelled current-year resources; keep the
+                            # prior verified archive intact if the replacement download fails.
+                            temp_destination = destination.with_name(destination.name + ".refresh")
+                            temp_destination.unlink(missing_ok=True)
+                            try:
+                                size, digest = download(session, download_url, temp_destination)
+                                os.replace(temp_destination, destination)
+                            finally:
+                                temp_destination.unlink(missing_ok=True)
+                            entry.update({"status": "refreshed_current_year", "local_path": str(destination),
+                                          "bytes": size, "sha256": digest})
+                        else:
+                            entry.update({"status": "already_downloaded", "local_path": str(destination),
+                                          "bytes": destination.stat().st_size, "sha256": existing_digest})
                     else:
                         size, digest = download(session, download_url, destination)
                         entry.update({"status": "downloaded", "local_path": str(destination),
