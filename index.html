@@ -282,7 +282,7 @@ function score(b){
   return {level,score:s,r24,r72,pr,cur,pct,peak,damStoragePct,riverScore:hazard.riverScore,damScore:hazard.damScore,weights:hazard.weights,reservoir,hours:idx.slice(0,24).map(rain)};
 }
 
-let pin=null,token=0,selectedLatLon=null;
+let pin=null,token=0,selectedLatLon=null,lastSelectedBundle=null;
 function setPin(lat,lon){
   if(pin)map.removeLayer(pin);
   pin=L.marker([lat,lon]).addTo(map);
@@ -298,6 +298,7 @@ async function selectLocation(lat,lon,name){
     const [[b],nm]=await Promise.all([fetchBundle([[lat,lon]]),name||reverseName(lat,lon)]);
     if(my!==token)return;
     $('place').textContent=nm||'Spot you picked';
+    lastSelectedBundle=b;
     render(b,lat,lon);
     $('status').textContent='Updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
   }catch(e){
@@ -519,6 +520,7 @@ async function refreshLstmForecast(force){
     lstmLoadedAt=Date.now();
     if(lstmStations.length){
       lstmStatus('Loaded '+lstmStations.length+' recent station forecasts. LSTM contributes at most 25% to nearby risk scores; colours remain experimental estimates, not calibrated flood probabilities.',true);
+      if(lastSelectedBundle&&selectedLatLon)render(lastSelectedBundle,selectedLatLon.lat,selectedLatLon.lon);
     }else{
       lstmStatus('API responded, but no station had all of: recent source history, usable coordinates and a historical discharge rank. Map colours remain based on rainfall/GloFAS only.',false);
     }
@@ -627,7 +629,10 @@ async function runContours(tok){
   if(tok!==ovTok)return;
   const cells=gridCells(mask),batches=[],res=new Array(cells.length).fill(null);
   for(let i=0;i<cells.length;i+=35)batches.push(cells.slice(i,i+35));
-  let cur=0,done=0,failed=0,lastErr='';
+  let cur=0,done=0,failed=0,lastErr='',lstmForRun=[],progressDone=0;
+  const apiConfigured=!!getLstmApiBase(),totalWork=batches.length+(apiConfigured?1:0);
+  const updateLoadProgress=()=>{if(tok===ovTok)$('ovTitle').textContent='Loading data · '+Math.min(100,Math.floor(progressDone/Math.max(1,totalWork)*100))+'%'};
+  const lstmPromise=apiConfigured?refreshLstmForecast(false).then(rows=>{lstmForRun=rows;progressDone++;updateLoadProgress();return rows}).catch(()=>{progressDone++;updateLoadProgress();return []}):Promise.resolve([]);
   async function worker(){
     while(cur<batches.length){
       if(tok!==ovTok)return;
@@ -636,12 +641,12 @@ async function runContours(tok){
         try{const bs=await fetchBundle(bt.map(c=>[c.lat,c.lon]));bs.forEach((b,j)=>{res[bi*35+j]=score(b).score});break}
         catch(e){lastErr=e.message;if(attempt===0)await new Promise(r=>setTimeout(r,2500));else failed++}
       }
-      done++;if(tok===ovTok)$('ovTitle').textContent='Loading data · '+Math.floor(done/batches.length*100)+'%';
+      done++;progressDone++;updateLoadProgress();
     }
   }
-  await Promise.all([worker(),worker(),worker()]);
+  await Promise.all([worker(),worker(),worker(),lstmPromise]);
   if(tok!==ovTok)return;
-  contourState={cells,base:res,mask,failed,lastErr,batches:batches.length};
+  contourState={cells,base:res,mask,failed,lastErr,batches:batches.length,lstmStations:lstmForRun};
   drawContours(tok);
 }
 function drawContours(tok){
@@ -736,10 +741,17 @@ function humanPoints(cell,records,now){
   }
   return {pts:Math.min(55,pts),inc};
 }
+function applyLstmCellScore(base,cell,stations){
+  if(base==null||!Number.isFinite(base))return base;
+  const signal=nearestLstmSignal(cell.lat,cell.lon,stations);
+  if(!signal)return base;
+  const weight=0.25*clamp(1-signal.distanceKm/LSTM_RADIUS_KM);
+  return 100*clamp(((1-weight)*base+weight*signal.percentile)/100);
+}
 function adjustedScores(){
-  const now=Date.now();
+  const now=Date.now(),stations=contourState.lstmStations||[];
   return contourState.cells.map((c,i)=>{
-    const base=contourState.base[i],h=humanPoints(c,infraRecords,now);
+    const baseRaw=contourState.base[i],base=baseRaw==null?baseRaw:applyLstmCellScore(baseRaw,c,stations),h=humanPoints(c,infraRecords,now);
     if(h.pts<=0)return base;
     return base==null?(h.inc?Math.max(35,h.pts):h.pts):Math.min(100,base+h.pts);
   });
