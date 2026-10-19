@@ -5,138 +5,122 @@ const assert = require('node:assert/strict');
 
 const html = fs.readFileSync('index.html', 'utf8');
 const mask = JSON.parse(fs.readFileSync('data/south-india-states.geojson', 'utf8'));
-const basins = JSON.parse(fs.readFileSync('data/south-india-basins.geojson', 'utf8'));
-const geoStart = html.indexOf('function pointInRing(');
-const geoEnd = html.indexOf('\nfunction gaugeSignalForCell', geoStart);
-const scoreStart = html.indexOf('function computeRiskScore(');
-const scoreEnd = html.indexOf('\nfunction riskLevelColor', scoreStart);
-assert(geoStart >= 0 && geoEnd > geoStart, 'Risk-grid geometry helpers should exist.');
-assert(scoreStart >= 0 && scoreEnd > scoreStart, 'Risk score function should exist.');
+const testNames = [];
+function test(name, fn) { fn(); testNames.push(name); }
 
-const geoCode = html.slice(geoStart, geoEnd);
-const geometry = new Function('FLOODWATCH_RISK_GRID', geoCode +
-  '\nreturn {pointInSouthMask, buildRiskGridCells};')({gridDegrees: 0.5});
-const cells = geometry.buildRiskGridCells(mask);
-assert(cells.length > 100, 'Regional mask should generate a useful regional point set.');
-assert(cells.every(c => c.north > c.south && c.east > c.west), 'Grid sample bounds must be positive.');
-assert(cells.every(c => Math.abs((c.north-c.south)-0.5) < 1e-8), 'Sample step should stay 0.5 degrees.');
-assert(geometry.pointInSouthMask(80.27, 13.08, mask), 'Chennai test point should be inside the regional mask.');
-assert(geometry.pointInSouthMask(77.59, 12.97, mask), 'Bengaluru test point should be inside the regional mask.');
-assert(geometry.pointInSouthMask(76.27, 9.93, mask), 'Kochi test point should be inside the regional mask.');
+assert(mask.features && mask.features.length > 0, 'The South India state mask should contain features.');
+assert(html.includes('function calculateFloodHazardScore('), 'Rain/GloFAS score function must exist.');
+assert(html.includes('function nearestLstmSignal('), 'Station-aware LSTM lookup must exist.');
+assert(html.includes('function applyLstmCellScore('), 'LSTM map-colour contribution must exist.');
 
-let mockGauge = null;
-let mockHuman = {points:0,items:[],incident:false};
-const scorer = new Function('clamp01','gaugeSignalForCell','humanMadeSignalForCell',
-  html.slice(scoreStart, scoreEnd) + '\nreturn computeRiskScore;')(
-  v=>Math.max(0,Math.min(1,v)), ()=>mockGauge, ()=>mockHuman
-);
-function weather(rainPerHour, probability, current) {
-  const ceilHour=Math.ceil(Date.now()/3600000)*3600000;
-  const times=Array.from({length:100},(_,i)=>new Date(ceilHour+i*3600000).toISOString().slice(0,16));
-  return {current:{precipitation:current,time:times[0]},hourly:{
-    time:times,precipitation:Array(times.length).fill(rainPerHour),
-    precipitation_probability:Array(times.length).fill(probability)
-  }};
-}
-const cell={lat:13,lon:80};
-const green=scorer(cell,{weather:weather(0.1,5,0.1),flow:null});
-assert.equal(green.level,'green','Low raw data should score green.');
-assert(green.score<35,'Green score should remain below amber cutoff.');
-const amber=scorer(cell,{weather:weather(2,40,0),flow:null});
-assert.equal(amber.level,'amber','Moderate raw data should score amber.');
-assert(amber.score>=35&&amber.score<65,'Amber score should sit within the configured cutoffs.');
-const red=scorer(cell,{weather:weather(8,80,10),flow:null});
-assert.equal(red.level,'red','High raw data should score red.');
-assert(red.score>=65,'Red score should meet the configured cutoff.');
-const unknown=scorer(cell,{weather:{failed:true},flow:null});
-assert.equal(unknown.level,'unknown','Missing inputs must never silently turn green.');
+const geoStart = html.indexOf('const polysOf=');
+const geoEnd = html.indexOf('\nfunction maskPath', geoStart);
+assert(geoStart >= 0 && geoEnd > geoStart, 'Map geometry helpers should exist.');
+const geo = new Function('GRID', html.slice(geoStart, geoEnd) +
+  '\nreturn {inMask, gridCells};')({step: 0.5, w: 73.5, e: 86.5, s: 7.5, n: 21.5});
+const cells = geo.gridCells(mask);
 
-const today=new Date().toISOString().slice(0,10),days=[],values=[];
-for(let i=92;i>=1;i--){const d=new Date();d.setUTCDate(d.getUTCDate()-i);days.push(d.toISOString().slice(0,10));values.push(10);}
-days.push(today);values.push(null);
-for(let i=1;i<=7;i++){const d=new Date();d.setUTCDate(d.getUTCDate()+i);days.push(d.toISOString().slice(0,10));values.push(100);}
-const flowOnly=scorer(cell,{weather:{failed:true},flow:{daily:{time:days,river_discharge:values}}});
-assert.equal(flowOnly.level,'red','High GloFAS peak percentile should influence the score.');
-assert.equal(flowOnly.flowHistoryCount,92,'Flow comparison should use valid pre-today history.');
+test('Regional mask generates more than 100 grid cells', () => assert(cells.length > 100));
+test('All grid points have finite coordinates inside South India bounds', () => {
+  assert(cells.every(c => Number.isFinite(c.lat) && Number.isFinite(c.lon)));
+  assert(cells.every(c => c.lat >= 7.5 && c.lat <= 21.5 && c.lon >= 73.5 && c.lon <= 86.5));
+});
+test('Chennai is inside the state mask', () => assert(geo.inMask(80.27, 13.08, mask)));
+test('Bengaluru is inside the state mask', () => assert(geo.inMask(77.59, 12.97, mask)));
+test('Kochi is inside the state mask', () => assert(geo.inMask(76.27, 9.93, mask)));
+test('Hyderabad is inside the state mask', () => assert(geo.inMask(78.49, 17.39, mask)));
+test('An out-of-coverage point is outside the regional mask', () => assert.equal(geo.inMask(95, 30, mask), false));
 
-mockGauge={percentile:50,rising:true,rapidRise:true,hydrologyLinked:true,riseRatePerHour:3,distanceKm:3,historyCount:15};
-const risingOnly=scorer(cell,{weather:{failed:true},flow:null});
-assert(risingOnly.score>=35,'A recent river rise alone should be at least elevated.');
-assert(risingOnly.gauge.rapidRise,'Rapid rise flag should be preserved.');
-mockGauge={percentile:97,rising:false,rapidRise:false,hydrologyLinked:false,distanceKm:4,historyCount:20};
-const highRiverOnly=scorer(cell,{weather:{failed:true},flow:null});
-assert(highRiverOnly.score>=35,'Unusually high recent station-relative river level should be elevated.');
-mockGauge=null;
+const clamp = x => Math.max(0, Math.min(1, x));
+const scoreStart = html.indexOf('function calculateFloodHazardScore(');
+const scoreEnd = html.indexOf('\nfunction score(', scoreStart);
+const calc = new Function('clamp', html.slice(scoreStart, scoreEnd) +
+  '\nreturn calculateFloodHazardScore;')(clamp);
+test('Risk score stays bounded for extreme rain and flow', () =>
+  assert(calc(1000, 100, null).score <= 100 && calc(1000, 100, null).score >= 0));
+test('Missing GloFAS input is not invented as zero flow', () =>
+  assert.equal(calc(10, NaN, null).riverScore, null));
+test('High station-relative flow increases the base risk score', () =>
+  assert(calc(40, 95, null).score > calc(40, 10, null).score));
+test('Missing reservoir storage does not add a reservoir score', () =>
+  assert.equal(calc(20, 40, null).damScore, null));
+test('Available reservoir storage is a separate factor', () =>
+  assert(Number.isFinite(calc(20, 40, 80).damScore)));
 
-mockHuman={points:29,items:[{category:'Dam/gate malfunction or abnormal release',points:29,distanceKm:3}],incident:true};
-const humanOnly=scorer(cell,{weather:{failed:true},flow:null});
-assert(humanOnly.score>=35,'Documented physical flood incident should not be presented as low risk when weather/flow feeds are missing.');
-assert(humanOnly.humanSignal.items.length===1,'Human-made factor evidence should be retained for explanation.');
-mockHuman={points:0,items:[],incident:false};
-
-const evidenceStart=html.indexOf('function scoreHumanMadeEvidence(');
-const evidenceEnd=html.indexOf('\nfunction localInfrastructureEvidence()',evidenceStart);
-assert(evidenceStart>=0&&evidenceEnd>evidenceStart,'Human-evidence scorer should exist.');
-const humanScorer=new Function('kmBetween',html.slice(evidenceStart,evidenceEnd)+'\nreturn scoreHumanMadeEvidence;')(()=>1);
-const incident={
-  category:'Dam/gate malfunction or abnormal release',place:'Test reservoir',
-  latitude:13.01,longitude:80.01,hydrologyLinked:false,
-  status:'Official public record',sourceUrl:'https://cwc.gov.in/test-report',
-  date:today,notes:'Published abnormal release'
+const haversineKm = (a,b,c,d) => {
+  const rad=x=>x*Math.PI/180, dLat=rad(c-a), dLon=rad(d-b);
+  const h=Math.sin(dLat/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(dLon/2)**2;
+  return 12742*Math.asin(Math.min(1,Math.sqrt(h)));
 };
-assert.equal(humanScorer(cell,[incident]).points,0,'Dam/gate incident without verified hydrology link must not affect a downstream cell.');
-incident.hydrologyLinked=true;
-assert(humanScorer(cell,[incident]).points>0,'Dated official incident with verified hydrology link should affect the nearby cell.');
-incident.status='Corroborated';
-incident.corroboratingSourceUrl='';
-assert.equal(humanScorer(cell,[incident]).points,0,'Corroborated status without a second source must not affect the risk score.');
-incident.corroboratingSourceUrl='https://cwc.gov.in/second-report';
-assert.equal(humanScorer(cell,[incident]).points,0,'Two source URLs from the same publisher host are not independent corroboration.');
-incident.corroboratingSourceUrl='https://independent-public-source.example/record';
-assert(humanScorer(cell,[incident]).points>0,'Corroborated evidence with separate HTTPS publisher hosts may contribute when the other scoring gates pass.');
-incident.status='Unverified report';
-assert.equal(humanScorer(cell,[incident]).points,0,'Unverified reports must not change the numeric risk score.');
+const nearestStart = html.indexOf('function nearestLstmSignal(');
+const nearestEnd = html.indexOf('\nfunction applyLstmToPointScore', nearestStart);
+const nearest = new Function('kmBetween','LSTM_RADIUS_KM',html.slice(nearestStart,nearestEnd)+
+  '\nreturn nearestLstmSignal;')(haversineKm,65);
+const applyPointStart = html.indexOf('function applyLstmToPointScore(');
+const applyPointEnd = html.indexOf('\n\nfunction clearOverlay',applyPointStart);
+const applyPoint = new Function('nearestLstmSignal','clamp','LSTM_RADIUS_KM',
+  html.slice(applyPointStart,applyPointEnd)+'\nreturn applyLstmToPointScore;')(nearest,clamp,65);
+const applyCellStart = html.indexOf('function applyLstmCellScore(');
+const applyCellEnd = html.indexOf('\nfunction adjustedScores',applyCellStart);
+const applyCell = new Function('nearestLstmSignal','clamp','LSTM_RADIUS_KM',
+  html.slice(applyCellStart,applyCellEnd)+'\nreturn applyLstmCellScore;')(nearest,clamp,65);
+const station = {
+  station_id:'TEST-GAUGE', station_latitude:13.08, station_longitude:80.27,
+  coordinates_available:true, forecast_is_live:true,
+  peak_discharge_percentile_all_available_history:100
+};
 
-const contourStart=html.indexOf('function buildRiskContourPolylines(');
-const contourEnd=html.indexOf('\nfunction drawComputedRiskCells',contourStart);
-assert(contourStart>=0&&contourEnd>contourStart,'Connected contour builder should exist.');
-const contourBuilder=new Function('pointInSouthMask',html.slice(contourStart,contourEnd)+'\nreturn buildRiskContourPolylines;')(()=>true);
-const contour=contourBuilder([[0,0,0],[0,80,0],[0,0,0]],35,1,10,20,{features:[]});
-assert(contour.length>0&&contour.every(line=>line.length>=2),'Marching-squares contour should create connected lines around a test hotspot.');
-assert(html.includes("layers:'IMERG_Precipitation_Rate'"),'NASA IMERG overlay should be registered.');
-assert(html.includes('id="basinRiskSection"'),'Basin-risk context section should exist.');
-assert(html.includes('async function loadSouthIndiaBasins()'),'Basin loader should exist.');
-const mapStartupIndex=html.indexOf('// Start with a regional overview; the user chooses the exact point.');
-assert(mapStartupIndex>=0&&html.indexOf('loadSouthIndiaBasins();',mapStartupIndex)>mapStartupIndex,'Basin data should load at startup without selecting the calculated-risk layer.');
-assert(html.includes('const basinGeo=await loadSouthIndiaBasins();'),'Calculated risk layer should reuse the shared basin loader.');
-assert(html.includes('function basinRoutingRelation('),'Basin routing helper should exist.');
-const routingStart=html.indexOf('function basinRoutingRelation(');
-const routingEnd=html.indexOf('async function loadSouthIndiaBasins',routingStart);
-assert(routingStart>=0&&routingEnd>routingStart,'Basin routing helper boundaries should be valid.');
-const routing=new Function(html.slice(routingStart,routingEnd)+'\nreturn basinRoutingRelation;')();
-const testNetwork={features:[
- {type:'Feature',geometry:{type:'Polygon',coordinates:[]},properties:{HYBAS_ID:101,NEXT_DOWN:102}},
- {type:'Feature',geometry:{type:'Polygon',coordinates:[]},properties:{HYBAS_ID:102,NEXT_DOWN:103}},
- {type:'Feature',geometry:{type:'Polygon',coordinates:[]},properties:{HYBAS_ID:103,NEXT_DOWN:0}}
-]};
-assert.equal(routing(101,101,testNetwork),'same_basin','Same basin should be identified.');
-assert.equal(routing(101,103,testNetwork),'upstream_candidate','NEXT_DOWN chain should identify an upstream candidate.');
-assert.equal(routing(103,101,testNetwork),'downstream_candidate','Reverse NEXT_DOWN chain should identify a downstream candidate.');
-assert.equal(routing(404,101,testNetwork),'unlinked','Disconnected basins should never be labelled upstream.');
-assert.equal(routing(null,101,testNetwork),'unknown','Missing basin IDs must remain unknown.');
-assert(Array.isArray(basins.features)&&basins.features.length>=50,'Regional basin GeoJSON should include a useful set of features.');
-assert(basins.features.every(f=>f.geometry&&Number.isFinite(Number(f.properties?.HYBAS_ID))&&f.properties?.NEXT_DOWN!==undefined),'Basin features should carry geometry, HYBAS_ID and NEXT_DOWN routing attributes.');
-assert(html.includes('id="infraLatitude"')&&html.includes('id="infraLongitude"'),'Infrastructure evidence must include coordinates.');
-assert(!html.includes('L.rectangle([[cell.south,cell.west]'),'The active risk rendering should no longer draw square risk cells.');
+test('Nearest eligible station is found at its coordinates', () =>
+  assert.equal(nearest(13.08,80.27,[station]).station.station_id,'TEST-GAUGE'));
+test('Stale source history is not used for the LSTM overlay', () =>
+  assert.equal(nearest(13.08,80.27,[{...station,forecast_is_live:false}]),null));
+test('Stations without usable coordinates are ignored', () =>
+  assert.equal(nearest(13.08,80.27,[{...station,coordinates_available:false}]),null));
+test('Stations beyond the configured 65 km radius are ignored', () =>
+  assert.equal(nearest(17.39,78.49,[station]),null));
+test('Station-relative discharge modifies a supported selected-point score', () => {
+  const result = applyPoint({score:50,level:'amber'},13.08,80.27,[station]);
+  assert(result.score > 50);
+  assert.equal(result.lstmSignal.station.station_id,'TEST-GAUGE');
+});
+test('At a gauge, LSTM blending is capped at 25 percent', () => {
+  const result = applyPoint({score:50,level:'amber'},13.08,80.27,[station]);
+  assert.equal(result.score,62.5);
+  assert.equal(result.lstmBlendWeight,0.25);
+});
+test('No nearby LSTM station leaves the existing score unchanged', () =>
+  assert.equal(applyPoint({score:50,level:'amber'},17.39,78.49,[station]).score,50));
+test('Unknown point scores stay unknown even near a station', () =>
+  assert.equal(applyPoint({score:null,level:'unk'},13.08,80.27,[station]).score,null));
+test('LSTM factor changes a nearby grid-cell score', () =>
+  assert.equal(applyCell(50,{lat:13.08,lon:80.27},[station]),62.5));
+test('Unknown grid cells remain unknown despite nearby station forecasts', () =>
+  assert.equal(applyCell(null,{lat:13.08,lon:80.27},[station]),null));
 
-console.log(JSON.stringify({
-  status:'PASS',
-  sample_cells:cells.length,
-  checks:38,
-  examples:{
-    green:green.score,amber:amber.score,red:red.score,
-    flow_only:flowOnly.score,rising_only:risingOnly.score,
-    high_river_only:highRiverOnly.score,human_incident_only:humanOnly.score,
-    unknown:unknown.level,contour_paths:contour.length
-  }
-},null,2));
+test('Map and location-card colour cutoffs are 35/65', () => {
+  assert(html.includes("s>=65?'red':s>=35?'amber':'green'"));
+  assert(html.includes('contourSegs(f.grid,35'));
+  assert(html.includes('contourSegs(f.grid,65'));
+});
+test('Map box contains only loading and progress while contour data load', () => {
+  assert(html.includes('progress-only #ovRows'));
+  assert(html.includes("Loading data · '+Math.min(100,Math.floor(progressDone/Math.max(1,totalWork)*100))+'%"));
+  assert(html.includes("Loading data · 100%"));
+  assert(!html.includes('Chill: score under 35'));
+  assert(!html.includes('Clear areas: not enough data, not safe.'));
+});
+test('Frontend requests all station forecasts rather than one arbitrary gauge', () =>
+  assert(html.includes('/api/v1/models/regional-discharge/forecast?all_stations=true')));
+test('Map overlay requires fresh history, coordinates and a station-relative percentile', () => {
+  assert(html.includes('forecast_is_live===true'));
+  assert(html.includes('coordinates_available===true'));
+  assert(html.includes('peak_discharge_percentile_all_available_history'));
+});
+test('LSTM influence is distance limited and clearly not a calibrated probability', () => {
+  assert(html.includes('LSTM_RADIUS_KM=65'));
+  assert(html.includes('not calibrated flood probabilities'));
+  assert(html.includes('not a calibrated probability'));
+});
+
+console.log('PASS: ' + testNames.length + ' FloodWatch frontend checks.');
+for (const name of testNames) console.log('  PASS ' + name);
