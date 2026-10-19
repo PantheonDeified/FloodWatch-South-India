@@ -100,7 +100,7 @@ def api_status():
         "model_readiness_endpoint": "/api/v1/models/status",
         "regional_discharge_forecast_endpoint": "/api/v1/models/regional-discharge/forecast",
         "water_observations": "Published GitHub Pages JSON snapshot; collector runs every six hours when scheduled execution succeeds; observation freshness varies by source",
-        "flood_forecast_model": "External Open-Meteo Flood API/GloFAS context is available. The trained five-state regional discharge LSTM supports on-demand single-station or all-eligible-station inference when local ML assets are installed. Station-relative discharge ranks can contribute to an explicitly configured frontend risk score, but are not calibrated flood probabilities or official warnings.",
+        "flood_forecast_model": "GloFAS proxy available through Open-Meteo. The trained five-state regional discharge LSTM supports on-demand single-station or all-eligible-station inference when local ML assets are installed. Station-relative discharge ranks can contribute to an explicitly configured frontend risk score, but are not calibrated flood probabilities or official warnings.",
         "last_checked": datetime.now(timezone.utc).isoformat(),
     }
 
