@@ -815,6 +815,32 @@ $('infraClear').addEventListener('click',()=>{
   infraRecords=[];infraChanged();
 });
 
+try{
+  const savedLstmApi=localStorage.getItem(LSTM_STORAGE_KEY)||'';
+  if(savedLstmApi)$('lstmApiBase').value=savedLstmApi;
+}catch(e){}
+$('lstmForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  try{
+    const normalized=normalizeLstmApiBase($('lstmApiBase').value);
+    $('lstmApiBase').value=normalized;
+    try{localStorage.setItem(LSTM_STORAGE_KEY,normalized)}catch(x){throw Error('Browser could not save this URL. Allow site storage and reconnect.')}
+    lstmStations=[];lstmLoadedAt=0;
+    await refreshLstmForecast(true);
+    if($('riskMode').value==='contours')await setMode('contours');
+  }catch(err){
+    if(!String(err.message||err).startsWith('Backend is reachable')&&!String(err.message||err).startsWith('Model status')&&!String(err.message||err).startsWith('Station forecast')&&!String(err.message||err).startsWith('LSTM not applied:')){
+      $('lstmStatus').textContent='LSTM connection failed: '+err.message+' The map remains on rainfall/GloFAS inputs.';
+    }
+  }
+});
+$('lstmDisconnect').addEventListener('click',()=>{
+  try{localStorage.removeItem(LSTM_STORAGE_KEY)}catch(e){}
+  $('lstmApiBase').value='';lstmStations=[];lstmLoadedAt=0;
+  lstmStatus('Disconnected. Map colours use forecast rainfall and GloFAS river context only.',false);
+  if($('riskMode').value==='contours')setMode('contours');
+});
+
 // Colour-coded city pins from one batched request
 (async()=>{
   try{
