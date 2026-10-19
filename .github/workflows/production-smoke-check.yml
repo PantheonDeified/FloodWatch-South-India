@@ -50,7 +50,8 @@ jobs:
               "agg_kerala", "agg_tamilnadu", "addCyclone", "riskMode",
               "ovLegend", "runContours", "gridCells", "buildField", "contourSegs",
               'id="lstmForm"', 'id="lstmStatus"', "all_stations=true",
-              "applyLstmCellScore", "nearestLstmSignal", "LSTM_RADIUS_KM=65",
+              "LSTM_STATIC_FORECAST_URL", "regional-lstm-forecast.json",
+              "sourceHistoryAgeDays", "applyLstmCellScore", "nearestLstmSignal", "LSTM_RADIUS_KM=65",
               "floodwatch.regionalLstmApiBase.v1", "infraForm",
               "floodwatch.infrastructureEvidence.v1", "sachet.ndma.gov.in",
           )
