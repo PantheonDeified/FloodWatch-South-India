@@ -431,13 +431,19 @@ def regional_discharge_forecast(
         None, max_length=120,
         description="Optional exact station ID from the normalized CWC/NWDP history; omit to use the predictor's default eligible station.",
     ),
+    all_stations: bool = Query(
+        False,
+        description="Return forecasts and coordinates for all eligible stations. Historical discharge ranks are not flood probabilities.",
+    ),
 ):
-    """Run the saved regional discharge model on demand; never convert output into a flood probability."""
+    """Run saved regional discharge inference on demand; output is not a flood probability."""
     chosen_station = (station_id or "").strip()
     if chosen_station and (chosen_station.startswith("-") or any(ord(char) < 32 for char in chosen_station)):
         raise HTTPException(status_code=422, detail="station_id contains unsupported characters.")
 
-    cache_key = chosen_station or "__default_eligible_station__"
+    if all_stations and chosen_station:
+        raise HTTPException(status_code=422, detail="Use either all_stations=true or a specific station_id, not both.")
+    cache_key = "__all_eligible_stations__" if all_stations else (chosen_station or "__default_eligible_station__")
 
     def cached_response():
         cached = _regional_inference_cache.get(cache_key)
@@ -495,7 +501,9 @@ def regional_discharge_forecast(
                 "--output-file", str(output_file),
                 "--lookback-days", "90",
             ]
-            if chosen_station:
+            if all_stations:
+                command.append("--all-stations")
+            elif chosen_station:
                 command.append(f"--station-id={chosen_station}")
             env = os.environ.copy()
             env.setdefault("OMP_NUM_THREADS", "2")
@@ -550,6 +558,29 @@ def regional_discharge_forecast(
             if not math.isfinite(value) or value < 0:
                 raise HTTPException(status_code=502, detail="Regional predictor output contains a non-finite or negative discharge prediction.")
 
+        if all_stations:
+            station_rows = payload.get("station_forecasts")
+            if not isinstance(station_rows, list) or not station_rows:
+                raise HTTPException(status_code=502, detail="Regional predictor did not return station-aware forecasts.")
+            for station in station_rows:
+                if not isinstance(station, dict) or not isinstance(station.get("forecast"), list) or not station["forecast"]:
+                    raise HTTPException(status_code=502, detail="Regional predictor returned an invalid station forecast.")
+                if station.get("coordinates_available") is True:
+                    try:
+                        lat = float(station["station_latitude"])
+                        lon = float(station["station_longitude"])
+                    except (KeyError, TypeError, ValueError) as exc:
+                        raise HTTPException(status_code=502, detail="Station coordinates are malformed.") from exc
+                    if not (math.isfinite(lat) and math.isfinite(lon) and 7.0 <= lat <= 21.8 and 73.0 <= lon <= 87.0):
+                        raise HTTPException(status_code=502, detail="Station coordinates are outside FloodWatch's supported region.")
+                for row in station["forecast"]:
+                    try:
+                        value = float(row["predicted_discharge_m3_s"])
+                    except (KeyError, TypeError, ValueError) as exc:
+                        raise HTTPException(status_code=502, detail="Station forecast has no numeric discharge prediction.") from exc
+                    if not math.isfinite(value) or value < 0:
+                        raise HTTPException(status_code=502, detail="Station forecast contains invalid discharge.")
+
         # Never expose absolute server paths from the local inference subprocess.
         payload.pop("model_artifact", None)
         payload.pop("scalers_artifact", None)
@@ -562,7 +593,9 @@ def regional_discharge_forecast(
             "uses_future_rainfall_forcing": False,
             "is_flood_probability": False,
             "is_official_warning": False,
-            "note": "forecast_is_live is a source-history age heuristic only; it does not verify live sensor transmission. Discharge is not water level or inundation depth.",
+            "forecast_mode": "all_eligible_stations" if all_stations else "single_station",
+            "station_forecast_count": len(payload.get("station_forecasts") or []) if all_stations else 1,
+            "note": "Station forecasts expose discharge and station-relative historical discharge ranks. These are not calibrated flood probabilities; source-history freshness is not proof of a live sensor feed.",
         }
         _regional_inference_cache[cache_key] = (time.monotonic(), payload)
         return json.loads(json.dumps(payload))
