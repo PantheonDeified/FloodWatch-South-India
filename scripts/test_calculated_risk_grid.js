@@ -119,7 +119,7 @@ test('Map overlay requires fresh history, coordinates and a station-relative per
 test('LSTM influence is distance limited and clearly not a calibrated probability', () => {
   assert(html.includes('LSTM_RADIUS_KM=65'));
   assert(html.includes('not calibrated flood probabilities'));
-  assert(html.includes('not a calibrated probability'));
+  assert(html.includes('This is a discharge rank, not flood probability.'));
 });
 
 console.log('PASS: ' + testNames.length + ' FloodWatch frontend checks.');
