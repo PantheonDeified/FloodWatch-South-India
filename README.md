@@ -76,7 +76,7 @@ Source numerical fields: [Open-Meteo weather API](https://open-meteo.com/en/docs
 
 ## Interactive mission-control dashboard
 
-The map now includes a dark glass HUD for hourly wind speed/direction, hourly modelled rainfall and probability, modelled topsoil moisture (volumetric m³/m³), rolling 24-hour rainfall estimate, and the latest available nearby official gauge/danger-mark context. Missing gauge, reservoir-release or shelter-capacity records remain explicitly unavailable; the HUD does not manufacture values. The 24-hour scrubber advances at two frames per second and drives a lightweight animated particle canvas. Grid samples are Open-Meteo forecast model output, not a measured weather field at every pixel.
+The map now includes a dark glass HUD for hourly wind speed/direction, hourly modelled rainfall and probability, modelled topsoil moisture (volumetric m³/m³), rolling 24-hour rainfall estimate, and the latest available nearby official gauge/danger-mark context. Missing gauge, reservoir-release or shelter-capacity records remain explicitly unavailable; the HUD does not manufacture values. The 24-hour scrubber advances at two frames per second, drives a lightweight animated particle canvas, and tints the existing rainfall/river contours by nearest-grid hourly rain when that layer is selected. Grid samples are Open-Meteo forecast model output, not a measured weather field at every pixel.
 
 Interactive tools:
 - **Wind/rain particles and timeline:** hourly precipitation, precipitation probability, wind direction/speed and soil-moisture model fields from Open-Meteo. The display's interpolated motion is a visualization of coarse model grid values, not a physical CFD simulation.
