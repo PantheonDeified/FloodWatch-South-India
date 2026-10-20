@@ -124,9 +124,7 @@ details.card[open] summary:after{content:'−'}
       </select>
     </div>
     <div id="map" aria-label="Map of South India. Tap anywhere to check flood signals."></div>
-    <div class="hovercard" id="hover" hidden></div>
-    <div class="ovlegend" id="ovLegend" hidden><b id="ovTitle"></b><div id="ovRows"></div><div class="ovnote" id="ovNote"></div><a id="ovSrc" href="#" target="_blank" rel="noopener noreferrer" hidden></a></div>
-    <div class="legend"><span><i class="dot" style="background:var(--mint)"></i>Chill</span><span><i class="dot" style="background:var(--amber)"></i>Heads up</span><span><i class="dot" style="background:var(--coral)"></i>High signal</span></div>
+
   </section>
 
   <aside class="side">
@@ -242,6 +240,15 @@ details.card[open] summary:after{content:'−'}
     </div>
   </aside>
 </main>
+
+<section id="fwMapReadouts" aria-label="Map layer legend and point details">
+  <div class="fw-readout-heading">Map layers &amp; point details</div>
+  <div class="fw-readout-grid">
+    <div class="legend"><span><i class="dot" style="background:var(--mint)"></i>Low screening signal</span><span><i class="dot" style="background:var(--amber)"></i>Elevated signal</span><span><i class="dot" style="background:var(--coral)"></i>High signal</span><span>Grey/blank: unknown data</span></div>
+    <div class="ovlegend" id="ovLegend" hidden><b id="ovTitle"></b><div id="ovRows"></div><div class="ovnote" id="ovNote"></div><a id="ovSrc" href="#" target="_blank" rel="noopener noreferrer" hidden></a></div>
+    <div class="hovercard" id="hover" hidden></div>
+  </div>
+</section>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="risk_engine.js"></script>
@@ -497,11 +504,8 @@ const hv=$('hover'),hoverCache=new Map(),esc=s=>String(s).replace(/[&<>"']/g,c=>
 let hTimer=null,hTok=0,hShown=null;
 function hideHover(){clearTimeout(hTimer);hTok++;hv.hidden=true;hShown=null}
 function placeHover(pos){
-  const m=$('map').parentElement.getBoundingClientRect(),w=hv.offsetWidth,h=hv.offsetHeight;
-  let x=pos.x-m.left+16,y=pos.y-m.top+16;
-  if(x+w>m.width-8)x=pos.x-m.left-w-16;
-  if(y+h>m.height-8)y=pos.y-m.top-h-16;
-  hv.style.left=Math.max(8,x)+'px';hv.style.top=Math.max(8,y)+'px';
+  // Hover telemetry lives below the map; never cover the user's map viewport.
+  hv.style.left='';hv.style.top='';
   hShown=pos;
 }
 function hoverHtml(b,name,ll){
