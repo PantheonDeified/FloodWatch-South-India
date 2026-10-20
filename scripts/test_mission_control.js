@@ -21,6 +21,11 @@ for (const [label, pattern] of [
 ]) assert.match(js+css, pattern, 'Missing feature or guardrail: '+label);
 assert.match(html, /mission-control\.css/);
 assert.match(html, /mission-control\.js/);
+assert.match(html, /id="fwMapReadouts"/);
+assert.ok(html.indexOf('</main>') < html.indexOf('id="fwMapReadouts"'), 'Map legends and hover detail panel must sit below the map/grid');
+assert.match(js, /insertAdjacentElement\('afterend',controls\)/, 'Mission-control panels must be inserted after the main map + graph');
+assert.match(css, /#fwMissionControls\{\s*position:static;inset:auto/, 'Mission-control must not overlay the map');
+assert.match(html, /DEM_HAZARD_PNG/);
 assert.match(js, /not (a )?flood probability/i);
 assert.match(js, /capacity.*unknown/i);
 console.log('PASS mission-control feature and safety-guardrail checks');
