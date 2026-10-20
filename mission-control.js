@@ -226,6 +226,7 @@ function clearCloudburstSimulation(message){
  const button=$('fwSimulate');
  if(button){button.textContent='⚡ Simulate 200 mm cloudburst';button.classList.remove('fw-btn-active')}
  if(message)setText('fwRouteStatus',message);
+ updateHud();
 }
 function makeSimZone(site,index){
  const polygon=L.polygon([],{
@@ -260,7 +261,7 @@ function startCloudburstSimulation(){
  document.body.classList.add('fw-sim-emergency');host.classList.add('fw-sim-active');
  setText('fwSimStatus','SCENARIO: hypothetical 200 mm / 24 h cloudburst · not a forecast');
  setText('fwSimSites','Aluva · Chennai · Wayanad: synthetic demonstration buffers, not measured inundation boundaries.');
- setSimScore(42);animateCounter('fwSimScore',94);
+ setSimScore(42);const simScore=$('fwSimScore');if(simScore)delete simScore.dataset.targetValue;animateCounter('fwSimScore',94);
  setThreatBadge('TRAINING SIMULATION ACTIVE · LIVE INDEX UNCHANGED','critical');
  playTactileClick(1160,.07);
  const zones=SIM_SITES.map(makeSimZone);
