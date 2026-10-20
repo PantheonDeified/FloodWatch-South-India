@@ -13,6 +13,11 @@
   const CACHE_TTL_MS = 5 * 60 * 1000;
   const FAILURE_CACHE_TTL_MS = 30 * 1000;
   const rainCache = new Map();
+  const GAUGE_SNAPSHOT_URL = 'data/water-observations.json';
+  const GAUGE_MAX_AGE_MS = 6 * 60 * 60 * 1000;
+  const GAUGE_MAX_DISTANCE_KM = 25;
+  let gaugeSnapshotCache = null;
+  let gaugeSnapshotPromise = null;
 
   const finite = value => typeof value === 'number' && Number.isFinite(value);
   const clamp = value => Math.max(0, Math.min(1, value));
@@ -207,6 +212,97 @@
     return promise;
   }
 
+  function isTimezoneQualified(value) {
+    return typeof value === 'string' && /(?:[zZ]|[+-]\d{2}:\d{2})$/.test(value.trim());
+  }
+
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    const rad = value => value * Math.PI / 180;
+    const dLat = rad(lat2 - lat1), dLon = rad(lon2 - lon1);
+    const h = Math.sin(dLat / 2) ** 2 +
+      Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLon / 2) ** 2;
+    return 12742 * Math.asin(Math.min(1, Math.sqrt(h)));
+  }
+
+  /**
+   * Use only source-reported river levels with a real danger mark, metre units,
+   * explicit timezone information, usable coordinates, and a recent timestamp.
+   * Proximity is contextual and does not prove river-network connectivity.
+   */
+  function findNearestRiverGauge(snapshot, lat, lon, nowMs, options) {
+    const latitude = Number(lat), longitude = Number(lon);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+        latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
+    const opts = options && typeof options === 'object' ? options : {};
+    const now = Number.isFinite(nowMs) ? nowMs : Date.now();
+    const maxAgeMs = Number.isFinite(opts.maxAgeMs) ? opts.maxAgeMs : GAUGE_MAX_AGE_MS;
+    const maxDistanceKm = Number.isFinite(opts.maxDistanceKm) ? opts.maxDistanceKm : GAUGE_MAX_DISTANCE_KM;
+    const rows = snapshot && Array.isArray(snapshot.observations) ? snapshot.observations : [];
+    let best = null;
+
+    for (const row of rows) {
+      if (!row || row.kind !== 'river_level') continue;
+      if (!Number.isFinite(row.value) || row.value < 0 ||
+          !Number.isFinite(row.danger_level) || row.danger_level < 0.1) continue;
+      const unit = String(row.unit || '').trim().toLowerCase();
+      if (!['m', 'meter', 'meters', 'metre', 'metres'].includes(unit)) continue;
+      if (!Number.isFinite(row.latitude) || !Number.isFinite(row.longitude) ||
+          row.latitude < -90 || row.latitude > 90 || row.longitude < -180 || row.longitude > 180) continue;
+      if (!isTimezoneQualified(row.observed_at)) continue;
+      const observedAt = parseUtcTime(row.observed_at);
+      if (!Number.isFinite(observedAt)) continue;
+      const ageMs = now - observedAt;
+      if (ageMs < 0 || ageMs > maxAgeMs) continue;
+      const distanceKm = haversineKm(latitude, longitude, row.latitude, row.longitude);
+      if (!Number.isFinite(distanceKm) || distanceKm > maxDistanceKm) continue;
+      if (!best || distanceKm < best.distanceKm) {
+        best = {
+          riverLevel: row.value,
+          riverDangerMark: row.danger_level,
+          stationName: row.station_name || row.station_id || 'Unnamed CWC/NWIC gauge',
+          stationId: row.station_id || null,
+          river: row.river || null,
+          state: row.state || null,
+          unit: 'm',
+          observedAt: row.observed_at,
+          ageMinutes: Math.round(ageMs / 60000),
+          distanceKm: Math.round(distanceKm * 10) / 10,
+          sourceName: row.source_name || row.agency || 'Official water observation',
+          sourceUrl: typeof row.source_dataset_url === 'string' && row.source_dataset_url.startsWith('https://')
+            ? row.source_dataset_url : null
+        };
+      }
+    }
+    return best;
+  }
+
+  async function loadGaugeSnapshot() {
+    if (gaugeSnapshotCache && gaugeSnapshotCache.expiresAt > Date.now()) return gaugeSnapshotCache.data;
+    if (gaugeSnapshotPromise) return gaugeSnapshotPromise;
+    gaugeSnapshotPromise = (async () => {
+      try {
+        const response = await fetch(GAUGE_SNAPSHOT_URL, { cache: 'no-store', headers: { Accept: 'application/json' } });
+        if (!response.ok) throw new Error('Public water snapshot returned HTTP ' + response.status);
+        const payload = await response.json();
+        if (!payload || !Array.isArray(payload.observations)) throw new Error('Public water snapshot schema is invalid.');
+        gaugeSnapshotCache = { data: payload, expiresAt: Date.now() + CACHE_TTL_MS };
+        return payload;
+      } catch (error) {
+        console.warn('[FloodWatch] Nearby river gauge unavailable:', error.message);
+        gaugeSnapshotCache = { data: null, expiresAt: Date.now() + FAILURE_CACHE_TTL_MS };
+        return null;
+      } finally {
+        gaugeSnapshotPromise = null;
+      }
+    })();
+    return gaugeSnapshotPromise;
+  }
+
+  async function fetchNearestRiverGauge(lat, lon, options) {
+    const snapshot = await loadGaugeSnapshot();
+    return findNearestRiverGauge(snapshot, lat, lon, Date.now(), options);
+  }
+
   async function evaluateZoneFloodRisk(zone) {
     const z = zone && typeof zone === 'object' ? zone : {};
     const lat = Number(z.lat);
@@ -214,23 +310,36 @@
     const rainfall24h = finite(z.rainfall24h) && z.rainfall24h >= 0
       ? z.rainfall24h
       : await fetchLivePrecipitation24h(lat, lon);
+    let riverLevel = finite(z.riverLevel) ? z.riverLevel : null;
+    let riverDangerMark = finite(z.riverDangerMark) ? z.riverDangerMark : null;
+    let riverTelemetry = null;
+    if ((!finite(riverLevel) || !finite(riverDangerMark)) && z.disableGaugeLookup !== true) {
+      riverTelemetry = await fetchNearestRiverGauge(lat, lon, { maxDistanceKm: z.maxGaugeDistanceKm || GAUGE_MAX_DISTANCE_KM });
+      if (riverTelemetry) {
+        riverLevel = riverTelemetry.riverLevel;
+        riverDangerMark = riverTelemetry.riverDangerMark;
+      }
+    }
+    const damStoragePct = finite(z.damStoragePct) ? z.damStoragePct : null;
+    const damSpillwayActive = typeof z.damSpillwayActive === 'boolean' ? z.damSpillwayActive : null;
     const assessment = calculateRisk({
       rainfall24h,
-      riverLevel: z.riverLevel,
-      riverDangerMark: z.riverDangerMark,
-      damStoragePct: z.damStoragePct,
-      damSpillwayActive: z.damSpillwayActive
+      riverLevel,
+      riverDangerMark,
+      damStoragePct,
+      damSpillwayActive
     });
     return {
       zoneName: typeof z.name === 'string' ? z.name : 'Selected location',
       coordinates: [lat, lon],
       liveRainfall24h_mm: rainfall24h,
-      rainfallSource: rainfall24h == null ? 'unavailable' : 'Open-Meteo hourly precipitation; last 24 completed hours',
+      rainfallSource: rainfall24h == null ? 'unavailable' : 'Open-Meteo hourly precipitation; last 24 completed hours (modelled estimate, not a rain-gauge reading)',
+      riverTelemetry,
       inputDetails: {
-        riverLevelM: finite(z.riverLevel) ? z.riverLevel : null,
-        riverDangerMarkM: finite(z.riverDangerMark) ? z.riverDangerMark : null,
-        damStoragePct: finite(z.damStoragePct) ? z.damStoragePct : null,
-        damSpillwayActive: typeof z.damSpillwayActive === 'boolean' ? z.damSpillwayActive : null
+        riverLevelM: riverLevel,
+        riverDangerMarkM: riverDangerMark,
+        damStoragePct,
+        damSpillwayActive
       },
       ...assessment
     };
@@ -240,6 +349,8 @@
     WEIGHTS,
     calculateRisk,
     fetchLivePrecipitation24h,
+    fetchNearestRiverGauge,
+    findNearestRiverGauge,
     evaluateZoneFloodRisk,
     sumPast24Hours
   });
