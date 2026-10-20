@@ -297,23 +297,6 @@ $('fwCompare').addEventListener('click',()=>{
  }else clearCompare();
 });
 $('fwCompareRange').addEventListener('input',e=>{state.comparePct=+e.target.value;applyCompare()});
-function applyCompare(){
- if(!state.compare)return;
- const pct=state.comparePct,style='inset(0 '+(100-pct)+'% 0 0)';
- const right='inset(0 0 0 '+pct+'%)';
- const pane=map.getPane('fwBeforePane');
- if(pane)Array.from(pane.children).forEach(c=>{c.style.clipPath=style;c.style.webkitClipPath=style});
- ['overlayPane','markerPane'].forEach(n=>{const p=map.getPane(n);if(p){p.style.clipPath=right;p.style.webkitClipPath=right}});
- canvas.style.clipPath=right;canvas.style.webkitClipPath=right;
- const old=$('fwCurtain');if(old)old.style.left=pct+'%';
-}
-function clearCompare(){
- ['overlayPane','markerPane'].forEach(n=>{const p=map.getPane(n);if(p){p.style.clipPath='';p.style.webkitClipPath=''}});
- const p=map.getPane('fwBeforePane');if(p)Array.from(p.children).forEach(c=>{c.style.clipPath='';c.style.webkitClipPath=''});
- canvas.style.clipPath='';canvas.style.webkitClipPath='';
- if(state.beforeLayer&&map.hasLayer(state.beforeLayer))map.removeLayer(state.beforeLayer);
- const old=$('fwCurtain');if(old)old.remove();
-}
 const curtain=document.createElement('div');curtain.id='fwCurtain';curtain.setAttribute('aria-hidden','true');map.getContainer().appendChild(curtain);
 function applyCompare(){if(!state.compare)return;const pct=state.comparePct,style='inset(0 '+(100-pct)+'% 0 0)',right='inset(0 0 0 '+pct+'%)';const pane=map.getPane('fwBeforePane');if(pane)Array.from(pane.children).forEach(c=>{c.style.clipPath=style;c.style.webkitClipPath=style});['overlayPane','markerPane'].forEach(n=>{const p=map.getPane(n);if(p){p.style.clipPath=right;p.style.webkitClipPath=right}});canvas.style.clipPath=right;canvas.style.webkitClipPath=right;curtain.style.display='block';curtain.style.left=pct+'%';}
 function clearCompare(){['overlayPane','markerPane'].forEach(n=>{const p=map.getPane(n);if(p){p.style.clipPath='';p.style.webkitClipPath=''}});const p=map.getPane('fwBeforePane');if(p)Array.from(p.children).forEach(c=>{c.style.clipPath='';c.style.webkitClipPath=''});canvas.style.clipPath='';canvas.style.webkitClipPath='';if(state.beforeLayer&&map.hasLayer(state.beforeLayer))map.removeLayer(state.beforeLayer);curtain.style.display='none';}
