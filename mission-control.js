@@ -169,7 +169,11 @@ async function loadWeatherField(force){
   state.weatherKey=key;state.weatherAt=Date.now();updateCanvasSize();refreshHud();restyleDem();
   setText('fwFeedStatus','Forecast grid refreshed '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
  }catch(e){if(epoch===fieldEpoch)setText('fwFeedStatus','Weather grid unavailable: '+e.message+'. HUD will use selected-point data where possible.')}
- finally{if(epoch===fieldEpoch)state.loadingField=false}
+ finally{
+  if(epoch===fieldEpoch)state.loadingField=false;
+  const latest=gridForView().map(p=>p.lat.toFixed(1)+','+p.lon.toFixed(1)).join(';');
+  if(latest!==key)setTimeout(()=>loadWeatherField(false),500);
+ }
 }
 function updateHud(){
  const sel=state.selection;
@@ -311,7 +315,7 @@ function clearCompare(){
  const old=$('fwCurtain');if(old)old.remove();
 }
 const curtain=document.createElement('div');curtain.id='fwCurtain';curtain.setAttribute('aria-hidden','true');map.getContainer().appendChild(curtain);
-function applyCompare(){if(!state.compare)return;const pct=state.comparePct,style='inset(0 '+(100-pct)+'% 0 0)',right='inset(0 0 0 '+pct+'%)';const pane=map.getPane('fwBeforePane');if(pane)Array.from(pane.children).forEach(c=>{c.style.clipPath=style;c.style.webkitClipPath=style});['overlayPane','markerPane'].forEach(n=>{const p=map.getPane(n);if(p){p.style.clipPath=right;p.style.webkitClipPath=right}});canvas.style.clipPath=right;canvas.style.webkitClipPath=right;curtain.style.left=pct+'%';}
+function applyCompare(){if(!state.compare)return;const pct=state.comparePct,style='inset(0 '+(100-pct)+'% 0 0)',right='inset(0 0 0 '+pct+'%)';const pane=map.getPane('fwBeforePane');if(pane)Array.from(pane.children).forEach(c=>{c.style.clipPath=style;c.style.webkitClipPath=style});['overlayPane','markerPane'].forEach(n=>{const p=map.getPane(n);if(p){p.style.clipPath=right;p.style.webkitClipPath=right}});canvas.style.clipPath=right;canvas.style.webkitClipPath=right;curtain.style.display='block';curtain.style.left=pct+'%';}
 function clearCompare(){['overlayPane','markerPane'].forEach(n=>{const p=map.getPane(n);if(p){p.style.clipPath='';p.style.webkitClipPath=''}});const p=map.getPane('fwBeforePane');if(p)Array.from(p.children).forEach(c=>{c.style.clipPath='';c.style.webkitClipPath=''});canvas.style.clipPath='';canvas.style.webkitClipPath='';if(state.beforeLayer&&map.hasLayer(state.beforeLayer))map.removeLayer(state.beforeLayer);curtain.style.display='none';}
 const originalClearCompare=clearCompare;
 const enableProfile=()=>{
@@ -377,7 +381,7 @@ $('fwRedrawProfile').addEventListener('click',drawProfile);
 $('fwReferenceWater').addEventListener('keydown',e=>{if(e.key==='Enter')drawProfile()});
 async function queryShelters(origin){
  const lat=origin.lat,lon=origin.lon,rad=15000;
- const q='[out:json][timeout:20];(node(around:'+rad+','+lat+','+lon+')["emergency"="shelter"];way(around:'+rad+','+lat+','+lon+')["emergency"="shelter"];relation(around:'+rad+','+lat+','+lon+')["emergency"="shelter"];node(around:'+rad+','+lat+','+lon+')["amenity"="shelter"];way(around:'+rad+','+lat+','+lon+')["amenity"="shelter"];);out center tags 60;';
+ const q='[out:json][timeout:20];(node(around:'+rad+','+lat+','+lon+')["emergency"="shelter"];way(around:'+rad+','+lat+','+lon+')["emergency"="shelter"];relation(around:'+rad+','+lat+','+lon+')["emergency"="shelter"];node(around:'+rad+','+lat+','+lon+')["amenity"="shelter"];way(around:'+rad+','+lat+','+lon+')["amenity"="shelter"];);out center;';
  const r=await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q),{headers:{Accept:'application/json'}});
  if(!r.ok)throw Error('OpenStreetMap Overpass HTTP '+r.status);
  const d=await r.json(),out=[],seen=new Set();
@@ -424,9 +428,9 @@ $('fwRoute').addEventListener('click',async()=>{
   let chosen=null,feature=null,lastError=null;
   for(const c of elevated.slice(0,3)){try{feature=await routeToCandidate(origin,c);chosen=c;break}catch(e){lastError=e}}
   if(!chosen||!feature)throw lastError||Error('No route was returned');
-  state.route.line=L.geoJSON({type:'Feature',properties:feature.properties||{},geometry:feature.geometry},{style:{color:'#071629',weight:8,opacity:.9},className:'fw-route-outline'}).addTo(map);
-  const animated=L.geoJSON({type:'Feature',properties:feature.properties||{},geometry:feature.geometry},{style:{color:'#50e6ff',weight:4,dashArray:'10 9',opacity:1},className:'fw-route-animated'}).addTo(map);
-  state.route.line.addLayer(animated);
+  const outline=L.geoJSON({type:'Feature',properties:feature.properties||{},geometry:feature.geometry},{style:{color:'#071629',weight:8,opacity:.9},className:'fw-route-outline'});
+  const animated=L.geoJSON({type:'Feature',properties:feature.properties||{},geometry:feature.geometry},{style:{color:'#50e6ff',weight:4,dashArray:'10 9',opacity:1},className:'fw-route-animated'});
+  state.route.line=L.layerGroup([outline,animated]).addTo(map);
   const dest=L.marker([chosen.lat,chosen.lon],{title:chosen.name}).addTo(map).bindPopup('<b>'+escapeHTML(chosen.name)+'</b><br>OSM-tagged shelter · terrain estimate '+fmt(chosen.elevation)+' m<br>Capacity: '+(chosen.capacity?escapeHTML(chosen.capacity)+' (OSM tag)':'unknown')+'<br>Not confirmation that this site is open or designated by current authorities.');
   state.route.markers.push(dest);
   const originMarker=L.circleMarker([origin.lat,origin.lon],{radius:6,color:'#fff',weight:2,fillColor:'#ff6b6b',fillOpacity:1}).addTo(map);state.route.markers.push(originMarker);
