@@ -1,0 +1,70 @@
+name: Generate regional DEM terrain layer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/build_regional_dem_overlay.py'
+      - 'backend/dem_hydrology_engine.py'
+      - 'backend/export_hazard_geojson.py'
+      - 'backend/requirements.txt'
+      - 'data/south-india-states.geojson'
+      - '.github/workflows/regional-dem-layer.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: floodwatch-regional-dem
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install geospatial dependencies
+        run: python -m pip install -r backend/requirements.txt
+      - name: Download public terrain tiles and calculate regional TWI
+        run: |
+          python backend/build_regional_dem_overlay.py \
+            --state-mask data/south-india-states.geojson \
+            --output-dem /tmp/floodwatch-dem/south-india-dem.tif \
+            --output-png data/dem-terrain-screening.png \
+            --output-metadata data/dem-terrain-screening.json \
+            --diagnostics-dir /tmp/floodwatch-dem/diagnostics \
+            --zoom 8 \
+            --cell-size-meters 2000 \
+            --max-cells 1250000 \
+            --tile-workers 10
+      - name: Keep terrain diagnostics as a downloadable CI artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: floodwatch-regional-dem-diagnostics
+          path: |
+            /tmp/floodwatch-dem/diagnostics/*.tif
+            /tmp/floodwatch-dem/south-india-dem.tif
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Publish the regional terrain layer to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/dem-terrain-screening.png data/dem-terrain-screening.json
+          if git diff --cached --quiet; then
+            echo "Regional DEM output is unchanged; no commit needed."
+          else
+            git commit -m "Publish regional DEM terrain wetness layer"
+            git push origin HEAD:main
+          fi
