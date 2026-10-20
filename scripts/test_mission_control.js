@@ -19,7 +19,7 @@ for (const [label, pattern] of [
   ['glassmorphism', /backdrop-filter:blur\(12px\)/],
   ['reduced-motion handling', /prefers-reduced-motion:reduce/],
   ['full-width map above information panels', /grid-template-areas:"map" "side"/],
-  ['map legend moved below the map', /readoutGrid\.appendChild\(el\)/],
+  ['existing map readout section reused without duplicate IDs', /getElementById\('fwMapReadouts'\)/],
   ['map feature popups docked below map', /map\.on\('popupopen'/],
   ['HUD below map instead of absolute overlay', /\.fw-hud,\.fw-playback,\.fw-profile-drawer\{[^}]{0,300}position:static/],
   ['whole-region terrain raster supported', /dem-inundation-zones\.geojson/],
@@ -27,6 +27,9 @@ for (const [label, pattern] of [
 assert.match(html, /mission-control\.css/);
 assert.match(html, /mission-control\.js/);
 assert.match(html, /id="fwMapReadouts"/);
+assert.equal((html.match(/id="fwMapReadouts"/g)||[]).length,1,'Map readout section must have a single DOM ID');
+assert.match(html, /class="map-intro"/);
+assert.match(html, /header-meta/);
 assert.ok(html.indexOf('</main>') < html.indexOf('id="fwMapReadouts"'), 'Map legends and hover detail panel must sit below the map/grid');
 assert.match(js, /insertAdjacentElement\('afterend',controls\)/, 'Mission-control panels must be inserted after the main map + graph');
 assert.match(css, /#fwMissionControls\{\s*position:static;inset:auto/, 'Mission-control must not overlay the map');
