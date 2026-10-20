@@ -14,7 +14,10 @@ const counterAnimations=new Map();
 function animateCounter(id,target,suffix=''){
  const el=$(id);if(!el)return;
  if(target==null||!Number.isFinite(Number(target))){el.textContent='—';counterAnimations.delete(id);return}
- const value=Number(target),start=Number(el.dataset.numericValue||0),token=(counterAnimations.get(id)||0)+1;
+ const value=Number(target),targetKey=String(value)+suffix;
+ if(el.dataset.targetValue===targetKey)return;
+ el.dataset.targetValue=targetKey;
+ const start=Number(el.dataset.numericValue||0),token=(counterAnimations.get(id)||0)+1;
  counterAnimations.set(id,token);
  const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const duration=reduce?0:650,started=performance.now();
@@ -279,7 +282,7 @@ function updateHud(){
   setText('fwTimeValue','Forecast unavailable · T+'+state.hour+'h');
  }
  const risk=sel&&sel.liveRisk;
- animateCounter('fwThreatScore',risk&&risk.percentage!=null?risk.percentage:null,'');
+ animateCounter('fwThreatScore',risk&&risk.percentage!=null?risk.percentage:null,'/100');
  setText('fwThreatState',!risk?'NO LOCATION SELECTED':risk.percentage==null?'INDEX UNAVAILABLE':String(risk.level||'UNKNOWN')+' · '+fmt(risk.coveragePct,0)+'% INPUT COVERAGE');
  if(!risk)setThreatBadge('AWAITING SELECTED POINT','unknown');
  else if(risk.percentage==null)setThreatBadge('INPUTS INCOMPLETE','unknown');
