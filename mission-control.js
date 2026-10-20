@@ -528,7 +528,13 @@ $('fwRoute').addEventListener('click',async()=>{
   for(const c of elevated.slice(0,3)){try{feature=await routeToCandidate(origin,c);chosen=c;break}catch(e){lastError=e}}
   if(!chosen||!feature)throw lastError||Error('No route was returned');
   const outline=L.geoJSON({type:'Feature',properties:feature.properties||{},geometry:feature.geometry},{style:{color:'#071629',weight:8,opacity:.9,className:'fw-route-outline'}});
-  const animated=L.geoJSON({type:'Feature',properties:feature.properties||{},geometry:feature.geometry},{style:{color:'#50e6ff',weight:4,dashArray:'10 9',opacity:1,className:'fw-route-animated'}});
+  const animated=L.geoJSON({type:'Feature',properties:feature.properties||{},geometry:feature.geometry},{
+    style:{color:'#50e6ff',weight:4,dashArray:'10 9',opacity:1},
+    onEachFeature:(ftr,layer)=>layer.on('add',()=>{
+      const path=typeof layer.getElement==='function'?layer.getElement():null;
+      if(path)path.classList.add('fw-route-animated');
+    })
+  });
   state.route.line=L.layerGroup([outline,animated]).addTo(map);
   const dest=L.marker([chosen.lat,chosen.lon],{title:chosen.name}).addTo(map).bindPopup('<b>'+escapeHTML(chosen.name)+'</b><br>OSM-tagged shelter · terrain estimate '+fmt(chosen.elevation)+' m<br>Capacity: '+(chosen.capacity?escapeHTML(chosen.capacity)+' (OSM tag)':'unknown')+'<br>Not confirmation that this site is open or designated by current authorities.');
   state.route.markers.push(dest);
