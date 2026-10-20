@@ -115,6 +115,7 @@ details.card[open] summary:after{content:'−'}
       <button id="radar" type="button" class="on">🛰️ Rain radar</button>
       <select id="riskMode" aria-label="Risk map layer">
         <option value="contours">🔥 Live risk contours</option>
+        <option value="dem">⛰️ DEM terrain/wetness index</option>
         <option value="historical">📜 Historical floods</option>
         <option value="cyclone">🌀 Cyclone alerts</option>
         <option value="combined">📜🌀 Historical + cyclone</option>
@@ -837,6 +838,68 @@ function addHistorical(){
     addOv(l);
   });
 }
+const DEM_HAZARD_URL='data/dem-inundation-zones.geojson';
+const DEM_ROWS=[
+  {c:'#d90429',t:'Very high terrain/rainfall index (≥ 0.75)'},
+  {c:'#f77f00',t:'High terrain/rainfall index (≥ 0.55)'},
+  {c:'#fcbf49',t:'Moderate terrain/rainfall index (≥ 0.25)'},
+  {c:'#2ec4b6',t:'Lower index (< 0.25; not a safety clearance)'}
+];
+function demIndexColor(value){
+  return value>=0.75?'#d90429':value>=0.55?'#f77f00':value>=0.25?'#fcbf49':'#2ec4b6';
+}
+function demPopup(feature){
+  const p=feature&&feature.properties||{},box=document.createElement('div');
+  const h=document.createElement('b');h.textContent='DEM terrain/rainfall cell';box.appendChild(h);
+  const score=document.createElement('p');
+  score.textContent=Number.isFinite(Number(p.hazard_index))
+    ?'Screening index: '+Math.round(Number(p.hazard_index)*100)+'/100 — not a flood probability.'
+    :'Screening index unavailable.';
+  box.appendChild(score);
+  if(p.risk_tier){const tier=document.createElement('p');tier.textContent='Index class: '+p.risk_tier;box.appendChild(tier)}
+  if(p.twi!=null){const twi=document.createElement('p');twi.textContent='Topographic Wetness Index: '+p.twi;box.appendChild(twi)}
+  if(p.slope_degrees!=null){const slope=document.createElement('p');slope.textContent='Terrain slope: '+p.slope_degrees+'°';box.appendChild(slope)}
+  if(p.rainfall_24h_mm!=null){const rain=document.createElement('p');rain.textContent='Rainfall input: '+p.rainfall_24h_mm+' mm/24 h; this uniform input may not represent the whole basin.';box.appendChild(rain)}
+  const note=document.createElement('small');note.textContent='Terrain screening only. It does not model river routing, water depth, drainage structures or calibrated flood extent.';box.appendChild(note);
+  return box;
+}
+async function addDEMHazardLayer(tok){
+  try{
+    const response=await fetch(DEM_HAZARD_URL,{cache:'no-store',headers:{Accept:'application/geo+json, application/json'}});
+    if(!response.ok)throw Error('GeoJSON is not published (HTTP '+response.status+').');
+    const data=await response.json();
+    if(tok!==ovTok)return;
+    if(!data||data.type!=='FeatureCollection'||!Array.isArray(data.features))throw Error('DEM GeoJSON schema is invalid.');
+    const features=data.features.filter(f=>f&&f.geometry&&f.properties&&Number.isFinite(Number(f.properties.hazard_index)));
+    if(!features.length){
+      showLegend('DEM layer has no mapped cells',DEM_ROWS,
+        'The published DEM layer is empty or contains no cells above its export threshold. This is unknown terrain, not evidence of safety.');
+      return;
+    }
+    const layer=L.geoJSON({type:'FeatureCollection',features},{
+      style:feature=>{
+        const score=Number(feature.properties.hazard_index);
+        const fillColor=demIndexColor(score);
+        return {fillColor,fillOpacity:0.55,weight:0.5,color:'#ffffff',opacity:0.8};
+      },
+      onEachFeature:(feature,leafletLayer)=>leafletLayer.bindPopup(demPopup(feature))
+    });
+    if(tok!==ovTok)return;
+    addOv(layer);
+    const m=data.metadata||{};
+    const rain=m.rainfall_24h_mm!=null?' Rainfall input: '+m.rainfall_24h_mm+' mm/24 h ('+(m.rainfall_source||'source unspecified')+').':'';
+    const source=m.dem_source?' DEM: '+m.dem_source+'.':'';
+    const note=(m.note||'Experimental DEM-derived terrain index; not an inundation probability.')+
+      source+rain+' '+features.length+' coloured grid cells shown. Unmapped areas mean unknown, not safe.';
+    showLegend('DEM terrain/wetness index',DEM_ROWS,note);
+  }catch(error){
+    if(tok!==ovTok)return;
+    showLegend('DEM layer unavailable',DEM_ROWS,
+      'No usable DEM GeoJSON is published at '+DEM_HAZARD_URL+'. Supply a real georeferenced DEM, run backend/export_hazard_geojson.py, and publish the generated file. No synthetic terrain or fallback colours are used. '+error.message+
+      ' This experimental terrain index is not a flood probability or official warning.');
+  }
+}
+
 async function addCyclone(tok,prefix){
   const pre=prefix||'';
   try{
@@ -860,6 +923,7 @@ async function setMode(mode){
   const tok=ovTok;
   if(mode==='off')return;
   if(mode==='contours'){await runContours(tok);return}
+  if(mode==='dem'){await addDEMHazardLayer(tok);return}
   if(mode==='historical'){
     showLegend('Historical flood evidence',HIST_ROWS,'Past floods seen by satellite, not a forecast. Colours are NRSC’s own; open the atlas for the key.',HIST_SRC);
     addHistorical();return;
