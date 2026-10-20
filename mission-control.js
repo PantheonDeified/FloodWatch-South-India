@@ -13,7 +13,7 @@ const state={hour:0,playing:false,timer:null,selection:null,weather:[],weatherKe
 const counterAnimations=new Map();
 function animateCounter(id,target,suffix=''){
  const el=$(id);if(!el)return;
- if(target==null||!Number.isFinite(Number(target))){el.textContent='—';counterAnimations.delete(id);return}
+ if(target==null||!Number.isFinite(Number(target))){el.textContent='—';delete el.dataset.targetValue;delete el.dataset.numericValue;counterAnimations.delete(id);return}
  const value=Number(target),targetKey=String(value)+suffix;
  if(el.dataset.targetValue===targetKey)return;
  el.dataset.targetValue=targetKey;
