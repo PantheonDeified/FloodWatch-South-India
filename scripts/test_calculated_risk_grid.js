@@ -102,10 +102,12 @@ test('Map and location-card colour cutoffs are 35/65', () => {
   assert(html.includes('contourSegs(f.grid,35'));
   assert(html.includes('contourSegs(f.grid,65'));
 });
-test('Map box contains only loading and progress while contour data load', () => {
+test('Contour view reports progress while loading and shows final legend when ready', () => {
   assert(html.includes('progress-only #ovRows'));
   assert(html.includes("Loading data · '+Math.min(100,Math.floor(progressDone/Math.max(1,totalWork)*100))+'%"));
-  assert(html.includes("Loading data · 100%"));
+  assert(html.includes("showLegend('Rainfall + river contours'"));
+  assert(html.includes('Lower screening score (<35)'));
+  assert(html.includes('Higher screening score (≥65)'));
   assert(!html.includes('Chill: score under 35'));
   assert(!html.includes('Clear areas: not enough data, not safe.'));
 });
