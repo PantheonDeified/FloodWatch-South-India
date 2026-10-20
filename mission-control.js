@@ -54,19 +54,20 @@ controls.innerHTML=
 '<div class="fw-smallnote">SRTM 90 m elevation is coarse terrain context, not a building-height survey. A reference line is user-entered and hypothetical; it is not a measured or projected water surface.</div>'+
 '</section>';
 document.querySelector('main').insertAdjacentElement('afterend',controls);
-const mapReadouts=document.createElement('section');
-mapReadouts.id='fwMapReadouts';
-mapReadouts.setAttribute('aria-label','Map legend and location details');
-mapReadouts.innerHTML='<div class="fw-readout-heading">MAP LEGEND &amp; LOCATION DETAILS</div><div class="fw-readout-grid"></div>';
-controls.insertAdjacentElement('afterend',mapReadouts);
-const readoutGrid=mapReadouts.querySelector('.fw-readout-grid');
-[host.querySelector('.legend'),document.getElementById('ovLegend'),document.getElementById('hover')].forEach(el=>{if(el)readoutGrid.appendChild(el)});
+/* Reuse the map-readout section already present in index.html. Creating a second
+   element with the same ID duplicated the legend and could move the live readout. */
+const mapReadouts=document.getElementById('fwMapReadouts');
+if(mapReadouts){
+ const heading=mapReadouts.querySelector('.fw-readout-heading');
+ if(heading)heading.textContent='MAP LEGEND & LOCATION DETAILS';
+}
+const readoutGrid=mapReadouts&&mapReadouts.querySelector('.fw-readout-grid');
 const popupDock=document.createElement('section');
 popupDock.className='fw-docked-popup';
 popupDock.setAttribute('aria-live','polite');
 popupDock.setAttribute('aria-label','Selected map feature details');
 popupDock.hidden=true;
-mapReadouts.insertBefore(popupDock,readoutGrid);
+if(mapReadouts&&readoutGrid)mapReadouts.insertBefore(popupDock,readoutGrid);
 let movingPopupToDock=false;
 map.on('popupopen',event=>{
  const element=event.popup&&event.popup.getElement();
