@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "product": "FloodWatch regional relative topographic wetness index",
+  "created_at_utc": "2026-10-20T09:43:22.535021+00:00",
+  "source": "Mapzen/Tilezen Terrain Tiles, public AWS dataset",
+  "source_url": "https://registry.opendata.aws/terrain-tiles/",
+  "source_attribution": "Mapzen/Tilezen Terrain Tiles; follow the dataset attribution terms at https://github.com/tilezen/joerd/blob/master/docs/attribution.md. Underlying terrain source/resolution can vary by tile.",
+  "tile_format": "Terrarium RGB elevation, decoded in metres",
+  "tile_zoom": 8,
+  "analysis_cell_size_meters": 2000.0,
+  "analysis_crs": "EPSG:32644",
+  "coverage_states": [
+    "Andhra Pradesh",
+    "Karnataka",
+    "Kerala",
+    "Tamil Nadu",
+    "Telangana"
+  ],
+  "state_mask_source": "data/south-india-states.geojson; approximate map mask, not legal boundary",
+  "bounds_wgs84": {
+    "west": 73.5,
+    "south": 7.5,
+    "east": 86.5,
+    "north": 21.5
+  },
+  "twi_normalization": "Regional 5th–95th percentile of analysed TWI; relative classes, not probability.",
+  "twi_p05": 10.9627,
+  "twi_p95": 17.3798,
+  "rainfall_applied_to_base_layer": false,
+  "image_file": "dem-terrain-screening.png",
+  "image_size_px": [
+    867,
+    934
+  ],
+  "valid_land_pixels": 238523,
+  "note": "Regional overview, derived from authentic public terrain tiles and a generalized 2 km analysis grid. Colours show relative terrain wetness (TWI), not live rainfall, calibrated flood probability, river overflow, inundation depth/extent, or an official warning. Low index does not mean safe. Fine-scale drains, buildings, channels, hydraulic conditions and local catchment boundaries are not resolved. Live rain/river context is shown in separate FloodWatch layers.",
+  "generator": "backend/build_regional_dem_overlay.py"
+}
