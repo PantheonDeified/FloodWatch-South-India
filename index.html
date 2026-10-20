@@ -845,8 +845,8 @@ function addHistorical(){
     addOv(l);
   });
 }
-const DEM_HAZARD_URL='data/dem-terrain-screening.json';
-const DEM_HAZARD_PNG='data/dem-terrain-screening.png';
+const DEM_HAZARD_URL='data/dem-inundation-zones.geojson';
+const DEM_HAZARD_PNG='data/dem-inundation-zones.png';
 const DEM_ROWS=[
   {c:'#d90429',t:'Very high relative terrain wetness (≥ 0.75)'},
   {c:'#f77f00',t:'High relative terrain wetness (≥ 0.55)'},
@@ -872,44 +872,62 @@ function demPopup(feature){
   return box;
 }
 async function addDEMHazardLayer(tok){
+  let raster=null;
   try{
-    const response=await fetch(DEM_HAZARD_URL,{cache:'no-store',headers:{Accept:'application/json'}});
-    if(!response.ok)throw Error('Regional DEM metadata is not published (HTTP '+response.status+').');
-    const m=await response.json();
+    const response=await fetch(DEM_HAZARD_URL,{cache:'no-store',headers:{Accept:'application/geo+json, application/json'}});
+    if(!response.ok)throw Error('Regional DEM GeoJSON is not published (HTTP '+response.status+').');
+    const data=await response.json();
     if(tok!==ovTok)return;
-    const bounds=m.bounds_wgs84||m.bounds||{};
+    if(!data||data.type!=='FeatureCollection'||!Array.isArray(data.features))throw Error('DEM GeoJSON schema is invalid.');
+    const m=data.metadata||{},bounds=m.bounds||{};
     const nums=[bounds.south,bounds.west,bounds.north,bounds.east].map(Number);
     if(nums.some(v=>!Number.isFinite(v))||bounds.north<=bounds.south||bounds.east<=bounds.west){
-      throw Error('Regional DEM metadata has no valid WGS84 bounds.');
+      throw Error('Regional DEM metadata has no valid geographic bounds.');
     }
-    if(m.schema_version!==1||m.rainfall_applied_to_base_layer!==false){
-      throw Error('Regional DEM metadata does not match the expected terrain-only schema.');
-    }
+    if(!String(m.dem_source||'').toLowerCase().includes('copernicus'))throw Error('DEM metadata does not identify the validated Copernicus source.');
     const pngUrl=DEM_HAZARD_PNG+'?v='+encodeURIComponent(m.created_at_utc||'1');
-    const raster=L.imageOverlay(pngUrl,[[Number(bounds.south),Number(bounds.west)],[Number(bounds.north),Number(bounds.east)]],{
-      opacity:0.93,interactive:false,attribution:m.source_attribution||'Terrain data © Mapzen/Tilezen Terrain Tiles'
+    raster=L.imageOverlay(pngUrl,[[Number(bounds.south),Number(bounds.west)],[Number(bounds.north),Number(bounds.east)]],{
+      opacity:0.93,interactive:false,attribution:m.attribution||'Terrain data © Copernicus WorldDEM-90'
     });
-    showLegend('Loading regional DEM terrain layer',DEM_ROWS,'Loading the generated public-terrain raster…');
+    showLegend('Loading regional DEM terrain layer',DEM_ROWS,'Loading the generated Copernicus-derived terrain raster…');
     await new Promise((resolve,reject)=>{
       raster.once('load',resolve);
-      raster.once('error',()=>reject(new Error('The published terrain PNG failed to load.')));
+      raster.once('error',()=>reject(new Error('The published DEM PNG failed to load.')));
       if(tok!==ovTok){resolve();return}
       addOv(raster);
     });
     if(tok!==ovTok)return;
-    const stateNames=Array.isArray(m.coverage_states)?m.coverage_states.join(', '):'South India state mask';
-    const note=(m.note||'Regional relative TWI layer; not a flood probability.')+
-      ' Coverage: '+stateNames+'. Analysis grid: approximately '+Number(m.analysis_cell_size_meters||2000).toLocaleString()+
-      ' m. Colours are relative TWI classes normalized to this region, not calibrated flood-risk classes.'+
-      ' Terrain source: '+(m.source||'Mapzen/Tilezen Terrain Tiles')+'. Missing/transparent areas mean unknown, not safe.';
+    const features=data.features.filter(f=>f&&f.geometry&&f.properties&&Number.isFinite(Number(f.properties.hazard_index)));
+    let layer=null;
+    if(features.length){
+      layer=L.geoJSON({type:'FeatureCollection',features},{
+        style:feature=>{
+          const score=Number(feature.properties.hazard_index);
+          return {fillColor:demIndexColor(score),fillOpacity:0.08,weight:0.65,color:'#ffffff',opacity:0.48};
+        },
+        onEachFeature:(feature,leafletLayer)=>leafletLayer.bindPopup(demPopup(feature))
+      });
+      if(tok!==ovTok)return;
+      addOv(layer);
+      window.FloodWatchBridge?.registerDemLayer(layer,features,m);
+    }
+    const states=Array.isArray(m.state_coverage)?m.state_coverage.join(', '):'South India state mask';
+    const resolution=m.analysis_grid_resolution_km_approx||2.22;
+    const note=(m.note||'Static relative terrain-wetness context; not an inundation probability.')+
+      ' Coverage: '+states+'. Source raster is the full-region colour layer; '+features.length+
+      ' sampled cells provide clickable terrain metrics (~'+Number(resolution).toFixed(2)+' km grid). '+
+      (m.attribution||'Copernicus WorldDEM-90 source attribution applies.')+
+      ' Time-dependent rain tint on sampled cells is illustrative only. Unmapped areas mean unknown, not safe.';
     showLegend('DEM terrain/wetness · whole region',DEM_ROWS,note,
-      [m.source_url||'https://registry.opendata.aws/terrain-tiles/','Terrain source & attribution ↗']);
+      [m.dem_source_url||'https://registry.opendata.aws/copernicus-dem/','Copernicus DEM source & licence ↗']);
   }catch(error){
     if(tok!==ovTok)return;
+    if(raster){try{map.removeLayer(raster)}catch(e){}}
+    clearOverlay();
     showLegend('Regional DEM layer unavailable',DEM_ROWS,
-      'No fabricated terrain is shown. The GitHub Actions terrain build must finish and publish '+DEM_HAZARD_PNG+' plus '+DEM_HAZARD_URL+
-      '. '+error.message+' This regional relative wetness layer is not flood probability, flood depth, a safe-route guarantee or an official warning.',
-      ['https://registry.opendata.aws/terrain-tiles/','Terrain source ↗']);
+      'No synthetic terrain is displayed. The genuine Copernicus DEM build must publish both '+DEM_HAZARD_PNG+' and '+DEM_HAZARD_URL+
+      '. '+error.message+' The relative TWI layer is not flood probability, flood depth, a safe-route guarantee or an official warning.',
+      ['https://registry.opendata.aws/copernicus-dem/','DEM source ↗']);
   }
 }
 async function addCyclone(tok,prefix){
