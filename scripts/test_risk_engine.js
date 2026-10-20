@@ -18,14 +18,14 @@ test('Frontend loads the engine and renders its colors, badge, and index', () =>
   assert.ok(!html.includes("return 15.0"));
 });
 
-test('Leaflet DEM layer uses a whole-region terrain raster and truthful labels', () => {
+test('Leaflet DEM layer uses the published whole-region Copernicus raster and truthful sample labels', () => {
   assert.ok(html.includes('value="dem"'));
   assert.ok(html.includes("async function addDEMHazardLayer(tok)"));
-  assert.ok(html.includes("const DEM_HAZARD_URL='data/dem-terrain-screening.json'"));
-  assert.ok(html.includes("const DEM_HAZARD_PNG='data/dem-terrain-screening.png'"));
+  assert.ok(html.includes("const DEM_HAZARD_URL='data/dem-inundation-zones.geojson'"));
+  assert.ok(html.includes("const DEM_HAZARD_PNG='data/dem-inundation-zones.png'"));
   assert.ok(html.includes("L.imageOverlay(pngUrl"));
-  assert.ok(html.includes("bounds_wgs84"));
-  assert.ok(html.includes("relative TWI classes"));
+  assert.ok(html.includes("leafletLayer.bindPopup(demPopup(feature))"));
+  assert.ok(html.includes("valid geographic bounds"));
   assert.ok(html.includes("not flood probability"));
   assert.ok(html.includes("whole region"));
 });
