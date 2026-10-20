@@ -307,18 +307,21 @@
     const z = zone && typeof zone === 'object' ? zone : {};
     const lat = Number(z.lat);
     const lon = Number(z.lon);
-    const rainfall24h = finite(z.rainfall24h) && z.rainfall24h >= 0
-      ? z.rainfall24h
-      : await fetchLivePrecipitation24h(lat, lon);
+    const hasSuppliedRain = finite(z.rainfall24h) && z.rainfall24h >= 0;
     let riverLevel = finite(z.riverLevel) ? z.riverLevel : null;
     let riverDangerMark = finite(z.riverDangerMark) ? z.riverDangerMark : null;
+    const needsGauge = (!finite(riverLevel) || !finite(riverDangerMark)) && z.disableGaugeLookup !== true;
+    const [rainfall24h, nearestGauge] = await Promise.all([
+      hasSuppliedRain ? Promise.resolve(z.rainfall24h) : fetchLivePrecipitation24h(lat, lon),
+      needsGauge
+        ? fetchNearestRiverGauge(lat, lon, { maxDistanceKm: z.maxGaugeDistanceKm || GAUGE_MAX_DISTANCE_KM })
+        : Promise.resolve(null)
+    ]);
     let riverTelemetry = null;
-    if ((!finite(riverLevel) || !finite(riverDangerMark)) && z.disableGaugeLookup !== true) {
-      riverTelemetry = await fetchNearestRiverGauge(lat, lon, { maxDistanceKm: z.maxGaugeDistanceKm || GAUGE_MAX_DISTANCE_KM });
-      if (riverTelemetry) {
-        riverLevel = riverTelemetry.riverLevel;
-        riverDangerMark = riverTelemetry.riverDangerMark;
-      }
+    if (nearestGauge) {
+      riverTelemetry = nearestGauge;
+      riverLevel = nearestGauge.riverLevel;
+      riverDangerMark = nearestGauge.riverDangerMark;
     }
     const damStoragePct = finite(z.damStoragePct) ? z.damStoragePct : null;
     const damSpillwayActive = typeof z.damSpillwayActive === 'boolean' ? z.damSpillwayActive : null;
