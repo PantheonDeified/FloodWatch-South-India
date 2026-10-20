@@ -44,9 +44,25 @@ python backend/export_hazard_geojson.py \
 
 `--rainfall-24h-mm` is an explicit override and should be labelled with its true source/time when used. The default limit is one million projected cells because priority-flood/D8 conditioning uses per-cell graph traversal; clip very large DEMs to a relevant basin, and inspect nodata edges/outlets. The pipeline writes diagnostic rasters under `backend/output/dem/`: conditioned DEM, slope (radians), flow accumulation (cells), approximate specific catchment area, TWI and the final screening index. GeoJSON output is capped for browser performance and contains `hazard_index`, TWI, slope, flow-accumulation and rainfall metadata.
 
-### Display it in Leaflet
+### Full-region DEM layer for the public map
 
-After running the pipeline, publish `data/dem-inundation-zones.geojson` on the same GitHub Pages branch. Then choose **DEM terrain/wetness index** in the map-layer selector. The UI fetches `data/dem-inundation-zones.geojson`, colors each polygon by `hazard_index` via Leaflet `fillColor`, and provides popups with the index and terrain measurements. When the generated file is absent or empty, the layer displays an explicit unavailable/empty message and does not paint invented coverage. **No DEM raster was supplied with this repository update**, so the GeoJSON is not generated automatically and the map will remain unavailable until you run the command with a real DEM.
+The region-wide builder `backend/build_regional_dem_layer.py` downloads real public Copernicus GLO-90 GeoTIFF tiles, mosaics them into an approximately 2.2 km grid over the five core states, runs depression conditioning, D8 flow accumulation, slope and TWI, and creates two browser assets:
+
+- `data/dem-inundation-zones.png`: the full-region, transparent raster overlay, clipped by the five-state boundary mask.
+- `data/dem-inundation-zones.geojson`: spatially distributed sample cells with terrain metrics for clickable Leaflet popups.
+
+Run manually from the repository root:
+
+```bash
+python -m pip install -r backend/requirements.txt
+python backend/build_regional_dem_layer.py
+```
+
+The GitHub Actions workflow `.github/workflows/refresh-regional-dem-layer.yml` does this build automatically when the builder, source DEM engine or state boundary data changes. It checks source metadata and data coverage, uploads a temporary artifact for inspection and commits the generated map assets to `main`. You can also open **Actions → Build South India regional Copernicus DEM layer → Run workflow** to rebuild it manually.
+
+Source: [Copernicus DEM open-data registry](https://registry.opendata.aws/copernicus-dem/). The source is the Copernicus GLO-90 digital surface model (nominal 90 m source data). Regional resampling to about 2.2 km is deliberate for compute/browser feasibility; this is not building-scale or parcel-scale terrain. Required attribution is included in the GeoJSON metadata. If required tiles are missing or less than 65% of cells inside the state mask have elevation data, the build fails rather than publishing invented coverage.
+
+In Leaflet, the PNG shows the complete regional relative-wetness field and the sampled GeoJSON cells provide popups. The wetness raster is static terrain context; only the sampled cells can receive the optional hourly-rain visual tint. The layer does not itself model rain, channel routing, inundation depth, dam releases or submerged streets. Transparent/unmapped areas are unknown, not safe.
 
 ### Scientific and operational limits
 
