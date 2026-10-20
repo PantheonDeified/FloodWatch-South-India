@@ -5,6 +5,9 @@ on:
     paths:
       - 'index.html'
       - 'risk_engine.js'
+      - 'mission-control.js'
+      - 'mission-control.css'
+      - 'scripts/test_mission_control.js'
       - 'scripts/test_risk_engine.js'
       - 'scripts/validate_frontend_js.py'
       - 'scripts/test_calculated_risk_grid.js'
@@ -44,3 +47,7 @@ jobs:
         run: node scripts/test_risk_engine.js
       - name: Syntax-check standalone risk engine
         run: node --check risk_engine.js
+      - name: Syntax-check mission-control dashboard
+        run: node --check mission-control.js
+      - name: Regression-test mission-control guardrails and features
+        run: node scripts/test_mission_control.js
