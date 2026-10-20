@@ -17,6 +17,45 @@ The water endpoint returns source-reported measurements and labels freshness unk
 
 The weather response preserves Open-Meteo's normal response fields (`current`, `hourly`, `timezone`) and adds a `_floodwatch` metadata object. The values are gridded model estimates and forecasts, not direct measurements from a local station. This API does not issue a flood probability or official warning.
 
+## DEM hydrology and Leaflet terrain layer
+
+The experimental DEM pipeline is implemented in `backend/dem_hydrology_engine.py` and `backend/export_hazard_geojson.py`. It requires a **real georeferenced elevation raster** (GeoTIFF with a coordinate reference system); there is deliberately no random/synthetic DEM fallback.
+
+From the repository root, install runtime dependencies and run:
+
+```bash
+python -m pip install -r backend/requirements.txt
+python backend/export_hazard_geojson.py --dem /path/to/your/real_dem.tif
+```
+
+By default, the pipeline reprojects a DEM tile to a local UTM coordinate system at 30 m, conditions enclosed depressions with a priority-flood algorithm, calculates slope, D8 flow direction/accumulation, specific catchment area and `TWI = ln(SCA / tan(slope))`, then scales a local TWI percentile stretch by a 24-hour rainfall estimate. If `--rainfall-24h-mm` is omitted, it queries Open-Meteo at the DEM tile centre and refuses to publish a new index if the recent hourly series is unavailable or too incomplete.
+
+Optional arguments:
+
+```bash
+python backend/export_hazard_geojson.py \
+  --dem /path/to/your/real_dem.tif \
+  --output data/dem-inundation-zones.geojson \
+  --rainfall-24h-mm 85 \
+  --cell-size-meters 30 \
+  --min-index 0.25 \
+  --max-features 25000
+```
+
+`--rainfall-24h-mm` is an explicit override and should be labelled with its true source/time when used. The default limit is one million projected cells because priority-flood/D8 conditioning uses per-cell graph traversal; clip very large DEMs to a relevant basin, and inspect nodata edges/outlets. The pipeline writes diagnostic rasters under `backend/output/dem/`: conditioned DEM, slope (radians), flow accumulation (cells), approximate specific catchment area, TWI and the final screening index. GeoJSON output is capped for browser performance and contains `hazard_index`, TWI, slope, flow-accumulation and rainfall metadata.
+
+### Display it in Leaflet
+
+After running the pipeline, publish `data/dem-inundation-zones.geojson` on the same GitHub Pages branch. Then choose **DEM terrain/wetness index** in the map-layer selector. The UI fetches `data/dem-inundation-zones.geojson`, colors each polygon by `hazard_index` via Leaflet `fillColor`, and provides popups with the index and terrain measurements. When the generated file is absent or empty, the layer displays an explicit unavailable/empty message and does not paint invented coverage. **No DEM raster was supplied with this repository update**, so the GeoJSON is not generated automatically and the map will remain unavailable until you run the command with a real DEM.
+
+### Scientific and operational limits
+
+- The map is a **terrain/rainfall screening index**, not a calibrated flood/inundation probability or official alert. The TWI percentile normalization is relative to the input tile; scores can change with DEM extent and resolution.
+- Rainfall is one estimate applied uniformly across the DEM tile. The prototype does not simulate river-channel hydraulics, flood depth, bridge/culvert capacity, drainage networks, structure failures or hydrologic boundary conditions.
+- Priority-flood/D8 flow routing and the specific-catchment-area conversion are raster approximations. Flats, nodata boundaries and tile edges can change results; compare with a trusted hydrology package, reference catchments and known flood extents before research or operational use.
+- The default 150 mm rainfall scaling is a project heuristic, not an IMD-verified probability threshold. Never use green or blank cells as assurance of safety. Follow official IMD/CWC/NDMA warnings.
+
+
 ## Build a container image
 
 From the repository root:
