@@ -263,3 +263,281 @@ main{
   main{grid-template-rows:minmax(420px,68vh) auto}
   #fwMapReadouts .legend{gap:8px}
 }
+
+
+/* ---------- FloodWatch visual refresh: calmer cartography-first dashboard ---------- */
+:root{
+  --sky:#f2f6fb;
+  --ink:#12283f;
+  --soft:#657a90;
+  --blue:#147ba5;
+  --sun:#f5bd4d;
+  --mint:#2bbf9b;
+  --coral:#ee5f68;
+  --amber:#f0a52e;
+  --card:#fff;
+  --line:#d9e3ed;
+  --fw-bg:rgba(8,23,40,.96);
+  --fw-border:rgba(185,211,232,.19);
+  --fw-text:#eef7ff;
+  --fw-muted:#a8bdcf;
+  --fw-cyan:#66def5;
+}
+html{scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(ellipse at 8% 0%,rgba(32,133,174,.07),transparent 35%),
+    #f2f6fb;
+  color:#12283f;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  letter-spacing:-.005em;
+}
+header.fw-site-header{
+  position:relative;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:18px;
+  width:100%;
+  min-height:82px;
+  padding:14px clamp(16px,3vw,34px);
+  margin:0 0 18px;
+  color:#f4f9ff;
+  background:linear-gradient(115deg,#0c243b 0%,#103954 58%,#12617a 100%);
+  border-bottom:3px solid #31b8bf;
+  box-shadow:0 8px 28px rgba(10,39,62,.13);
+}
+.brand-lockup{display:flex;align-items:center;gap:14px;min-width:0}
+.brand-copy{min-width:0}
+header.fw-site-header .logo{
+  width:48px;height:48px;flex:none;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:15px;background:linear-gradient(145deg,#35c3d2,#177fa7);
+  box-shadow:0 5px 15px rgba(0,0,0,.18);
+  transform:none;font-size:25px;
+}
+header.fw-site-header h1{
+  margin:0;color:#fff;font-size:clamp(22px,2.2vw,28px);
+  font-weight:750;line-height:1.1;letter-spacing:-.035em;
+}
+header.fw-site-header h1 span{color:#8fe9ef;font-weight:600}
+header.fw-site-header .sub{margin-top:5px;color:#c2d6e7;font-size:12px;font-weight:450;letter-spacing:.02em}
+.header-meta{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.header-pill,.header-coverage{
+  display:inline-flex;align-items:center;gap:8px;
+  min-height:32px;padding:7px 11px;
+  border:1px solid rgba(231,246,255,.2);border-radius:999px;
+  background:rgba(255,255,255,.07);color:#e7f4ff;
+  font-size:10px;font-weight:750;letter-spacing:.09em;
+}
+.header-coverage{color:#c4e4f1;font-weight:600;letter-spacing:.02em}
+.header-live-dot{width:7px;height:7px;border-radius:50%;background:#f4bd51;box-shadow:0 0 0 4px rgba(244,189,81,.12)}
+main{
+  width:100%;
+  max-width:1900px;
+  margin:0 auto;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"map" "side";
+  grid-template-rows:minmax(550px,80vh) auto;
+  gap:18px;
+  padding:0 clamp(12px,2vw,26px) 20px;
+}
+.mapcard{
+  grid-area:map;
+  min-width:0;width:100%;height:80vh;min-height:550px;
+  border:1px solid #cedbe7;border-radius:20px;
+  box-shadow:0 12px 34px rgba(23,53,77,.12);
+  background:#e6f0f6;
+}
+.map-intro{
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  padding:16px 21px 14px;
+  border-bottom:1px solid #e0e8f0;background:linear-gradient(105deg,#fff 0%,#f5fbff 100%);
+}
+.map-intro-copy{min-width:0}
+.map-eyebrow{display:block;font-size:9px;line-height:1.4;font-weight:800;letter-spacing:.16em;color:#1681a3}
+.map-intro h2{margin:4px 0 3px;font-size:clamp(19px,1.75vw,24px);font-weight:760;letter-spacing:-.035em;color:#102a42}
+.map-intro p{margin:0;color:#657a90;font-size:12px;line-height:1.45}
+.map-intro-badges{display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap;flex:none}
+.map-intro-badges span{
+  display:inline-flex;align-items:center;gap:7px;padding:7px 10px;
+  border-radius:10px;border:1px solid #dce6ee;background:#fff;
+  color:#435c72;font-size:10px;font-weight:650;white-space:nowrap;
+}
+.intro-dot{display:inline-block;width:7px;height:7px;border-radius:50%}
+.intro-dot-blue{background:#1d9bc6}
+.intro-dot-amber{background:#eca63b}
+.bar{
+  gap:8px;align-items:center;flex-wrap:wrap;
+  padding:10px 12px;
+  background:#f9fbfd;border-bottom:1px solid #dce6ee;
+}
+.bar form{gap:7px;min-width:min(280px,100%)}
+.bar input#search{
+  min-height:40px;border:1px solid #d1deea;border-radius:11px;
+  padding:9px 13px;background:#fff;color:#173149;font-size:13px;font-weight:500;
+  box-shadow:inset 0 1px 2px rgba(16,42,66,.025);
+}
+.bar input#search:focus{border-color:#58b9d5;box-shadow:0 0 0 3px rgba(30,157,196,.14);outline:0}
+.bar button,.bar select{
+  min-height:40px;padding:8px 12px;border:1px solid #cedce8;border-radius:11px;
+  background:#fff;color:#274158;font-size:12px;font-weight:700;
+  box-shadow:0 1px 2px rgba(12,39,62,.04);transition:background .16s,border-color .16s,transform .16s;
+}
+.bar button:hover,.bar select:hover{transform:translateY(-1px);border-color:#91b5c9;background:#f5fbfe;box-shadow:0 4px 10px rgba(12,39,62,.08)}
+.bar button.on{background:#e3f6f7;border-color:#6dc9ca;color:#0f6678}
+.bar select{max-width:300px}
+#map{flex:1;min-height:350px}
+.leaflet-control-zoom{border:1px solid #c9d9e7!important;border-radius:11px!important;overflow:hidden;box-shadow:0 3px 12px rgba(16,42,66,.13)!important}
+.leaflet-control-zoom a{color:#183b54!important;border-bottom:1px solid #dce6ee!important}
+.leaflet-control-attribution{font-size:9px!important;background:rgba(255,255,255,.85)!important}
+.side{
+  grid-area:side;display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  align-content:start;align-items:stretch;
+  gap:14px;max-height:none;overflow:visible;
+  padding:0 2px 7px;
+}
+.side>.card,.side>details.card{
+  min-width:0;margin:0;padding:18px;
+  background:rgba(255,255,255,.97);
+  border:1px solid #dce5ee;border-radius:17px;
+  box-shadow:0 5px 18px rgba(24,54,79,.055);
+}
+.side>.card:first-child{border-top:3px solid #36b7bd}
+.side h2,.side details.card summary{color:#183650;font-weight:760;letter-spacing:-.015em}
+.side .place{color:#102b43;font-size:21px;letter-spacing:-.03em}
+.coords,.note,.side .note{color:#647b90}
+.status{font-size:12px;color:#567187}
+.side .risk{border:1px solid rgba(18,40,63,.1);border-radius:14px;padding:13px}
+.side .risk .face{font-size:42px}
+.side .risk .lvl{font-size:22px;letter-spacing:-.025em}
+.side .risk .num{font-size:12px;line-height:1.4}
+.side .why{font-size:13px;color:#314f67}
+.side .tiles{gap:10px}
+.side .tile{
+  border:1px solid #dce5ee;border-radius:15px;
+  padding:14px;background:linear-gradient(145deg,#fff,#f5f9fc);
+  box-shadow:0 3px 12px rgba(24,54,79,.04);
+}
+.side .tile b{font-size:26px;color:#113650;letter-spacing:-.04em}
+.side .tile span{font-size:11px;font-weight:650;letter-spacing:.015em}
+.side .bars{height:88px;gap:4px;border-bottom:1px solid #b9cbd9}
+.side .bars i{background:linear-gradient(180deg,#2cb8d2,#247ac0);border-radius:5px 5px 1px 1px;transition:height .2s}
+.side .axis{font-size:10px}
+.side details.card summary{font-size:15px;line-height:1.45}
+.side details.card summary b{font-weight:760}
+.side details.card summary .badge{margin-left:5px}
+.side .infra label{color:#526b81;font-size:12px;font-weight:600}
+.side .infra input:not([type=checkbox]),.side .infra select,.side .infra textarea{
+  border:1px solid #cfdeea;border-radius:10px;padding:9px 10px;background:#fbfdff;font-size:12px;
+}
+.side .infra input:focus,.side .infra textarea:focus,.side .infra select:focus{
+  outline:0;border-color:#57b8d2;box-shadow:0 0 0 3px rgba(30,157,196,.12);
+}
+.side button:not(.bar button){
+  border:1px solid #cbdbe6;border-radius:10px;padding:8px 12px;
+  background:#f8fbfd;color:#27475f;font-size:12px;box-shadow:none;
+}
+.side button:not(.bar button):hover{background:#eaf6fb;border-color:#9bbdce;transform:translateY(-1px);box-shadow:none}
+.side form button[type=submit]{background:#126f91;color:#fff;border-color:#126f91}
+.side form button[type=submit]:hover{background:#0e5c79}
+#lstmCard,#infraCard,.side>.note{grid-column:1/-1}
+.side>.note{line-height:1.7;background:#edf5fa;border-color:#d6e5f0;font-size:12px}
+.badge{border:1px solid #d6e1e9;background:#eef3f7;color:#4c657b;font-weight:700}
+.badge.on{background:#fff3d4;border-color:#f0cf81;color:#805712}
+#liveRiskCard{border-top:3px solid #49a7d1}
+#fwMapReadouts{
+  width:100%;max-width:1900px;margin:0 auto;
+  padding:0 clamp(12px,2vw,26px) 24px;
+  display:grid;gap:10px;
+}
+.fw-readout-heading{color:#4d6b82;font-size:10px;letter-spacing:.16em}
+.fw-readout-grid{grid-template-columns:minmax(230px,.7fr) minmax(300px,1.3fr);gap:12px}
+#fwMapReadouts .legend,#fwMapReadouts .ovlegend,#fwMapReadouts .hovercard,#fwMapReadouts .fw-docked-popup{
+  position:static!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+  width:auto;max-width:none;max-height:none;overflow:visible;margin:0;
+  border:1px solid #d7e3ec;border-radius:14px;background:#fff;
+  box-shadow:0 5px 18px rgba(24,54,79,.05);
+}
+#fwMapReadouts .legend{gap:10px;padding:13px 15px;font-size:11px;color:#526b80}
+#fwMapReadouts .dot{width:9px;height:9px;border:0;vertical-align:0}
+#fwMapReadouts .ovlegend{padding:14px 16px;font-size:12px;color:#35526a}
+#fwMapReadouts .ovlegend b{font-size:14px;color:#14334b}
+#fwMapReadouts .ovnote{font-size:11px;line-height:1.55}
+#fwMapReadouts .hovercard,#fwMapReadouts .fw-docked-popup{padding:14px 16px;font-size:12px;color:#29475e;min-height:56px}
+#fwMapReadouts .hovercard[hidden],#fwMapReadouts .ovlegend[hidden],#fwMapReadouts .fw-docked-popup[hidden]{display:none!important}
+#fwMapReadouts a{color:#0d759b}
+#fwMissionControls{
+  pointer-events:auto;
+  grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);
+  grid-template-areas:"hud playback" "hud profile";
+  align-items:start;
+  gap:14px;
+  padding:0 clamp(12px,2vw,26px) 16px;
+  max-width:1900px;margin:0 auto;
+}
+.fw-hud,.fw-playback,.fw-profile-drawer{
+  border:1px solid rgba(119,157,185,.24);
+  border-radius:17px;
+  box-shadow:0 10px 28px rgba(11,32,50,.12);
+}
+.fw-hud{padding:18px}
+.fw-hud h2{font-size:18px;font-weight:750}
+.fw-metric{border-radius:12px;background:rgba(255,255,255,.045)}
+.fw-metric b{font-size:19px}
+.fw-route-status{padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.045)}
+.fw-btn,.fw-play{min-height:36px;border:1px solid rgba(186,216,235,.2);border-radius:9px}
+.fw-btn-active,.fw-play.fw-btn-active{background:rgba(30,157,196,.22);border-color:#4aa9c5}
+.fw-playback{padding:16px}
+.fw-playback-head>span{font-size:9px;letter-spacing:.14em}
+.fw-profile-drawer{padding:16px}
+.fw-smallnote{line-height:1.55}
+.leaflet-popup{display:none!important}
+@media(max-width:1000px){
+  header.fw-site-header{align-items:flex-start}
+  .header-meta{max-width:270px}
+  main{grid-template-rows:minmax(480px,72vh) auto;padding:0 12px 16px}
+  .mapcard{height:72vh;min-height:480px}
+  .side{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #fwMissionControls{grid-template-columns:minmax(0,1fr);grid-template-areas:"hud" "playback" "profile";padding:0 12px 14px}
+  .fw-hud,.fw-playback,.fw-profile-drawer{grid-column:1}
+  #fwMapReadouts{padding:0 12px 16px}
+  .fw-readout-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:640px){
+  header.fw-site-header{padding:12px;gap:10px;align-items:center;margin-bottom:12px;min-height:74px}
+  .brand-lockup{gap:10px}
+  header.fw-site-header .logo{width:40px;height:40px;border-radius:12px;font-size:21px}
+  header.fw-site-header h1{font-size:21px}
+  header.fw-site-header h1 span{display:block;font-size:13px;letter-spacing:.03em;margin-top:2px}
+  header.fw-site-header .sub{font-size:10px;max-width:230px}
+  .header-meta{display:none}
+  main{grid-template-rows:minmax(440px,68vh) auto;gap:14px;padding:0 9px 12px}
+  .mapcard{height:68vh;min-height:440px;border-radius:15px}
+  .map-intro{align-items:flex-start;padding:12px;gap:10px}
+  .map-intro h2{font-size:18px}
+  .map-intro p{font-size:11px;max-width:350px}
+  .map-eyebrow{font-size:8px}
+  .map-intro-badges{display:none}
+  .bar{padding:8px;gap:6px}
+  .bar form{min-width:100%;flex-basis:100%}
+  .bar button,.bar select{flex:1;min-width:0;font-size:11px;padding:8px 9px}
+  .bar select{max-width:none;flex-basis:100%}
+  #map{min-height:320px}
+  .side{grid-template-columns:minmax(0,1fr);gap:10px}
+  #lstmCard,#infraCard,.side>.note{grid-column:1}
+  .side>.card,.side>details.card{padding:14px;border-radius:14px}
+  .side .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #fwMapReadouts{padding:0 9px 14px}
+  #fwMissionControls{padding:0 9px 12px;gap:10px}
+  .fw-hud{padding:13px}
+  .fw-playback{padding:12px}
+  .fw-profile-drawer{padding:12px}
+  .fw-profile-input{grid-template-columns:minmax(0,1fr) 100px}
+  .fw-profile-input button{grid-column:1/-1}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
+}
