@@ -10,6 +10,29 @@ const compass=d=>{if(!Number.isFinite(+d))return '—';return ['N','NNE','NE','E
 const fmt=(n,d=1)=>Number.isFinite(+n)?(+n).toFixed(d):'—';
 const setText=(id,value)=>{const el=$(id);if(el)el.textContent=value};
 const state={hour:0,playing:false,timer:null,selection:null,weather:[],weatherKey:'',weatherAt:0,fieldScreen:[],particles:[],rain:[],dem:null,profile:{active:false,points:[],line:null,markers:[]},route:{line:null,markers:[]},compare:false,comparePct:50,beforeLayer:null,raf:0,lastFrame:0,canvas:null,ctx:null,profileLine:null,loadingField:false};
+const counterAnimations=new Map();
+function animateCounter(id,target,suffix=''){
+ const el=$(id);if(!el)return;
+ if(target==null||!Number.isFinite(Number(target))){el.textContent='—';counterAnimations.delete(id);return}
+ const value=Number(target),start=Number(el.dataset.numericValue||0),token=(counterAnimations.get(id)||0)+1;
+ counterAnimations.set(id,token);
+ const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const duration=reduce?0:650,started=performance.now();
+ function step(now){
+  if(counterAnimations.get(id)!==token)return;
+  const t=duration?Math.min(1,(now-started)/duration):1,eased=1-Math.pow(1-t,3);
+  const n=start+(value-start)*eased;
+  el.textContent=Math.round(n)+suffix;
+  el.dataset.numericValue=String(n);
+  if(t<1)requestAnimationFrame(step);else el.dataset.numericValue=String(value);
+ }
+ requestAnimationFrame(step);
+}
+function setThreatBadge(label,kind){
+ const el=$('fwThreatBadge');if(!el)return;
+ el.className='fw-command-status'+(kind?' is-'+kind:'');
+ const span=el.querySelector('span');if(span)span.textContent=label;
+}
 const host=document.querySelector('.mapcard');
 if(!host)return;
 const resetMapView=()=>{
@@ -39,6 +62,11 @@ controls.innerHTML=
 '<section class="fw-hud" aria-label="FloodWatch mission control">'+
 '<div class="fw-hud-top"><div><span class="fw-kicker">FLOODWATCH / LIVE MODEL FEED</span><h2>Atmospheric telemetry</h2></div><span class="fw-pulse" aria-hidden="true"></span></div>'+
 '<div id="fwFeedStatus" class="fw-feed-status">Loading local forecast grid…</div>'+
+'<div class="fw-command-strip">'+
+'<div class="fw-command-stat"><span>SELECTED SCREENING INDEX</span><b id="fwThreatScore">—</b><small id="fwThreatState">NO LOCATION SELECTED</small></div>'+
+'<div class="fw-command-stat"><span>FORECAST GRID POINTS</span><b id="fwGridCount">0</b><small>REGIONAL MODEL SAMPLES</small></div>'+
+'<div class="fw-command-status" id="fwThreatBadge"><i></i><span>DATA FEED CHECKING</span></div>'+
+'</div>'+
 '<div class="fw-metric-grid">'+
 '<div class="fw-metric"><span>Wind speed</span><b id="fwWind">—</b><small id="fwWindDir">Direction —</small></div>'+
 '<div class="fw-metric"><span>Hourly rain</span><b id="fwRain">—</b><small id="fwRainProb">Precipitation —</small></div>'+
@@ -109,6 +137,10 @@ const canvas=document.createElement('canvas');
 canvas.className='fw-particle-canvas';
 canvas.setAttribute('aria-hidden','true');
 map.getContainer().appendChild(canvas);
+const scanline=document.createElement('div');
+scanline.className='fw-map-scanline';
+scanline.setAttribute('aria-hidden','true');
+map.getContainer().appendChild(scanline);
 state.canvas=canvas;
 state.ctx=canvas.getContext('2d',{alpha:true});
 function updateCanvasSize(){
@@ -218,7 +250,9 @@ async function loadWeatherField(force){
   if(!state.weather.length)throw Error('Forecast response contains no hourly grid data');
   state.weatherKey=key;state.weatherAt=Date.now();updateCanvasSize();refreshHud();restyleDem();
   setText('fwFeedStatus','Forecast grid refreshed '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
- }catch(e){if(epoch===fieldEpoch)setText('fwFeedStatus','Weather grid unavailable: '+e.message+'. HUD will use selected-point data where possible.')}
+  animateCounter('fwGridCount',state.weather.length,'');
+  if(state.weather.length)setThreatBadge('MODEL GRID CONNECTED','live');
+ }catch(e){if(epoch===fieldEpoch){setText('fwFeedStatus','Weather grid unavailable: '+e.message+'. HUD will use selected-point data where possible.');setThreatBadge('MODEL GRID UNAVAILABLE','unknown')}}
  finally{
   if(epoch===fieldEpoch)state.loadingField=false;
   const latest=gridForView().map(p=>p.lat.toFixed(1)+','+p.lon.toFixed(1)).join(';');
@@ -245,6 +279,13 @@ function updateHud(){
   setText('fwTimeValue','Forecast unavailable · T+'+state.hour+'h');
  }
  const risk=sel&&sel.liveRisk;
+ animateCounter('fwThreatScore',risk&&risk.percentage!=null?risk.percentage:null,'');
+ setText('fwThreatState',!risk?'NO LOCATION SELECTED':risk.percentage==null?'INDEX UNAVAILABLE':String(risk.level||'UNKNOWN')+' · '+fmt(risk.coveragePct,0)+'% INPUT COVERAGE');
+ if(!risk)setThreatBadge('AWAITING SELECTED POINT','unknown');
+ else if(risk.percentage==null)setThreatBadge('INPUTS INCOMPLETE','unknown');
+ else if(risk.level==='CRITICAL'||risk.level==='HIGH')setThreatBadge('ELEVATED SCREENING SIGNAL','critical');
+ else if(risk.level==='MODERATE')setThreatBadge('MODERATE SCREENING SIGNAL','warning');
+ else setThreatBadge('LOW SCREENING INDEX · NOT A SAFETY CLEARANCE','live');
  setText('fwRain24',risk&&risk.liveRainfall24h_mm!=null?fmt(risk.liveRainfall24h_mm)+' mm':'Unavailable');
  const g=risk&&risk.riverTelemetry;
  if(g&&Number.isFinite(+g.riverLevel)&&Number.isFinite(+g.riverDangerMark)){
