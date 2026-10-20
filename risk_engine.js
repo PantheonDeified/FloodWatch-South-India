@@ -92,7 +92,10 @@
     const missingFactors = [];
     if (normalized.rain == null) missingFactors.push('24-hour rainfall');
     if (normalized.river == null) missingFactors.push('river stage and danger mark');
-    if (normalized.dam == null) missingFactors.push('reservoir storage and spillway state');
+    if (normalized.dam == null) {
+      if (!hasStorage) missingFactors.push('reservoir storage');
+      if (typeof p.damSpillwayActive !== 'boolean') missingFactors.push('spillway/gate state');
+    }
     if (availableWeight === 0) {
       return {
         score: null, percentage: null, level: 'UNAVAILABLE',
@@ -223,6 +226,12 @@
       coordinates: [lat, lon],
       liveRainfall24h_mm: rainfall24h,
       rainfallSource: rainfall24h == null ? 'unavailable' : 'Open-Meteo hourly precipitation; last 24 completed hours',
+      inputDetails: {
+        riverLevelM: finite(z.riverLevel) ? z.riverLevel : null,
+        riverDangerMarkM: finite(z.riverDangerMark) ? z.riverDangerMark : null,
+        damStoragePct: finite(z.damStoragePct) ? z.damStoragePct : null,
+        damSpillwayActive: typeof z.damSpillwayActive === 'boolean' ? z.damSpillwayActive : null
+      },
       ...assessment
     };
   }
