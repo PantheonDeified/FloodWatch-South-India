@@ -18,6 +18,16 @@ test('Frontend loads the engine and renders its colors, badge, and index', () =>
   assert.ok(!html.includes("return 15.0"));
 });
 
+test('Leaflet DEM layer uses exported hazard index and safe popup labels', () => {
+  assert.ok(html.includes('value="dem"'));
+  assert.ok(html.includes("async function addDEMHazardLayer(tok)"));
+  assert.ok(html.includes("const DEM_HAZARD_URL='data/dem-inundation-zones.geojson'"));
+  assert.ok(html.includes("fillColor,fillOpacity:0.55"));
+  assert.ok(html.includes("layer.bindPopup(demPopup(feature))"));
+  assert.ok(html.includes("not a flood probability"));
+  assert.ok(!html.includes("TWI Risk Score:</b>") || html.includes("DEM terrain/wetness index"));
+});
+
 test('Complete inputs use the 40/35/25 factors and stay bounded', () => {
   const r = engine.calculateRisk({
     rainfall24h: 150, riverLevel: 12, riverDangerMark: 10,
