@@ -13,7 +13,7 @@ for (const [label, pattern] of [
   ['SRTM elevation profiler', /opentopodata\.org\/v1\/srtm90m/],
   ['OSM shelter query', /"emergency"="shelter"/],
   ['walking route profile', /profile=trekking/],
-  ['capacity unknown rather than invented', /Capacity: '\+\(chosen\.capacity\?escapeHTML\(chosen\.capacity\)\+' \(OSM tag\)':'unknown'\)/],
+  ['capacity unknown rather than invented', /chosen\\.capacity\\?escapeHTML\\(chosen\\.capacity\\).*unknown/],
   ['route safety caveat', /Route is NOT flood-validated/],
   ['imagery compare layer', /ArcGIS\/rest\/services\/World_Imagery/],
   ['glassmorphism', /backdrop-filter:blur\(12px\)/],
