@@ -104,12 +104,29 @@ details.card[open] summary:after{content:'−'}
 <link rel="stylesheet" href="mission-control.css">
 </head>
 <body>
-<header>
-  <div class="logo">🌧️</div>
-  <div><h1>FloodWatch</h1><div class="sub">Rain and river signals for South India</div></div>
+<header class="fw-site-header">
+  <div class="brand-lockup">
+    <div class="logo" aria-hidden="true">🌧️</div>
+    <div class="brand-copy"><h1>FloodWatch <span>South India</span></h1><div class="sub">Regional rain, river and terrain intelligence</div></div>
+  </div>
+  <div class="header-meta" aria-label="Product status">
+    <span class="header-pill"><i class="header-live-dot"></i> MODEL-ASSISTED MONITORING</span>
+    <span class="header-coverage">5-state regional view</span>
+  </div>
 </header>
 <main>
   <section class="mapcard">
+    <div class="map-intro">
+      <div class="map-intro-copy">
+        <span class="map-eyebrow">REGIONAL SITUATIONAL AWARENESS</span>
+        <h2>South India overview</h2>
+        <p>Search a place or select any point on the map to explore available weather and river signals.</p>
+      </div>
+      <div class="map-intro-badges">
+        <span><i class="intro-dot intro-dot-blue"></i> Weather model</span>
+        <span><i class="intro-dot intro-dot-amber"></i> Experimental index</span>
+      </div>
+    </div>
     <div class="bar">
       <form id="searchForm"><input id="search" placeholder="Search a town or district…" aria-label="Search a place" autocomplete="off"><button type="submit">Find</button></form>
       <button id="locate" type="button">📍 Me</button>
