@@ -22,7 +22,7 @@ test('Leaflet DEM layer uses exported hazard index and safe popup labels', () =>
   assert.ok(html.includes('value="dem"'));
   assert.ok(html.includes("async function addDEMHazardLayer(tok)"));
   assert.ok(html.includes("const DEM_HAZARD_URL='data/dem-inundation-zones.geojson'"));
-  assert.ok(html.includes("fillColor,fillOpacity:0.55"));
+  assert.ok(html.includes("fillColor,fillOpacity:0.08"));
   assert.ok(html.includes("leafletLayer.bindPopup(demPopup(feature))"));
   assert.ok(html.includes("not a flood probability"));
   assert.ok(!html.includes("TWI Risk Score:</b>") || html.includes("DEM terrain/wetness index"));
