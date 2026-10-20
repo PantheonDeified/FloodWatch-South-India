@@ -50,6 +50,7 @@ for (const [label, pattern] of [
   ['simulation never claims to update real telemetry', /Live readings were not changed/],
   ['audio is opt-in and disabled by default', /audioEnabled:false[\s\S]*id="fwAudioToggle"[^>]*aria-pressed="false"/],
   ['audio context is created only by explicit audio cue action', /function playTactileClick[\s\S]*if\(!state\.audioEnabled\)return/],
+  ['optional audio covers map selection and dashboard controls', /controls\.addEventListener\('click',[\s\S]*playTactileClick\(660,[\s\S]*map\.on\('click',[\s\S]*playTactileClick\(1040/],
   ['simulated zones use separate Leaflet vector layer', /fwSimulationPane[\s\S]*L\.polygon/],
 ]) assert.match(js+css+html, pattern, 'Missing feature or guardrail: '+label);
 assert.match(html, /mission-control\.css/);
