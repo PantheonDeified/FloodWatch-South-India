@@ -32,7 +32,7 @@ jobs:
       - name: Install backend test dependencies
         run: python -m pip install -r backend/requirements-dev.txt
       - name: Compile the API and DEM pipeline
-        run: python -m py_compile backend/main.py backend/dem_hydrology_engine.py backend/export_hazard_geojson.py
+        run: python -m py_compile backend/main.py backend/dem_hydrology_engine.py backend/export_hazard_geojson.py backend/build_regional_dem_layer.py
       - name: Validate IBM LinuxONE installer and regional-ML runner shell syntax
         run: |
           bash -n deploy/ibm-linuxone/install-user-service.sh
