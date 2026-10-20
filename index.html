@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0c243b">
+<meta name="theme-color" content="#050a14">
 <meta name="description" content="FloodWatch South India explores rainfall, modelled river-flow signals, terrain wetness and experimental regional flood-screening indicators.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <title>FloodWatch | South India Monitoring</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
@@ -105,7 +105,17 @@ details.card[open] summary:after{content:'−'}
 </style>
 <link rel="stylesheet" href="mission-control.css">
 </head>
+
 <body>
+<div id="bootScreen" class="fw-boot-screen" role="status" aria-live="polite" aria-label="Initializing FloodWatch interface">
+  <div class="fw-boot-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  <div class="fw-boot-title">FLOODWATCH <span>// SEC-NET 08</span></div>
+  <div class="fw-boot-subtitle">SOUTH INDIA SITUATIONAL AWARENESS</div>
+  <div id="bootLogs" class="fw-boot-logs">INITIALIZING CARTOGRAPHIC ENGINE…</div>
+  <div class="fw-boot-progress"><div id="bootBar"></div></div>
+  <div class="fw-boot-foot"><span>FIELD INTERFACE / BUILD 08</span><span>LIVE FEEDS LOAD IN BACKGROUND</span></div>
+</div>
+<div class="fw-crt-overlay" aria-hidden="true"></div>
 <header class="fw-site-header">
   <div class="brand-lockup">
     <div class="logo" aria-hidden="true">🌧️</div>
@@ -135,6 +145,7 @@ details.card[open] summary:after{content:'−'}
       <button id="radar" type="button" class="on">🛰️ Rain radar</button>
       <button id="resetMapView" type="button" title="Reset to the five-state South India view">⌂ Region view</button>
       <button id="mapExpand" type="button" aria-pressed="false" title="Expand map to full screen">⛶ Full-screen map</button>
+      <select id="baseMapStyle" aria-label="Basemap style"><option value="dark" selected>◉ Dark Matter</option><option value="street">Street map</option><option value="satellite">Satellite</option></select>
       <select id="riskMode" aria-label="Risk map layer">
         <option value="contours">🔥 Live risk contours</option>
         <option value="dem">⛰️ DEM terrain/wetness index</option>
@@ -280,7 +291,25 @@ if(typeof L==='undefined'){
 }else{
 const CITIES=[['Chennai',13.08,80.27],['Bengaluru',12.97,77.59],['Hyderabad',17.39,78.49],['Kochi',9.93,76.27],['Vijayawada',16.51,80.65],['Mangaluru',12.87,74.84],['Coimbatore',11.0,76.96],['Visakhapatnam',17.69,83.22]];
 const map=L.map('map',{minZoom:5,maxZoom:16}).fitBounds([[7.5,73.5],[21.5,86.5]],{padding:[18,18],maxZoom:6});
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap contributors'}).addTo(map);
+const fwBasemaps={
+  dark:L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+    subdomains:'abcd',maxZoom:19,attribution:'© CARTO © OpenStreetMap contributors'
+  }),
+  street:L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:18,attribution:'© OpenStreetMap contributors'
+  }),
+  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
+    maxZoom:19,attribution:'Imagery © Esri and contributors'
+  })
+};
+let fwActiveBasemap=fwBasemaps.dark.addTo(map);
+const baseMapStyle=document.getElementById('baseMapStyle');
+if(baseMapStyle)baseMapStyle.addEventListener('change',()=>{
+  const next=fwBasemaps[baseMapStyle.value]||fwBasemaps.dark;
+  if(next===fwActiveBasemap)return;
+  map.removeLayer(fwActiveBasemap);
+  fwActiveBasemap=next.addTo(map);
+});
 
 const clamp=x=>Math.max(0,Math.min(1,x));
 const LEVELS={green:{face:'😎',text:'Chill',color:'#3ddc97'},amber:{face:'😬',text:'Heads up',color:'#ffb02e'},red:{face:'🌊',text:'High signal',color:'#ff6b6b'},unk:{face:'🤷',text:'Not enough data',color:'#cbd5e1'}};
