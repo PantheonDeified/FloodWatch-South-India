@@ -12,6 +12,27 @@ const setText=(id,value)=>{const el=$(id);if(el)el.textContent=value};
 const state={hour:0,playing:false,timer:null,selection:null,weather:[],weatherKey:'',weatherAt:0,fieldScreen:[],particles:[],rain:[],dem:null,profile:{active:false,points:[],line:null,markers:[]},route:{line:null,markers:[]},compare:false,comparePct:50,beforeLayer:null,raf:0,lastFrame:0,canvas:null,ctx:null,profileLine:null,loadingField:false};
 const host=document.querySelector('.mapcard');
 if(!host)return;
+const resetMapView=()=>{
+ map.fitBounds([[7.5,73.5],[21.5,86.5]],{padding:[18,18],maxZoom:6,animate:false});
+ requestAnimationFrame(()=>{map.invalidateSize({animate:false});updateCanvasSize()});
+};
+const resetMapButton=$('resetMapView');
+if(resetMapButton)resetMapButton.addEventListener('click',resetMapView);
+const expandMapButton=$('mapExpand');
+function setMapExpanded(expanded){
+ host.classList.toggle('fw-map-expanded',expanded);
+ document.body.classList.toggle('fw-map-expanded-active',expanded);
+ if(expandMapButton){
+  expandMapButton.setAttribute('aria-pressed',String(expanded));
+  expandMapButton.textContent=expanded?'⤢ Exit full screen':'⛶ Full-screen map';
+  expandMapButton.title=expanded?'Exit full-screen map':'Expand map to full screen';
+ }
+ requestAnimationFrame(()=>{map.invalidateSize({animate:false});updateCanvasSize()});
+}
+if(expandMapButton){
+ expandMapButton.addEventListener('click',()=>setMapExpanded(!host.classList.contains('fw-map-expanded')));
+ window.addEventListener('keydown',e=>{if(e.key==='Escape'&&host.classList.contains('fw-map-expanded'))setMapExpanded(false)});
+}
 const controls=document.createElement('div');
 controls.id='fwMissionControls';
 controls.innerHTML=
