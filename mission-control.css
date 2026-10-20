@@ -686,3 +686,93 @@ body.fw-map-expanded-active{overflow:hidden}
  .mapcard.fw-map-expanded .map-intro{padding:8px 10px}
  .mapcard.fw-map-expanded .map-intro p{display:none}
 }
+
+
+/* Unified dark operations-console surface; keep the basemap itself legible and geographic. */
+body{
+  background:
+    radial-gradient(ellipse at 8% 0%,rgba(0,245,212,.065),transparent 32%),
+    radial-gradient(ellipse at 100% 38%,rgba(25,107,153,.09),transparent 38%),
+    #050a14;
+  color:#e4eff8;
+}
+header.fw-site-header{
+  background:linear-gradient(112deg,#050b16 0%,#0a2034 54%,#0b3549 100%);
+  border-bottom:1px solid rgba(0,245,212,.42);
+  box-shadow:0 9px 30px rgba(0,0,0,.22);
+}
+main{color:#e4eff8}
+.side>.card,.side>details.card{
+  color:#e4eff8;
+  background:linear-gradient(145deg,rgba(11,23,39,.97),rgba(8,18,32,.98));
+  border:1px solid rgba(145,184,210,.19);
+  box-shadow:0 9px 26px rgba(0,0,0,.17),inset 0 0 0 1px rgba(255,255,255,.015);
+}
+.side>.card:first-child{border-top:2px solid rgba(0,245,212,.55)}
+.side h2,.side details.card summary{color:#eaf6ff}
+.side .place{color:#f4fbff}
+.side .coords,.side .note{color:#9ab0c3}
+.side .status{color:#aac1d4}
+.side .risk{background:rgba(148,163,184,.09);border-color:rgba(185,213,232,.2);color:#eaf6ff}
+.side .risk.green{background:rgba(43,191,155,.13);border-color:rgba(43,191,155,.42)}
+.side .risk.amber{background:rgba(240,165,46,.13);border-color:rgba(240,165,46,.48)}
+.side .risk.red{background:rgba(255,54,93,.14);border-color:rgba(255,54,93,.5)}
+.side .risk.unk{background:rgba(148,163,184,.08);border-color:rgba(148,163,184,.22)}
+.side .risk .lvl,.side .risk .num{color:#eff8ff;opacity:1}
+.side .why{color:#c2d3e2}
+.side .tile{
+  color:#eaf6ff;background:linear-gradient(145deg,rgba(14,36,55,.96),rgba(8,22,38,.98));
+  border:1px solid rgba(91,165,195,.24);box-shadow:inset 0 0 18px rgba(0,245,212,.018);
+}
+.side .tile b{color:#d9fbff}
+.side .tile span{color:#8eaabd}
+.side details.card summary .badge{vertical-align:middle}
+.side .infra label{color:#a8bfd1}
+.side .infra input:not([type=checkbox]),.side .infra select,.side .infra textarea{
+  color:#ecf6ff;background:#0b1a2a;border-color:#27465c;
+}
+.side .infra input::placeholder,.bar input#search::placeholder{color:#7791a7}
+.side button:not(.bar button){
+  color:#e4f4ff;background:#10253a;border-color:#34576f;
+}
+.side button:not(.bar button):hover{color:#fff;background:#16334c;border-color:#4e8aa5}
+.side form button[type=submit]{background:#08798b;color:#fff;border-color:#12a3a9}
+.side>.note{
+  color:#a7bfce;background:linear-gradient(120deg,rgba(12,31,49,.97),rgba(9,24,39,.97));
+  border:1px solid rgba(0,245,212,.14);
+}
+.side>.note a{color:#6ee7f0}
+#fwMapReadouts{color:#d9e9f5}
+.fw-readout-heading{color:#8cb0c4}
+#fwMapReadouts .legend,#fwMapReadouts .ovlegend,#fwMapReadouts .hovercard,#fwMapReadouts .fw-docked-popup{
+  color:#dbeaf5;background:linear-gradient(140deg,#0b1b2c,#091725);
+  border-color:rgba(139,184,212,.2);
+  box-shadow:0 7px 24px rgba(0,0,0,.18);
+}
+#fwMapReadouts .ovlegend b{color:#eaf8ff}
+#fwMapReadouts .ovnote{color:#9bb5c7}
+#fwMapReadouts .ovrow,#fwMapReadouts .hovercard p{color:#c5d7e4}
+#fwMapReadouts .hovercard .hv-grid div{color:#d8edf9;background:#11273a;border-color:#24445a}
+#fwMapReadouts .hovercard .hv-grid span,#fwMapReadouts .hv-src{color:#9bb5c7}
+#fwMapReadouts .hovercard .hv-grid b{color:#f0fbff}
+.fw-docked-popup:before{color:#72d9e8}
+#fwMapReadouts a{color:#70e2ef}
+.bar{background:linear-gradient(90deg,#0a1726,#0c1f31);border-bottom-color:#24465c}
+.bar input#search,.bar select,.bar button{
+  color:#dcebf6;background:#0e2437;border-color:#294b62;box-shadow:none;
+}
+.bar input#search:focus{background:#112c42;border-color:#3cc5d4}
+.bar button:hover,.bar select:hover{background:#15354c;border-color:#39889f;box-shadow:0 0 15px rgba(0,245,212,.07)}
+.bar button.on{background:#0e596b;color:#a8fbf2;border-color:#27b3bf}
+.map-intro{background:linear-gradient(110deg,#091725,#0d2235);border-bottom-color:#24465c}
+.map-eyebrow{color:#6fe3ec}
+.map-intro h2{color:#edf8ff}
+.map-intro p{color:#a3bdcf}
+.map-intro-badges span{background:#10263a;color:#b5cedd;border-color:#2a4a60}
+.mapcard{border-color:#29485c;box-shadow:0 12px 32px rgba(0,0,0,.24);background:#0b1725}
+.leaflet-control-zoom a{background:#0c2032!important;color:#d7edf8!important;border-color:#29465a!important}
+.leaflet-control-attribution{color:#253d50}
+#fwMapReadouts .dot{box-shadow:0 0 9px currentColor}
+@media(prefers-reduced-motion:reduce){
+ .fw-command-stat>b{scroll-behavior:auto}
+}
