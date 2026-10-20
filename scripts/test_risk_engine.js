@@ -74,6 +74,37 @@ test('Negative and out-of-range inputs are excluded', () => {
   assert.equal(r.score, null);
 });
 
+test('Fresh timezone-qualified official river gauge supplies stage and danger mark', () => {
+  const now = Date.parse('2026-10-20T10:00:00Z');
+  const snapshot = { observations: [{
+    id: 'test-gauge', kind: 'river_level', value: 8.6, unit: 'm', danger_level: 9.2,
+    latitude: 10.1, longitude: 76.3, observed_at: '2026-10-20T09:30:00+00:00',
+    station_name: 'Periyar test gauge', station_id: 'TEST-1', river: 'Periyar',
+    source_name: 'CWC test feed', source_dataset_url: 'https://example.gov.in/gauge'
+  }] };
+  const r = engine.findNearestRiverGauge(snapshot, 10.1, 76.3, now);
+  assert.ok(r);
+  assert.equal(r.riverLevel, 8.6);
+  assert.equal(r.riverDangerMark, 9.2);
+  assert.equal(r.stationName, 'Periyar test gauge');
+  assert.equal(r.ageMinutes, 30);
+  assert.equal(r.distanceKm, 0);
+});
+
+test('Stale, timezone-ambiguous, and non-metre gauge records are rejected', () => {
+  const now = Date.parse('2026-10-20T10:00:00Z');
+  const base = {
+    kind: 'river_level', value: 8.6, unit: 'm', danger_level: 9.2,
+    latitude: 10.1, longitude: 76.3, station_name: 'Test gauge'
+  };
+  const snapshot = { observations: [
+    { ...base, id: 'no-timezone', observed_at: '2026-10-20T09:30:00' },
+    { ...base, id: 'stale', observed_at: '2026-10-20T01:00:00Z' },
+    { ...base, id: 'unit-unknown', unit: 'source-defined', observed_at: '2026-10-20T09:30:00Z' }
+  ] };
+  assert.equal(engine.findNearestRiverGauge(snapshot, 10.1, 76.3, now), null);
+});
+
 test('Last-24-hour sum uses completed hourly readings only', () => {
   const end = Date.parse('2026-10-20T10:00:00Z');
   const times = [];
@@ -92,7 +123,7 @@ test('Insufficient hourly coverage returns unavailable rather than treating gaps
 
 test('Zone evaluation returns live-rainfall provenance, input details, badge and index', async () => {
   const r = await engine.evaluateZoneFloodRisk({
-    name: 'Test zone', lat: 10.1, lon: 76.3, rainfall24h: 75,
+    name: 'Test zone', lat: 10.1, lon: 76.3, rainfall24h: 75, disableGaugeLookup: true,
     riverLevel: null, riverDangerMark: null, damStoragePct: null, damSpillwayActive: null
   });
   assert.equal(r.zoneName, 'Test zone');
