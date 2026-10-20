@@ -17,8 +17,13 @@ for (const [label, pattern] of [
   ['route safety caveat', /Route is NOT flood-validated/],
   ['imagery compare layer', /ArcGIS\/rest\/services\/World_Imagery/],
   ['glassmorphism', /backdrop-filter:blur\(12px\)/],
-  ['reduced-motion handling', /prefers-reduced-motion:reduce/]
-]) assert.match(js+css, pattern, 'Missing feature or guardrail: '+label);
+  ['reduced-motion handling', /prefers-reduced-motion:reduce/],
+  ['full-width map above information panels', /grid-template-areas:"map" "side"/],
+  ['map legend moved below the map', /readoutGrid\.appendChild\(el\)/],
+  ['map feature popups docked below map', /map\.on\('popupopen'/],
+  ['HUD below map instead of absolute overlay', /\.fw-hud,\.fw-playback,\.fw-profile-drawer\{[\\s\\S]{0,300}position:static/],
+  ['whole-region terrain raster supported', /dem-terrain-screening\.json/]
+]) assert.match(js+css+html, pattern, 'Missing feature or guardrail: '+label);
 assert.match(html, /mission-control\.css/);
 assert.match(html, /mission-control\.js/);
 assert.match(html, /id="fwMapReadouts"/);
