@@ -3,19 +3,13 @@
 
 const assert = require('node:assert/strict');
 const engine = require('../risk_engine.js');
-
-function test(name, fn) {
-  fn();
-  process.stdout.write('✓ ' + name + '\n');
-}
+const tests = [];
+function test(name, fn) { tests.push({ name, fn }); }
 
 test('Complete inputs use the 40/35/25 factors and stay bounded', () => {
   const r = engine.calculateRisk({
-    rainfall24h: 150,
-    riverLevel: 12,
-    riverDangerMark: 10,
-    damStoragePct: 100,
-    damSpillwayActive: true
+    rainfall24h: 150, riverLevel: 12, riverDangerMark: 10,
+    damStoragePct: 100, damSpillwayActive: true
   });
   assert.equal(r.score, 1);
   assert.equal(r.percentage, 100);
@@ -27,11 +21,8 @@ test('Complete inputs use the 40/35/25 factors and stay bounded', () => {
 
 test('Weighted components are combined with the requested normalizers', () => {
   const r = engine.calculateRisk({
-    rainfall24h: 75,
-    riverLevel: 6,
-    riverDangerMark: 12,
-    damStoragePct: 55,
-    damSpillwayActive: false
+    rainfall24h: 75, riverLevel: 6, riverDangerMark: 12,
+    damStoragePct: 55, damSpillwayActive: false
   });
   assert.equal(r.score, 0.35);
   assert.equal(r.percentage, 35);
@@ -44,7 +35,8 @@ test('Missing dam telemetry is not silently treated as zero risk', () => {
   assert.equal(r.factorStatus.reservoir, 'unavailable');
   assert.equal(r.factorStatus.spillway, 'unavailable');
   assert.equal(r.coveragePct, 75);
-  assert.ok(r.missingFactors.includes('reservoir storage and spillway state'));
+  assert.ok(r.missingFactors.includes('reservoir storage'));
+  assert.ok(r.missingFactors.includes('spillway/gate state'));
   assert.match(r.badge, /INPUTS INCOMPLETE/);
 });
 
@@ -86,29 +78,41 @@ test('Insufficient hourly coverage returns unavailable rather than treating gaps
   assert.equal(engine.sumPast24Hours({ time: times, precipitation }, end), null);
 });
 
-test('Zone evaluation uses supplied live rainfall and returns color/badge/index', async () => {
-  return engine.evaluateZoneFloodRisk({
+test('Zone evaluation returns live-rainfall provenance, input details, badge and index', async () => {
+  const r = await engine.evaluateZoneFloodRisk({
     name: 'Test zone', lat: 10.1, lon: 76.3, rainfall24h: 75,
     riverLevel: null, riverDangerMark: null, damStoragePct: null, damSpillwayActive: null
-  }).then(r => {
-    assert.equal(r.zoneName, 'Test zone');
-    assert.equal(r.liveRainfall24h_mm, 75);
-    assert.equal(r.percentage, 50);
-    assert.equal(r.color, '#fcbf49');
-    assert.ok(r.badge.length > 0);
   });
+  assert.equal(r.zoneName, 'Test zone');
+  assert.equal(r.liveRainfall24h_mm, 75);
+  assert.equal(r.percentage, 50);
+  assert.equal(r.color, '#fcbf49');
+  assert.equal(r.inputDetails.riverLevelM, null);
+  assert.ok(r.badge.length > 0);
 });
 
-(async () => {
+test('Open-Meteo failure returns unavailable, not fabricated rain', async () => {
   const previousFetch = global.fetch;
   try {
-    global.fetch = async () => ({ ok: false, status: 503 });
+    global.fetch = async url => {
+      assert.match(String(url), /api\.open-meteo\.com\/v1\/forecast/);
+      assert.match(String(url), /hourly=precipitation/);
+      assert.match(String(url), /past_days=1/);
+      return { ok: false, status: 503 };
+    };
     const rainfall = await engine.fetchLivePrecipitation24h(31.1234, -122.1234);
-    assert.equal(rainfall, null, 'failed live fetch must not become an invented numeric estimate');
-    process.stdout.write('✓ Open-Meteo failure returns unavailable, not fabricated rain\n');
+    assert.equal(rainfall, null);
   } finally {
     global.fetch = previousFetch;
   }
+});
+
+(async () => {
+  for (const item of tests) {
+    await item.fn();
+    process.stdout.write('✓ ' + item.name + '\n');
+  }
+  process.stdout.write('\n' + tests.length + ' risk-engine tests passed.\n');
 })().catch(err => {
   process.stderr.write(String(err.stack || err) + '\n');
   process.exitCode = 1;
