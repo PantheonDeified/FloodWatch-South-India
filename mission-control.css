@@ -776,3 +776,179 @@ main{color:#e4eff8}
 @media(prefers-reduced-motion:reduce){
  .fw-command-stat>b{scroll-behavior:auto}
 }
+
+
+/* ---------- Cinematic satellite-situation-room finish ---------- */
+:root{
+  --fw-neon-cyan:#00f5d4;
+  --fw-neon-red:#ff365d;
+  --fw-deck:#050a14;
+  --fw-panel:rgba(6,15,28,.96);
+}
+header.fw-site-header{
+  position:relative;
+  overflow:hidden;
+  border-bottom:1px solid rgba(0,245,212,.42);
+}
+header.fw-site-header:after{
+  content:"";
+  position:absolute;left:0;right:0;bottom:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,245,212,.8),rgba(48,144,255,.6),transparent);
+  pointer-events:none;
+}
+header.fw-site-header .logo{
+  border-radius:12px;
+  box-shadow:0 0 0 1px rgba(0,245,212,.12),0 0 22px rgba(0,245,212,.12);
+}
+header.fw-site-header h1,
+header.fw-site-header .sub{font-family:"Space Grotesk","Plus Jakarta Sans",system-ui,sans-serif}
+.mapcard{
+  border-color:rgba(0,245,212,.26);
+  box-shadow:0 12px 34px rgba(0,0,0,.38),0 0 0 1px rgba(0,245,212,.035);
+}
+.map-intro{position:relative}
+.map-eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;letter-spacing:.18em}
+.map-intro-badges span{
+  border-color:rgba(0,245,212,.15);
+  font-family:"JetBrains Mono",ui-monospace,monospace;
+  letter-spacing:.025em;
+}
+.bar button,.bar select,.bar input#search{
+  border-radius:8px;
+  font-family:"JetBrains Mono",ui-monospace,monospace;
+}
+.bar select#baseMapStyle{
+  max-width:175px;
+  border-color:rgba(0,245,212,.28);
+  box-shadow:inset 0 0 0 1px rgba(0,245,212,.025);
+}
+.leaflet-container{background:#030914}
+.leaflet-control-attribution{
+  background:rgba(4,11,20,.78)!important;
+  color:#98b3c8!important;
+  border:1px solid rgba(137,179,206,.18);
+  border-radius:4px 0 0 0;
+}
+.leaflet-control-attribution a{color:#76dfee!important}
+.leaflet-control-zoom{
+  border-color:rgba(0,245,212,.2)!important;
+}
+#map .leaflet-control-zoom a{
+  background:#071624!important;color:#c4f8f2!important;border-color:#173a4e!important;
+}
+.fw-crt-overlay{
+  position:fixed;inset:0;z-index:9200;pointer-events:none;
+  opacity:.22;
+  background:
+    repeating-linear-gradient(to bottom,rgba(1,8,18,0) 0,rgba(1,8,18,0) 2px,rgba(1,8,18,.27) 3px,rgba(1,8,18,.27) 4px),
+    linear-gradient(90deg,rgba(255,0,38,.015),rgba(0,245,212,.018),rgba(58,110,255,.02));
+  mix-blend-mode:screen;
+}
+.fw-boot-screen{
+  position:fixed;inset:0;z-index:100001;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;gap:0;padding:28px;
+  background:
+    radial-gradient(ellipse at 50% 42%,rgba(0,245,212,.09),transparent 35%),
+    radial-gradient(ellipse at 50% 110%,rgba(29,106,166,.12),transparent 48%),
+    #030712;
+  color:#00f5d4;font-family:"JetBrains Mono",ui-monospace,monospace;
+  opacity:1;visibility:visible;pointer-events:all;
+  transition:opacity .42s ease,visibility .42s ease;
+}
+.fw-boot-screen:before{
+  content:"";position:absolute;inset:16px;border:1px solid rgba(0,245,212,.12);
+  pointer-events:none;
+}
+.fw-boot-screen:after{
+  content:"";position:absolute;left:0;right:0;top:0;height:2px;
+  background:linear-gradient(90deg,transparent,#00f5d4,transparent);
+  box-shadow:0 0 22px rgba(0,245,212,.5);
+  animation:fwBootSweep 1.2s ease-in-out infinite alternate;
+}
+.fw-boot-mark{
+  width:54px;height:54px;display:grid;grid-template-columns:repeat(2,1fr);
+  gap:4px;margin-bottom:25px;transform:rotate(45deg);
+}
+.fw-boot-mark span{display:block;border:1px solid rgba(0,245,212,.58);background:rgba(0,245,212,.1);box-shadow:inset 0 0 9px rgba(0,245,212,.13)}
+.fw-boot-mark span:nth-child(2),.fw-boot-mark span:nth-child(3){background:rgba(0,245,212,.26)}
+.fw-boot-title{font-size:clamp(18px,3vw,27px);font-weight:800;letter-spacing:.19em;text-align:center;text-shadow:0 0 18px rgba(0,245,212,.32)}
+.fw-boot-title span{color:#e7faff;font-size:.67em;letter-spacing:.13em;white-space:nowrap}
+.fw-boot-subtitle{margin-top:9px;color:#7c9caf;font-size:10px;letter-spacing:.22em;text-align:center}
+.fw-boot-logs{
+  width:min(580px,100%);min-height:38px;margin-top:34px;
+  color:#a9c1cf;font-size:10px;letter-spacing:.08em;text-align:center;line-height:1.5;
+}
+.fw-boot-progress{width:min(360px,82vw);height:3px;margin-top:10px;background:rgba(0,245,212,.13);overflow:hidden}
+.fw-boot-progress>div{height:100%;width:0;background:#00f5d4;box-shadow:0 0 15px #00f5d4;transition:width .44s cubic-bezier(.16,1,.3,1)}
+.fw-boot-foot{
+  position:absolute;bottom:34px;left:36px;right:36px;display:flex;justify-content:space-between;gap:12px;
+  color:#567285;font-size:8px;letter-spacing:.1em;
+}
+.fw-boot-screen.is-boot-hidden{opacity:0;visibility:hidden;pointer-events:none}
+@keyframes fwBootSweep{from{transform:translateY(0);opacity:.45}to{transform:translateY(calc(100vh - 2px));opacity:.8}}
+.fw-command-stat,.fw-command-status,.fw-metric,.fw-hud-two>div{
+  border-radius:8px;
+}
+.fw-command-stat{position:relative;overflow:hidden}
+.fw-command-stat:before{
+  content:"";position:absolute;left:0;top:0;width:18px;height:18px;
+  border-top:1px solid rgba(0,245,212,.8);border-left:1px solid rgba(0,245,212,.8);
+  pointer-events:none;
+}
+.fw-hud,.fw-playback,.fw-profile-drawer{
+  border-radius:8px;
+}
+.fw-hud:after,.fw-playback:after,.fw-profile-drawer:after{
+  content:"";position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;
+  border-right:2px solid rgba(0,245,212,.8);border-bottom:2px solid rgba(0,245,212,.8);
+  pointer-events:none;
+}
+.fw-btn{border-radius:7px;letter-spacing:.01em}
+.fw-btn-alert{
+  grid-column:1/-1!important;
+  border-color:rgba(255,54,93,.55)!important;
+  background:linear-gradient(100deg,rgba(255,54,93,.17),rgba(255,145,0,.08))!important;
+  color:#ffb5c1!important;
+  box-shadow:inset 0 0 0 1px rgba(255,54,93,.035)!important;
+}
+.fw-btn-alert:hover{border-color:rgba(255,54,93,.9)!important;box-shadow:0 0 18px rgba(255,54,93,.1)!important}
+.fw-btn-alert.fw-btn-active{background:rgba(255,54,93,.18)!important;color:#fff!important}
+#fwAudioToggle[aria-pressed="true"]{border-color:rgba(0,245,212,.48);color:#9bfff2}
+.fw-simulation-panel{
+  margin-top:10px;padding:12px;border:1px solid rgba(255,54,93,.35);
+  border-radius:9px;background:linear-gradient(130deg,rgba(255,54,93,.085),rgba(7,17,32,.92));
+  box-shadow:inset 0 0 22px rgba(255,54,93,.04);
+}
+.fw-simulation-panel[hidden]{display:none!important}
+.fw-sim-heading{display:flex;align-items:center;justify-content:space-between;gap:9px;font:800 8px/1.4 "JetBrains Mono",monospace;letter-spacing:.1em;color:#a9bdcf}
+.fw-sim-heading b{
+  padding:3px 6px;border:1px solid rgba(255,54,93,.48);border-radius:4px;
+  color:#ff91a3;background:rgba(255,54,93,.075);font-size:8px;white-space:nowrap;
+}
+.fw-sim-meter{display:grid;grid-template-columns:112px minmax(0,1fr);align-items:center;gap:13px;margin-top:10px}
+.fw-sim-meter>div:first-child>span{display:block;color:#90aabc;font:8px "JetBrains Mono",monospace;letter-spacing:.06em}
+.fw-sim-meter strong{display:block;margin-top:2px;color:#ff667f;font:800 30px/1 "JetBrains Mono",monospace;font-variant-numeric:tabular-nums;text-shadow:0 0 18px rgba(255,54,93,.25)}
+.fw-sim-meter-track{height:7px;overflow:hidden;background:rgba(255,255,255,.08);border-radius:5px}
+.fw-sim-meter-track i{display:block;width:0;height:100%;background:linear-gradient(90deg,#00f5d4,#ff9100,#ff365d);box-shadow:0 0 12px rgba(255,54,93,.36);transition:width .08s linear}
+.fw-sim-caption,.fw-sim-sites{margin-top:8px;color:#c2d0dc;font:10px/1.5 "JetBrains Mono",monospace}
+.fw-sim-sites{color:#90aabc;font-size:9px}
+.fw-btn-stop{margin-top:8px;background:rgba(255,255,255,.035)!important;border-color:rgba(255,54,93,.28)!important;color:#ffabb8!important}
+.fw-sim-zone-path{filter:drop-shadow(0 0 5px rgba(255,54,93,.68))}
+.fw-sim-vector{stroke-dasharray:7 10;animation:fwSimVectorSweep .65s linear infinite;filter:drop-shadow(0 0 4px rgba(255,54,93,.8))}
+@keyframes fwSimVectorSweep{to{stroke-dashoffset:-34}}
+body.fw-sim-emergency:after{
+  content:"";position:fixed;inset:5px;z-index:9100;pointer-events:none;border:2px solid rgba(255,54,93,.9);
+  box-shadow:inset 0 0 40px rgba(255,54,93,.085),0 0 25px rgba(255,54,93,.18);
+  animation:fwEmergencyPulse .72s ease-in-out infinite alternate;
+}
+@keyframes fwEmergencyPulse{from{opacity:.32;box-shadow:inset 0 0 18px rgba(255,54,93,.025),0 0 8px rgba(255,54,93,.07)}to{opacity:.95;box-shadow:inset 0 0 45px rgba(255,54,93,.1),0 0 28px rgba(255,54,93,.25)}}
+.fw-map-scanline{opacity:.16;mix-blend-mode:screen}
+@media(max-width:900px){
+  .fw-boot-foot{left:20px;right:20px;bottom:22px;font-size:7px}
+  .fw-sim-meter{grid-template-columns:98px minmax(0,1fr)}
+}
+@media(prefers-reduced-motion:reduce){
+  .fw-boot-screen:after,.fw-sim-vector,body.fw-sim-emergency:after{animation:none!important}
+  .fw-boot-progress>div,.fw-sim-meter-track i{transition:none!important}
+  .fw-crt-overlay{display:none}
+}
