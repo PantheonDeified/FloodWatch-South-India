@@ -76,6 +76,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # A long raster build can overlap with ordinary commits to main. Move the
+          # local parent to the newest main before committing only the generated
+          # map products, so the publish push remains a fast-forward.
+          git fetch origin main
+          git reset --mixed origin/main
           git add data/dem-inundation-zones.png data/dem-inundation-zones.geojson
           if git diff --cached --quiet; then
             echo "DEM map assets are already current."
