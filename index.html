@@ -829,7 +829,9 @@ function drawContours(tok){
   addOv(L.polyline(contourSegs(f.grid,35,f.st,f.minLat,f.minLon),{color:'#b45309',weight:2,opacity:.9,interactive:false}));
   addOv(L.polyline(contourSegs(f.grid,65,f.st,f.minLat,f.minLon),{color:'#b91c1c',weight:2.5,opacity:.95,interactive:false}));
   const known=scores.filter(v=>v!=null),used=infraRecords.filter(r=>humanRule(r,Date.now())).length;
+  const sc=window.FloodWatchBridge&&window.FloodWatchBridge.scenario;
   $('ovNote').textContent='Smooth blend of the same rain and river score, sampled at '+cells.length+' points ('+known.length+' with data).'+(used?' '+used+' infrastructure record(s) add points near their location.':'')+' Experimental, not a probability or an official warning.'+
+    (sc&&Array.isArray(sc.weather)&&sc.weather.length?' Time playback T+'+sc.hour+'h blends 75% of the base screening score with 25% of nearby hourly modelled rainfall. This is an illustrative tint; it does not simulate flood extent or depth.':'')+
     (contourState.failed?' '+contourState.failed+' of '+contourState.batches+' data batches failed ('+contourState.lastErr+'). Open-Meteo may be rate-limiting or blocked; wait a minute and pick the layer again. Clear areas mean no data, not safe.':'');
 }
 function addHistorical(){
@@ -983,10 +985,29 @@ function applyLstmCellScore(base,cell,stations){
   const weight=0.25*clamp(1-signal.distanceKm/LSTM_RADIUS_KM);
   return 100*clamp(((1-weight)*base+weight*signal.percentile)/100);
 }
+function scenarioRainScore(cell,scenario){
+  const rows=scenario&&Array.isArray(scenario.weather)?scenario.weather:[];
+  if(!rows.length)return null;
+  let nearest=null,best=Infinity;
+  for(const row of rows){
+    const d=(Number(row.lat)-cell.lat)**2+(Number(row.lon)-cell.lon)**2;
+    if(d<best){best=d;nearest=row}
+  }
+  const h=nearest&&nearest.hourly;if(!h||!Array.isArray(h.time)||!Array.isArray(h.precipitation))return null;
+  const now=Date.now();let ix=h.time.findIndex(t=>Date.parse(String(t)+'Z')>=now-10*60*1000);
+  if(ix<0)ix=h.time.length-1;
+  ix=Math.min(h.time.length-1,ix+Math.max(0,Math.min(24,Number(scenario.hour)||0)));
+  const rain=h.precipitation[ix];
+  return Number.isFinite(Number(rain))?100*clamp(Number(rain)/10):null;
+}
 function adjustedScores(){
-  const now=Date.now(),stations=contourState.lstmStations||[];
+  const now=Date.now(),stations=contourState.lstmStations||[],scenario=window.FloodWatchBridge?.scenario||null;
   return contourState.cells.map((c,i)=>{
-    const baseRaw=contourState.base[i],base=baseRaw==null?baseRaw:applyLstmCellScore(baseRaw,c,stations),h=humanPoints(c,infraRecords,now);
+    const baseRaw=contourState.base[i];
+    let base=baseRaw==null?baseRaw:applyLstmCellScore(baseRaw,c,stations);
+    const rainScenario=base==null?null:scenarioRainScore(c,scenario);
+    if(base!=null&&rainScenario!=null)base=.75*base+.25*rainScenario;
+    const h=humanPoints(c,infraRecords,now);
     if(h.pts<=0)return base;
     return base==null?(h.inc?Math.max(35,h.pts):h.pts):Math.min(100,base+h.pts);
   });
@@ -1110,7 +1131,7 @@ function recolorCityPins(){
     });
   }catch(e){}
 })();
-window.FloodWatchBridge={map,getSelection:()=>selectedLatLon?{lat:selectedLatLon.lat,lon:selectedLatLon.lon,name:$('place').textContent,bundle:lastSelectedBundle}:null,demLayer:null,onDemLayer:null,registerDemLayer(layer,features,metadata){this.demLayer={layer,features,metadata};if(typeof this.onDemLayer==='function')this.onDemLayer(this.demLayer);window.dispatchEvent(new CustomEvent('floodwatch:dem-layer',{detail:this.demLayer}));}};
+window.FloodWatchBridge={map,getSelection:()=>selectedLatLon?{lat:selectedLatLon.lat,lon:selectedLatLon.lon,name:$('place').textContent,bundle:lastSelectedBundle}:null,demLayer:null,onDemLayer:null,scenario:{hour:0,weather:[]},setScenario(hour,weather){this.scenario={hour:Math.max(0,Math.min(24,Number(hour)||0)),weather:Array.isArray(weather)?weather:[]};if($('riskMode').value==='contours'&&contourState&&contourState.cells){clearOverlay();drawContours(ovTok)}},registerDemLayer(layer,features,metadata){this.demLayer={layer,features,metadata};if(typeof this.onDemLayer==='function')this.onDemLayer(this.demLayer);window.dispatchEvent(new CustomEvent('floodwatch:dem-layer',{detail:this.demLayer}));}};
 setMode('contours');
 }
 </script>
