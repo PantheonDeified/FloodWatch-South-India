@@ -17,6 +17,9 @@ on:
     paths:
       - 'index.html'
       - 'risk_engine.js'
+      - 'mission-control.js'
+      - 'mission-control.css'
+      - 'scripts/test_mission_control.js'
       - 'scripts/test_risk_engine.js'
       - 'scripts/validate_frontend_js.py'
       - '.github/workflows/frontend-tests.yml'
