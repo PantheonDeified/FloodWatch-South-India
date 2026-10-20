@@ -821,8 +821,7 @@ async function runContours(tok){
   drawContours(tok);
 }
 function drawContours(tok){
-  $('ovTitle').textContent='Loading data · 100%';
-  $('ovNote').textContent='';
+  showLegend('Rainfall + river contours',[{c:'#3ddc97',t:'Lower screening score (<35)'},{c:'#ffb02e',t:'Moderate screening score (35–64)'},{c:'#ff6b6b',t:'Higher screening score (≥65)'}],'');
   const {cells,mask}=contourState,scores=adjustedScores(),f=buildField(cells,scores,mask);
   addOv(L.imageOverlay(f.url,[[GRID.s,GRID.w],[GRID.n,GRID.e]],{interactive:false,opacity:1}));
   addOv(L.geoJSON(mask,{style:{color:'#10294a',weight:1,opacity:.45,fillOpacity:0},interactive:false}));
