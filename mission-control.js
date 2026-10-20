@@ -197,6 +197,12 @@ if(audioButton)audioButton.addEventListener('click',()=>{
  audioButton.classList.toggle('fw-btn-active',state.audioEnabled);
  if(state.audioEnabled)playTactileClick(880,.06);
 });
+controls.addEventListener('click',event=>{
+ const button=event.target.closest('button');
+ if(!button||!state.audioEnabled||['fwSimulate','fwStopSimulation','fwAudioToggle','fwPlay'].includes(button.id))return;
+ playTactileClick(660,.035);
+});
+map.on('click',()=>playTactileClick(1040,.04));
 const SIM_SITES=[
  {name:'Aluva / Periyar basin',lat:10.1076,lon:76.3516},
  {name:'Chennai / Adyar–Cooum region',lat:13.0827,lon:80.2707},
