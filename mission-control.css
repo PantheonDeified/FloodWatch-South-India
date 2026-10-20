@@ -1,5 +1,7 @@
 :root{--fw-bg:rgba(5,14,27,.92);--fw-border:rgba(191,219,254,.18);--fw-text:#eaf6ff;--fw-muted:#9fb4ca;--fw-cyan:#58e0ff;--fw-amber:#ffc857}
 .mapcard{position:relative}
+#fwMissionControls{position:absolute;inset:0;z-index:1200;pointer-events:none}
+.fw-hud,.fw-playback,.fw-profile-drawer{pointer-events:auto}
 .fw-particle-canvas{position:absolute;inset:0;z-index:430;pointer-events:none}
 .fw-hud,.fw-playback,.fw-profile-drawer{position:absolute;z-index:1200;color:var(--fw-text);font-family:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",monospace;background:var(--fw-bg);border:1px solid var(--fw-border);box-shadow:0 12px 32px rgba(0,0,0,.28);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .fw-hud{top:72px;right:12px;width:min(350px,calc(100% - 24px));padding:14px;border-radius:18px;max-height:calc(100% - 175px);overflow:auto}
