@@ -35,13 +35,14 @@ def test_select_tile_names_fails_closed_if_source_index_empty():
 
 
 def test_normalize_twi_only_normalizes_masked_finite_cells():
-    twi = np.array([[1, 2, 3], [4, 5, np.nan]], dtype=float)
-    mask = np.array([[True, True, True], [True, True, True]])
+    twi = np.arange(200, dtype=float).reshape(10, 20)
+    twi[2, 3] = np.nan
+    mask = np.ones(twi.shape, dtype=bool)
     value, low, high = normalize_twi(twi, mask)
     assert value.shape == twi.shape
     assert value[0, 0] == 0
-    assert value[1, 1] == 1
-    assert np.isnan(value[1, 2])
+    assert value[9, 19] == 1
+    assert np.isnan(value[2, 3])
     assert high > low
 
 
