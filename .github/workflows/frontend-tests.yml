@@ -12,6 +12,8 @@ on:
       - 'scripts/validate_frontend_js.py'
       - 'scripts/test_calculated_risk_grid.js'
       - 'data/south-india-states.geojson'
+      - 'data/dem-inundation-zones.geojson'
+      - 'data/dem-inundation-zones.png'
       - '.github/workflows/frontend-tests.yml'
   pull_request:
     paths:
