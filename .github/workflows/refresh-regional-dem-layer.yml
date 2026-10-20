@@ -37,7 +37,7 @@ jobs:
         run: |
           python -m py_compile backend/dem_hydrology_engine.py backend/build_regional_dem_layer.py
           python -m pip install pytest
-          python -m pytest -q backend/tests/test_regional_dem_layer.py backend/tests/test_dem_hydrology_engine.py
+          PYTHONPATH=backend python -m pytest -q backend/tests/test_regional_dem_layer.py backend/tests/test_dem_hydrology_engine.py
       - name: Download genuine Copernicus GLO-90 tiles and calculate full-region TWI
         run: |
           python backend/build_regional_dem_layer.py \
