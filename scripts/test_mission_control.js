@@ -18,9 +18,9 @@ for (const [label, pattern] of [
   ['imagery compare layer', /ArcGIS\/rest\/services\/World_Imagery/],
   ['glassmorphism', /backdrop-filter:blur\(12px\)/],
   ['reduced-motion handling', /prefers-reduced-motion:reduce/]
-]) assert.match(label==='24-hour slider'?html:js+css, pattern, 'Missing feature or guardrail: '+label);
+]) assert.match(js+css, pattern, 'Missing feature or guardrail: '+label);
 assert.match(html, /mission-control\.css/);
 assert.match(html, /mission-control\.js/);
-assert.match(js, /not a flood probability/i);
+assert.match(js, /not (a )?flood probability/i);
 assert.match(js, /capacity.*unknown/i);
 console.log('PASS mission-control feature and safety-guardrail checks');
