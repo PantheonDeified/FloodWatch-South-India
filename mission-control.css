@@ -76,3 +76,4 @@
  .fw-route-animated path{animation:none}
  .fw-particle-canvas{opacity:.7}
 }
+#fwCurtain{display:none;position:absolute;top:0;bottom:0;width:2px;background:#f0fbff;box-shadow:0 0 0 1px rgba(0,0,0,.6),0 0 18px rgba(0,0,0,.8);z-index:1180;pointer-events:none}
