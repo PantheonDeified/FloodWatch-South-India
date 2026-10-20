@@ -52,7 +52,7 @@
 .fw-curtain{position:absolute;top:0;bottom:0;width:2px;background:#f0fbff;box-shadow:0 0 0 1px rgba(0,0,0,.6),0 0 18px rgba(0,0,0,.8);z-index:1180;pointer-events:none}
 #fwCurtain:before{content:"";position:absolute;left:-13px;top:50%;width:26px;height:42px;transform:translateY(-50%);border-radius:99px;background:rgba(5,14,27,.95);border:1px solid rgba(255,255,255,.7)}
 #fwCurtain:after{content:"↔";position:absolute;left:-8px;top:50%;transform:translateY(-50%);font:14px system-ui;color:#fff}
-.fw-route-animated path{stroke-dasharray:10 9;animation:fwDash 1.25s linear infinite}
+.fw-route-animated{stroke-dasharray:10 9;animation:fwDash 1.25s linear infinite}
 .fw-route-outline path{stroke-linecap:round;stroke-linejoin:round}
 @keyframes fwDash{to{stroke-dashoffset:-38}}
 @media(max-width:900px){
@@ -73,7 +73,7 @@
  .fw-playback-head>b{margin-left:0}
 }
 @media(prefers-reduced-motion:reduce){
- .fw-route-animated path{animation:none}
+ .fw-route-animated{animation:none}
  .fw-particle-canvas{opacity:.7}
 }
 #fwCurtain{display:none;position:absolute;top:0;bottom:0;width:2px;background:#f0fbff;box-shadow:0 0 0 1px rgba(0,0,0,.6),0 0 18px rgba(0,0,0,.8);z-index:1180;pointer-events:none}
