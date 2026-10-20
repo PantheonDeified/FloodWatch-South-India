@@ -1,5 +1,33 @@
 (function(){
 'use strict';
+(function initializeBootCurtain(){
+ const boot=document.getElementById('bootScreen');
+ if(!boot)return;
+ const bar=document.getElementById('bootBar'),logs=document.getElementById('bootLogs');
+ const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const steps=[
+  [170,34,'INITIALIZING CARTOGRAPHIC ENGINE…'],
+  [430,68,'PREPARING WEATHER / RIVER FEED PANELS…'],
+  [760,91,'CHECKING REGIONAL TERRAIN OVERLAY…'],
+  [1010,100,'DISPLAY READY · LIVE FEEDS CONTINUE IN BACKGROUND.']
+ ];
+ if(reduced){
+  if(bar)bar.style.width='100%';
+  if(logs)logs.textContent='DISPLAY READY · LIVE FEEDS CONTINUE IN BACKGROUND.';
+  setTimeout(()=>{boot.classList.add('is-boot-hidden');setTimeout(()=>boot.remove(),250)},250);
+  return;
+ }
+ steps.forEach(([delay,pct,message])=>setTimeout(()=>{
+  if(!boot.isConnected)return;
+  if(bar)bar.style.width=pct+'%';
+  if(logs){logs.textContent=message;if(pct===100)logs.style.color='#00f5d4'}
+ },delay));
+ setTimeout(()=>{
+  if(!boot.isConnected)return;
+  boot.classList.add('is-boot-hidden');
+  setTimeout(()=>boot.remove(),480);
+ },1320);
+})();
 const bridge=window.FloodWatchBridge;
 if(!bridge||!bridge.map||!window.L)return;
 const map=bridge.map;
@@ -9,7 +37,7 @@ const escapeHTML=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<'
 const compass=d=>{if(!Number.isFinite(+d))return '—';return ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round((+d%360)/22.5)%16]};
 const fmt=(n,d=1)=>Number.isFinite(+n)?(+n).toFixed(d):'—';
 const setText=(id,value)=>{const el=$(id);if(el)el.textContent=value};
-const state={hour:0,playing:false,timer:null,selection:null,weather:[],weatherKey:'',weatherAt:0,fieldScreen:[],particles:[],rain:[],dem:null,profile:{active:false,points:[],line:null,markers:[]},route:{line:null,markers:[]},compare:false,comparePct:50,beforeLayer:null,raf:0,lastFrame:0,canvas:null,ctx:null,profileLine:null,loadingField:false};
+const state={hour:0,playing:false,timer:null,selection:null,weather:[],weatherKey:'',weatherAt:0,fieldScreen:[],particles:[],rain:[],dem:null,profile:{active:false,points:[],line:null,markers:[]},route:{line:null,markers:[]},compare:false,comparePct:50,beforeLayer:null,raf:0,lastFrame:0,canvas:null,ctx:null,profileLine:null,loadingField:false,audioEnabled:false,audioContext:null,lastScrubBeep:0,simulation:{active:false,layers:[],frame:0,timeout:null,started:0}};
 const counterAnimations=new Map();
 function animateCounter(id,target,suffix=''){
  const el=$(id);if(!el)return;
@@ -88,7 +116,16 @@ controls.innerHTML=
 '<button type="button" id="fwProfile" class="fw-btn">⌁ Cross-section</button>'+
 '<button type="button" id="fwRoute" class="fw-btn">⇢ Find elevated shelter</button>'+
 '<button type="button" id="fwCompare" class="fw-btn">◫ Before / after</button>'+
+'<button type="button" id="fwSimulate" class="fw-btn fw-btn-alert">⚡ Simulate 200 mm cloudburst</button>'+
+'<button type="button" id="fwAudioToggle" class="fw-btn" aria-pressed="false">Audio cues: off</button>'+
 '</div>'+
+'<section class="fw-simulation-panel" id="fwSimulationPanel" hidden aria-live="polite">'+
+'<div class="fw-sim-heading"><span>CONTROLLED DEMONSTRATION</span><b>SIMULATION ONLY</b></div>'+
+'<div class="fw-sim-meter"><div><span>SIMULATED INDEX</span><strong id="fwSimScore">42</strong></div><div class="fw-sim-meter-track"><i id="fwSimMeterFill"></i></div></div>'+
+'<div class="fw-sim-caption" id="fwSimStatus">Illustrative 200 mm cloudburst scenario. Live measurements and the real screening index are unchanged.</div>'+
+'<div class="fw-sim-sites" id="fwSimSites">Aluva · Chennai · Wayanad — illustrative overlays only</div>'+
+'<button type="button" id="fwStopSimulation" class="fw-btn fw-btn-stop">■ Stop simulation</button>'+
+'</section>'+
 '<div id="fwRouteStatus" class="fw-route-status" aria-live="polite">Select a map location before asking for candidate shelter routes.</div>'+
 '</section>'+
 '<section class="fw-playback" aria-label="24-hour forecast playback">'+
@@ -136,6 +173,126 @@ map.on('popupclose',()=>{if(!movingPopupToDock)popupDock.hidden=true});
 const hudCss = document.createElement('style');
 hudCss.textContent = '';
 document.head.appendChild(hudCss);
+let simulationPane=map.getPane('fwSimulationPane');
+if(!simulationPane){simulationPane=map.createPane('fwSimulationPane');simulationPane.style.zIndex='445';}
+function playTactileClick(freq=820,duration=.055){
+ if(!state.audioEnabled)return;
+ const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;
+ try{
+  if(!state.audioContext)state.audioContext=new Audio();
+  const ctx=state.audioContext;
+  if(ctx.state==='suspended')ctx.resume().catch(()=>{});
+  const osc=ctx.createOscillator(),gain=ctx.createGain(),now=ctx.currentTime;
+  osc.type='sine';osc.frequency.setValueAtTime(freq,now);
+  gain.gain.setValueAtTime(.018,now);
+  gain.gain.exponentialRampToValueAtTime(.0001,now+duration);
+  osc.connect(gain);gain.connect(ctx.destination);osc.start(now);osc.stop(now+duration);
+ }catch(e){/* Audio is optional and must never block core map controls. */}
+}
+const audioButton=$('fwAudioToggle');
+if(audioButton)audioButton.addEventListener('click',()=>{
+ state.audioEnabled=!state.audioEnabled;
+ audioButton.textContent=state.audioEnabled?'Audio cues: on':'Audio cues: off';
+ audioButton.setAttribute('aria-pressed',String(state.audioEnabled));
+ audioButton.classList.toggle('fw-btn-active',state.audioEnabled);
+ if(state.audioEnabled)playTactileClick(880,.06);
+});
+const SIM_SITES=[
+ {name:'Aluva / Periyar basin',lat:10.1076,lon:76.3516},
+ {name:'Chennai / Adyar–Cooum region',lat:13.0827,lon:80.2707},
+ {name:'Wayanad / Kalpetta region',lat:11.6085,lon:76.0833}
+];
+const SIM_SHAPE=[.82,1.03,.91,1.11,.86,1.05,.95,1.12,.89,1.04,.84,1.02];
+function hexMix(a,b,t){
+ const pa=[parseInt(a.slice(1,3),16),parseInt(a.slice(3,5),16),parseInt(a.slice(5,7),16)];
+ const pb=[parseInt(b.slice(1,3),16),parseInt(b.slice(3,5),16),parseInt(b.slice(5,7),16)];
+ const v=pa.map((x,i)=>Math.round(x+(pb[i]-x)*clamp(t,0,1)).toString(16).padStart(2,'0'));
+ return '#'+v.join('');
+}
+function setSimScore(value){
+ const el=$('fwSimScore'),fill=$('fwSimMeterFill');
+ if(el){el.textContent=String(Math.round(value));el.dataset.numericValue=String(value)}
+ if(fill)fill.style.width=clamp((value-20)/80,0,1)*100+'%';
+}
+function clearCloudburstSimulation(message){
+ const sim=state.simulation;
+ if(sim.frame)cancelAnimationFrame(sim.frame);
+ if(sim.timeout)clearTimeout(sim.timeout);
+ sim.layers.forEach(layer=>{try{map.removeLayer(layer)}catch(e){}});
+ sim.layers=[];sim.frame=0;sim.timeout=null;sim.active=false;sim.started=0;
+ document.body.classList.remove('fw-sim-emergency');
+ host.classList.remove('fw-sim-active');
+ if($('fwSimulationPanel'))$('fwSimulationPanel').hidden=true;
+ const button=$('fwSimulate');
+ if(button){button.textContent='⚡ Simulate 200 mm cloudburst';button.classList.remove('fw-btn-active')}
+ if(message)setText('fwRouteStatus',message);
+}
+function makeSimZone(site,index){
+ const polygon=L.polygon([],{
+  pane:'fwSimulationPane',color:'#00f5d4',weight:2,opacity:.95,fillColor:'#00f5d4',
+  fillOpacity:.08,dashArray:'5 7',interactive:false,className:'fw-sim-zone-path'
+ }).addTo(map);
+ state.simulation.layers.push(polygon);
+ const factors=SIM_SHAPE.map((f,i)=>f*(1+index*.025));
+ const update=(radiusKm,color,opacity)=>{
+  const latRadius=radiusKm/111.32,lonRadius=radiusKm/(111.32*Math.max(.1,Math.cos(site.lat*Math.PI/180)));
+  const points=factors.map((f,i)=>{
+   const angle=(i/SIM_SHAPE.length)*Math.PI*2;
+   return [site.lat+Math.sin(angle)*latRadius*f,site.lon+Math.cos(angle)*lonRadius*f];
+  });
+  polygon.setLatLngs(points);polygon.setStyle({color,fillColor:color,fillOpacity:opacity,opacity});
+ };
+ update(1.5,'#00f5d4',.025);
+ const vectorLength=.24+(index*.025),endLat=site.lat+vectorLength,endLon=site.lon+vectorLength*.68;
+ const vector=L.polyline([[site.lat,site.lon],[endLat,endLon]],{
+  pane:'fwSimulationPane',color:'#ff365d',weight:3,opacity:.95,dashArray:'7 10',
+  interactive:false,className:'fw-sim-vector'
+ }).addTo(map);
+ state.simulation.layers.push(vector);
+ return {site,polygon,update,index};
+}
+function startCloudburstSimulation(){
+ clearCloudburstSimulation();
+ const sim=state.simulation;sim.active=true;sim.started=performance.now();
+ const panel=$('fwSimulationPanel'),button=$('fwSimulate');
+ if(panel)panel.hidden=false;
+ if(button){button.textContent='⚡ Stop cloudburst demo';button.classList.add('fw-btn-active')}
+ document.body.classList.add('fw-sim-emergency');host.classList.add('fw-sim-active');
+ setText('fwSimStatus','SCENARIO: hypothetical 200 mm / 24 h cloudburst · not a forecast');
+ setText('fwSimSites','Aluva · Chennai · Wayanad: synthetic demonstration buffers, not measured inundation boundaries.');
+ setSimScore(42);animateCounter('fwSimScore',94);
+ setThreatBadge('TRAINING SIMULATION ACTIVE · LIVE INDEX UNCHANGED','critical');
+ playTactileClick(1160,.07);
+ const zones=SIM_SITES.map(makeSimZone);
+ const duration=2600;
+ function frame(now){
+  if(!sim.active)return;
+  const t=clamp((now-sim.started)/duration,0,1),ease=1-Math.pow(1-t,3);
+  const color=t<.48?hexMix('#00f5d4','#ff9100',t/.48):hexMix('#ff9100','#ff365d',(t-.48)/.52);
+  const radius=1.5+29.5*ease;
+  zones.forEach(z=>z.update(radius*(1+z.index*.035),color,.04+.25*ease));
+  setSimScore(42+52*ease);
+  if(t<1)sim.frame=requestAnimationFrame(frame);
+  else{
+   setText('fwSimStatus','SIMULATION ONLY · 200 mm is a user-triggered scenario, not live rainfall or a flood prediction.');
+   sim.frame=0;
+  }
+ }
+ sim.frame=requestAnimationFrame(frame);
+ setText('fwRouteStatus','Schematic vectors only—not road-following evacuation routes. Live scores and telemetry are unchanged.');
+ sim.timeout=setTimeout(()=>clearCloudburstSimulation('Cloudburst demonstration ended. Live readings were not changed.'),9500);
+}
+const simButton=$('fwSimulate'),stopSimButton=$('fwStopSimulation');
+if(simButton)simButton.addEventListener('click',()=>{
+ if(state.simulation.active){clearCloudburstSimulation('Cloudburst demonstration stopped. Live readings were not changed.');return}
+ startCloudburstSimulation();
+});
+if(stopSimButton)stopSimButton.addEventListener('click',()=>{
+ playTactileClick(520,.05);
+ clearCloudburstSimulation('Cloudburst demonstration stopped. Live readings were not changed.');
+});
+const mapStyleSelect=$('baseMapStyle');
+if(mapStyleSelect)mapStyleSelect.addEventListener('change',()=>playTactileClick(620,.04));
 const canvas=document.createElement('canvas');
 canvas.className='fw-particle-canvas';
 canvas.setAttribute('aria-hidden','true');
@@ -321,9 +478,10 @@ function updateHud(){
 function refreshHud(){updateHud();restyleDem()}
 function stopPlayback(){state.playing=false;if(state.timer)clearInterval(state.timer);state.timer=null;setText('fwPlay','▶ Play');$('fwPlay').classList.remove('fw-btn-active')}
 function advanceHour(){state.hour=state.hour>=24?0:state.hour+1;$('fwTimeline').value=String(state.hour);updateHud();restyleDem()}
-$('fwTimeline').addEventListener('input',e=>{state.hour=clamp(+e.target.value,0,24);updateHud();restyleDem()});
+$('fwTimeline').addEventListener('input',e=>{state.hour=clamp(+e.target.value,0,24);updateHud();restyleDem();const now=performance.now();if(now-state.lastScrubBeep>180){playTactileClick(430,.035);state.lastScrubBeep=now}});
 $('fwPlay').addEventListener('click',()=>{
- if(state.playing){stopPlayback();return}
+ if(state.playing){stopPlayback();playTactileClick(520,.05);return}
+ playTactileClick(780,.05);
  state.playing=true;$('fwPlay').textContent='Ⅱ Pause';$('fwPlay').classList.add('fw-btn-active');
  state.timer=setInterval(()=>{if(state.hour>=24)state.hour=-1;advanceHour()},500);
 });
