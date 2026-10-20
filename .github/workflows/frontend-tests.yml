@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'index.html'
+      - 'risk_engine.js'
+      - 'scripts/test_risk_engine.js'
       - 'scripts/validate_frontend_js.py'
       - 'scripts/test_calculated_risk_grid.js'
       - 'data/south-india-states.geojson'
@@ -11,6 +13,8 @@ on:
   pull_request:
     paths:
       - 'index.html'
+      - 'risk_engine.js'
+      - 'scripts/test_risk_engine.js'
       - 'scripts/validate_frontend_js.py'
       - '.github/workflows/frontend-tests.yml'
   workflow_dispatch:
@@ -36,3 +40,7 @@ jobs:
         run: python scripts/validate_frontend_js.py
       - name: Regression-test calculated grid geometry and scoring
         run: node scripts/test_calculated_risk_grid.js
+      - name: Regression-test live multi-variable risk engine
+        run: node scripts/test_risk_engine.js
+      - name: Syntax-check standalone risk engine
+        run: node --check risk_engine.js
