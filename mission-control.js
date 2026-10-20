@@ -54,6 +54,13 @@ controls.innerHTML=
 '<div class="fw-smallnote">SRTM 90 m elevation is coarse terrain context, not a building-height survey. A reference line is user-entered and hypothetical; it is not a measured or projected water surface.</div>'+
 '</section>';
 document.querySelector('main').insertAdjacentElement('afterend',controls);
+const mapReadouts=document.createElement('section');
+mapReadouts.id='fwMapReadouts';
+mapReadouts.setAttribute('aria-label','Map legend and location details');
+mapReadouts.innerHTML='<div class="fw-readout-heading">MAP LEGEND &amp; LOCATION DETAILS</div><div class="fw-readout-grid"></div>';
+controls.insertAdjacentElement('afterend',mapReadouts);
+const readoutGrid=mapReadouts.querySelector('.fw-readout-grid');
+[host.querySelector('.legend'),document.getElementById('ovLegend'),document.getElementById('hover')].forEach(el=>{if(el)readoutGrid.appendChild(el)});
 const hudCss = document.createElement('style');
 hudCss.textContent = '';
 document.head.appendChild(hudCss);
