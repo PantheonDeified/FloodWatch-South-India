@@ -4,7 +4,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /app
-RUN useradd --create-home --uid 10001 appuser
+RUN useradd --create-home --uid 10001 appuser && mkdir -p /app/data /app/backend/output/dem && chown -R appuser:appuser /app/data /app/backend
 COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/main.py ./main.py
