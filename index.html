@@ -101,6 +101,7 @@ details.card[open] summary:after{content:'−'}
 @media(max-width:900px){body{height:auto}html{height:auto}main{grid-template-columns:1fr}.side{overflow:visible}#map{min-height:380px}}
 @media(prefers-reduced-motion:reduce){button{transition:none}}
 </style>
+<link rel="stylesheet" href="mission-control.css">
 </head>
 <body>
 <header>
@@ -258,7 +259,7 @@ const LEVELS={green:{face:'😎',text:'Chill',color:'#3ddc97'},amber:{face:'😬
 
 async function fetchBundle(pts){
   const la=pts.map(p=>p[0].toFixed(3)).join(','),lo=pts.map(p=>p[1].toFixed(3)).join(',');
-  const wq='https://api.open-meteo.com/v1/forecast?latitude='+la+'&longitude='+lo+'&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=precipitation,precipitation_probability&forecast_days=4&timezone=UTC';
+  const wq='https://api.open-meteo.com/v1/forecast?latitude='+la+'&longitude='+lo+'&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=precipitation,precipitation_probability,wind_speed_10m,wind_direction_10m,soil_moisture_0_to_7cm&forecast_days=4&timezone=UTC';
   const fq='https://flood-api.open-meteo.com/v1/flood?latitude='+la+'&longitude='+lo+'&daily=river_discharge&past_days=60&forecast_days=7&timezone=GMT';
   const get=(u,n)=>fetch(u,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error(n+' returned HTTP '+r.status);return r.json()});
   const [w,f]=await Promise.allSettled([get(wq,'Weather'),get(fq,'River model')]);
@@ -432,6 +433,7 @@ async function selectLocation(lat,lon,name){
     $('place').textContent=nm||'Spot you picked';
     lastSelectedBundle=b;
     render(b,lat,lon,liveRisk);
+    window.dispatchEvent(new CustomEvent('floodwatch:location',{detail:{lat:+lat,lon:+lon,name:nm||name||'Selected location',bundle:b,liveRisk}}));
     $('status').textContent='Updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
   }catch(e){
     if(my!==token)return;
@@ -887,6 +889,7 @@ async function addDEMHazardLayer(tok){
     if(tok!==ovTok)return;
     addOv(layer);
     const m=data.metadata||{};
+    window.FloodWatchBridge?.registerDemLayer(layer,features,m);
     const rain=m.rainfall_24h_mm!=null?' Rainfall input: '+m.rainfall_24h_mm+' mm/24 h ('+(m.rainfall_source||'source unspecified')+').':'';
     const source=m.dem_source?' DEM: '+m.dem_source+'.':'';
     const note=(m.note||'Experimental DEM-derived terrain index; not an inundation probability.')+
@@ -1107,8 +1110,10 @@ function recolorCityPins(){
     });
   }catch(e){}
 })();
+window.FloodWatchBridge={map,getSelection:()=>selectedLatLon?{lat:selectedLatLon.lat,lon:selectedLatLon.lon,name:$('place').textContent,bundle:lastSelectedBundle}:null,demLayer:null,onDemLayer:null,registerDemLayer(layer,features,metadata){this.demLayer={layer,features,metadata};if(typeof this.onDemLayer==='function')this.onDemLayer(this.demLayer);window.dispatchEvent(new CustomEvent('floodwatch:dem-layer',{detail:this.demLayer}));}};
 setMode('contours');
 }
 </script>
+<script src="mission-control.js"></script>
 </body>
 </html>
