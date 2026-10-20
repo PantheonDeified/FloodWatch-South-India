@@ -61,6 +61,25 @@ mapReadouts.innerHTML='<div class="fw-readout-heading">MAP LEGEND &amp; LOCATION
 controls.insertAdjacentElement('afterend',mapReadouts);
 const readoutGrid=mapReadouts.querySelector('.fw-readout-grid');
 [host.querySelector('.legend'),document.getElementById('ovLegend'),document.getElementById('hover')].forEach(el=>{if(el)readoutGrid.appendChild(el)});
+const popupDock=document.createElement('section');
+popupDock.className='fw-docked-popup';
+popupDock.setAttribute('aria-live','polite');
+popupDock.setAttribute('aria-label','Selected map feature details');
+popupDock.hidden=true;
+mapReadouts.insertBefore(popupDock,readoutGrid);
+let movingPopupToDock=false;
+map.on('popupopen',event=>{
+ const element=event.popup&&event.popup.getElement();
+ const source=element&&element.querySelector('.leaflet-popup-content');
+ if(!source)return;
+ popupDock.replaceChildren();
+ Array.from(source.childNodes).forEach(node=>popupDock.appendChild(node.cloneNode(true)));
+ popupDock.hidden=false;
+ movingPopupToDock=true;
+ map.closePopup(event.popup);
+ movingPopupToDock=false;
+});
+map.on('popupclose',()=>{if(!movingPopupToDock)popupDock.hidden=true});
 const hudCss = document.createElement('style');
 hudCss.textContent = '';
 document.head.appendChild(hudCss);
