@@ -1,0 +1,85 @@
+name: Build South India regional Copernicus DEM layer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/build_regional_dem_layer.py'
+      - 'backend/dem_hydrology_engine.py'
+      - 'backend/requirements.txt'
+      - 'data/south-india-states.geojson'
+      - '.github/workflows/refresh-regional-dem-layer.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: regional-dem-publish
+  cancel-in-progress: false
+
+jobs:
+  build-regional-dem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install raster and hydrology dependencies
+        run: python -m pip install -r backend/requirements.txt
+      - name: Syntax-check and test regional DEM functions
+        run: |
+          python -m py_compile backend/dem_hydrology_engine.py backend/build_regional_dem_layer.py
+          python -m pip install pytest
+          python -m pytest -q backend/tests/test_regional_dem_layer.py backend/tests/test_dem_hydrology_engine.py
+      - name: Download genuine Copernicus GLO-90 tiles and calculate full-region TWI
+        run: |
+          python backend/build_regional_dem_layer.py \
+            --cache-dir "$RUNNER_TEMP/floodwatch-copernicus-glo90" \
+            --png data/dem-inundation-zones.png \
+            --geojson data/dem-inundation-zones.geojson
+      - name: Validate published map assets
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          png = Path("data/dem-inundation-zones.png")
+          geojson = Path("data/dem-inundation-zones.geojson")
+          if not png.is_file() or png.read_bytes()[:8] != b"\x89PNG\r\n\x1a\n":
+              raise SystemExit("DEM output PNG is missing or invalid")
+          d = json.loads(geojson.read_text())
+          m = d.get("metadata", {})
+          if d.get("type") != "FeatureCollection" or not m.get("dem_source", "").startswith("Copernicus"):
+              raise SystemExit("DEM GeoJSON failed schema/source validation")
+          if m.get("tile_count", 0) < 1 or m.get("valid_dem_fraction_inside_state_mask", 0) < 0.65:
+              raise SystemExit("DEM source/coverage validation failed")
+          if not m.get("bounds") or not m.get("state_coverage"):
+              raise SystemExit("DEM geographic bounds/state coverage missing")
+          print("PASS: regional Copernicus DEM assets", png.stat().st_size, "PNG bytes,", len(d.get("features", [])), "popup cells,", "tiles:", m["tile_count"], "state data coverage:", m["valid_dem_fraction_inside_state_mask"])
+          PY
+      - name: Upload DEM build report and source-derived map for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: floodwatch-regional-dem-layer
+          path: |
+            data/dem-inundation-zones.png
+            data/dem-inundation-zones.geojson
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish generated DEM map assets to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/dem-inundation-zones.png data/dem-inundation-zones.geojson
+          if git diff --cached --quiet; then
+            echo "DEM map assets are already current."
+          else
+            git commit -m "Publish Copernicus regional DEM wetness layer"
+            git push origin HEAD:main
+          fi
