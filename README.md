@@ -18,7 +18,7 @@ New: [Problems solved, early-warning workflow and infrastructure accountability]
 
 ## DEM terrain/wetness layer
 
-FloodWatch now includes a DEM conditioning/TWI pipeline and a Leaflet **DEM terrain/wetness index** layer. It needs a real, georeferenced DEM GeoTIFF before it can show terrain polygons; this repository update intentionally does not create a synthetic DEM map. Follow the [DEM pipeline and run instructions](backend/README.md#dem-hydrology-and-leaflet-terrain-layer). The displayed score is an experimental terrain/rainfall index, not an inundation probability, hydraulic simulation or official alert.
+FloodWatch now publishes a region-wide Leaflet **DEM terrain/wetness index** generated from genuine Copernicus GLO-90 public tiles. The current build used 133 tiles and has DEM values for 100% of the raster cells inside the approximate five-state boundary mask. The browser receives a transparent PNG raster for the full map plus a spatially thinned GeoJSON with clickable terrain samples; its analysis grid is about 2.2 km, not building scale. The [automated build and source details](backend/README.md#full-region-dem-layer-for-the-public-map) explain how it is rebuilt. The index is relative terrain wetness, not an inundation probability, hydraulic simulation or official alert.
 
 ## Backend and ML status
 
