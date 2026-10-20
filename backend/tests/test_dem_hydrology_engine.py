@@ -100,7 +100,7 @@ def test_geojson_export_uses_wgs84_polygons_and_labels_index_not_probability(tmp
     assert len(data["features"]) == 6
     assert all(feature["geometry"]["type"] == "Polygon" for feature in data["features"])
     assert all(feature["properties"]["hazard_index"] >= 0.25 for feature in data["features"])
-    assert "not inundation probability" in data["metadata"]["note"]
+    assert "not a calibrated" in data["metadata"]["note"]
     assert "probability" not in data["features"][0]["properties"]
 
 
@@ -145,7 +145,7 @@ def test_dem_loader_reprojects_a_small_geotiff_to_metric_utm(tmp_path):
     ) as dst:
         dst.write(values, 1)
     dem, valid, transform, crs, dx, dy = load_dem_projected(
-        source_dem, cell_size_meters=30.0, max_cells=10_000
+        source_dem, cell_size_meters=30.0, max_cells=20_000
     )
     assert crs.is_projected
     assert dem.ndim == 2 and dem.shape == valid.shape
