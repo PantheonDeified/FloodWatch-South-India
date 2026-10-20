@@ -35,6 +35,20 @@ for (const [label, pattern] of [
   ['map feature popups docked below map', /map\.on\('popupopen'/],
   ['HUD below map instead of absolute overlay', /\.fw-hud,\.fw-playback,\.fw-profile-drawer\{[^}]{0,300}position:static/],
   ['whole-region terrain raster supported', /dem-inundation-zones\.geojson/],
+  ['dark matter is the default map tile layer', /basemaps\.cartocdn\.com\/dark_all/],
+  ['street and satellite alternatives remain available', /id="baseMapStyle"[^>]*Street map/],
+  ['soundless boot curtain exists', /id="bootScreen"[^>]*fw-boot-screen/],
+  ['boot says live feeds load in background instead of claiming they synchronized', /LIVE FEEDS LOAD IN BACKGROUND/],
+  ['full-viewport CRT overlay does not intercept clicks', /fw-crt-overlay[^}]*pointer-events:none/],
+  ['cloudburst simulator is clearly identified as a simulation', /CONTROLLED DEMONSTRATION[\s\S]*SIMULATION ONLY/],
+  ['simulation index is separate from the real selected index', /id="fwSimScore"/],
+  ['simulation includes illustrative Aluva, Chennai and Wayanad sites', /Aluva \/ Periyar basin[\s\S]*Chennai \/ Adyar–Cooum region[\s\S]*Wayanad \/ Kalpetta region/],
+  ['simulation annotations do not claim real inundation boundaries', /synthetic demonstration buffers, not measured inundation boundaries/],
+  ['simulation vectors are not presented as verified evacuation routes', /Schematic vectors only—not road-following evacuation routes/],
+  ['simulation never claims to update real telemetry', /Live readings were not changed/],
+  ['audio is opt-in and disabled by default', /audioEnabled:false[\s\S]*id="fwAudioToggle"[^>]*aria-pressed="false"/],
+  ['audio context is created only by explicit audio cue action', /function playTactileClick[\s\S]*if\(!state\.audioEnabled\)return/],
+  ['simulated zones use separate Leaflet vector layer', /fwSimulationPane[\s\S]*L\.polygon/],
 ]) assert.match(js+css+html, pattern, 'Missing feature or guardrail: '+label);
 assert.match(html, /mission-control\.css/);
 assert.match(html, /mission-control\.js/);
