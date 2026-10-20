@@ -74,6 +74,18 @@ The map now opens with a **South India-wide, 0.5° grid**. Each cell's own provi
 
 Source numerical fields: [Open-Meteo weather API](https://open-meteo.com/en/docs) and [Open-Meteo Flood API / GloFAS](https://open-meteo.com/en/docs/flood-api); public station context from the repository's NWDP/NWIC/CWC-derived snapshot. Data sources provide the observations/model outputs; **FloodWatch calculates the colour itself**.
 
+## Interactive mission-control dashboard
+
+The map now includes a dark glass HUD for hourly wind speed/direction, hourly modelled rainfall and probability, modelled topsoil moisture (volumetric m³/m³), rolling 24-hour rainfall estimate, and the latest available nearby official gauge/danger-mark context. Missing gauge, reservoir-release or shelter-capacity records remain explicitly unavailable; the HUD does not manufacture values. The 24-hour scrubber advances at two frames per second and drives a lightweight animated particle canvas. Grid samples are Open-Meteo forecast model output, not a measured weather field at every pixel.
+
+Interactive tools:
+- **Wind/rain particles and timeline:** hourly precipitation, precipitation probability, wind direction/speed and soil-moisture model fields from Open-Meteo. The display's interpolated motion is a visualization of coarse model grid values, not a physical CFD simulation.
+- **Before/after swipe:** Esri World Imagery on the left, regular map and visible overlays on the right. This compares basemap/overlay views; it does not imply a simulated 150 mm inundation extent.
+- **Terrain cross-section:** click two points to query the public SRTM 90 m elevation service and graph the sampled elevation. The optional horizontal line is a user-entered hypothetical reference, not a current/projected water level. This resolution is not building-scale.
+- **Elevated shelter candidate route:** queries OpenStreetMap objects tagged as shelters, samples SRTM terrain, and attempts a pedestrian route through BRouter's trekking profile. It chooses a candidate whose terrain estimate is at least 5 m above the start when one can be found. It does not check road flooding/closures, shelter operation, accessibility, official evacuation instructions, or real bed capacity, so the line is **not a verified safe evacuation route**. Use local authorities' instructions in emergencies.
+
+If a real DEM-derived GeoJSON is later generated using [the DEM pipeline](backend/README.md), the time scrubber applies an explicitly experimental rainfall-weighted display tint to those terrain polygons. This is a visualization aid, **not** a calibrated flood probability, hydraulic simulation, inundation depth/extent, or official warning. If DEM polygons, forecast variables, gauge history, reservoir data, elevation samples, or mapped shelters are missing, the UI shows an unavailable state rather than fabricating a value. The page uses external public services (Open-Meteo, OpenTopoData, Overpass, BRouter and Esri) when these features are activated; their outages, coverage, freshness and rate limits apply.
+
 ## Current frontend capabilities
 
 - Interactive Leaflet map with street, terrain and satellite basemaps.
