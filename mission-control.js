@@ -53,7 +53,7 @@ controls.innerHTML=
 '<div class="fw-profile-input"><label for="fwReferenceWater">Optional hypothetical reference water elevation (m)</label><input id="fwReferenceWater" type="number" step="0.1" placeholder="Leave empty if unknown"><button type="button" id="fwRedrawProfile">Apply reference line</button></div>'+
 '<div class="fw-smallnote">SRTM 90 m elevation is coarse terrain context, not a building-height survey. A reference line is user-entered and hypothetical; it is not a measured or projected water surface.</div>'+
 '</section>';
-map.getContainer().appendChild(controls);
+document.querySelector('main').insertAdjacentElement('afterend',controls);
 const hudCss = document.createElement('style');
 hudCss.textContent = '';
 document.head.appendChild(hudCss);
