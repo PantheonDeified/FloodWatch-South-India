@@ -315,8 +315,10 @@ function telemetryFromBundle(b){
   const reservoir=flood.reservoir||{};
   const fields=[flood,gauge,b?.f?.gauge,b?.f?.telemetry];
   return {
-    riverLevel:firstFiniteField(fields,['river_level_m','gauge_level_m']),
-    riverDangerMark:firstFiniteField(fields,['river_danger_mark_m','danger_mark_m']),
+    // River stage is loaded separately from the official, freshness-checked gauge snapshot.
+    // A modelled discharge value is not the same as river stage in metres.
+    riverLevel:null,
+    riverDangerMark:null,
     damStoragePct:firstFiniteField([reservoir,flood],['storage_pct']),
     damSpillwayActive:firstBooleanField([reservoir,flood],['spillway_active','sluice_gates_open'])
   };
@@ -325,7 +327,14 @@ async function evaluateLiveRisk(bundle,lat,lon,name){
   if(!window.FloodWatchRiskEngine)throw Error('risk_engine.js did not load; refresh the page.');
   const telemetry=telemetryFromBundle(bundle);
   const result=await window.FloodWatchRiskEngine.evaluateZoneFloodRisk({name:name||'Selected location',lat,lon,...telemetry});
-  return {...result,telemetry};
+  const inputs=result.inputDetails||{};
+  return {...result,telemetry:{
+    ...telemetry,
+    riverLevel:inputs.riverLevelM,
+    riverDangerMark:inputs.riverDangerMarkM,
+    damStoragePct:inputs.damStoragePct,
+    damSpillwayActive:inputs.damSpillwayActive
+  }};
 }
 function riskMarkerIcon(color){
   const safeColor=/^#[0-9a-f]{6}$/i.test(String(color||''))?color:'#cbd5e1';
@@ -347,6 +356,14 @@ function riskPopupContent(name,res){
   const rain=document.createElement('p');
   rain.textContent=res.liveRainfall24h_mm==null?'Last 24-hour rainfall: unavailable':'Last 24-hour rainfall: '+res.liveRainfall24h_mm.toFixed(1)+' mm (Open-Meteo estimate)';
   d.appendChild(rain);
+  const gauge=document.createElement('p');
+  gauge.textContent=res.riverTelemetry
+    ?'Nearby gauge: '+res.riverTelemetry.stationName+' · '+res.riverTelemetry.distanceKm+' km away · observed '+res.riverTelemetry.observedAt+'; proximity does not prove river connection.'
+    :'No recent timezone-qualified nearby river gauge with a danger mark was available.';
+  d.appendChild(gauge);
+  if(res.riverTelemetry&&res.riverTelemetry.sourceUrl){
+    const source=document.createElement('a');source.href=res.riverTelemetry.sourceUrl;source.target='_blank';source.rel='noopener noreferrer';source.textContent='Gauge source ↗';d.appendChild(source);
+  }
   const coverage=document.createElement('small');
   coverage.textContent='Input-weight coverage: '+(res.coveragePct||0)+'%. Not an official warning; check IMD/CWC/NDMA.';
   d.appendChild(coverage);
@@ -367,15 +384,19 @@ function renderLiveRiskAssessment(res,lat,lon,name){
   factors.push(res.liveRainfall24h_mm==null
     ?'🌧️ Rolling 24-hour rainfall: unavailable (no fabricated fallback)'
     :'🌧️ Rolling 24-hour rainfall: '+res.liveRainfall24h_mm.toFixed(1)+' mm · Open-Meteo estimate');
+  const gauge=res.riverTelemetry;
   factors.push(t.riverLevel!=null&&t.riverDangerMark!=null
-    ?'🏞️ River stage: '+t.riverLevel+' m · danger mark: '+t.riverDangerMark+' m'
-    :'🏞️ River stage + official danger mark: not supplied for this location');
+    ?'🏞️ River stage: '+t.riverLevel+' m · danger mark: '+t.riverDangerMark+' m'+
+      (gauge?' · '+gauge.stationName+' · '+gauge.distanceKm+' km away · '+gauge.ageMinutes+' min old':'')
+    :'🏞️ River stage + official danger mark: not supplied by a recent, timezone-qualified nearby gauge');
   factors.push(t.damStoragePct!=null
     ?'🏗️ Reservoir storage: '+t.damStoragePct+'%'
     :'🏗️ Reservoir storage: not supplied for this location');
   factors.push(typeof t.damSpillwayActive==='boolean'
     ?'🚪 Spillway/gate state: '+(t.damSpillwayActive?'active/open':'not active/closed')
     :'🚪 Spillway/gate state: not supplied for this location');
+  if(gauge)factors.push('📡 Gauge: '+gauge.sourceName+' · observation '+gauge.observedAt+
+    ' · proximity is approximate and does not prove downstream connectivity'+(gauge.sourceUrl?' · '+gauge.sourceUrl:''));
   factors.push('Factors used: '+(res.factorStatus.rainfall==='available'?'rainfall':'')+
     (res.factorStatus.riverStage==='available'?(res.factorStatus.rainfall==='available'?', ':'')+'river stage':'')+
     (res.factorStatus.reservoir==='available'&&res.factorStatus.spillway==='available'?', reservoir/spillway':'')+
