@@ -223,7 +223,8 @@ function updateHud(){
   setText('fwSparkTotal',fmt(sum)+' mm forecast');
  }else{$('fwRainSpark').innerHTML='';setText('fwSparkTotal','Unavailable')}
  setText('fwHudNote',sel?'Selected spot: '+fmt(sel.lat,3)+', '+fmt(sel.lon,3)+'. Gauge/dam data are latest available and do not advance with the weather scrubber.':'Select a point for location-specific gauge/rainfall context. Weather grid is regional and modelled.');
- setText('fwScenarioLabel',state.dem?'Terrain/rain scenario colours are a visualization only—not flood probability, extent or depth.':'Particles and HUD scrub forecast weather. DEM polygons stay unavailable until real GeoJSON is published.');
+ setText('fwScenarioLabel',state.dem?'Terrain/rain scenario colours are a visualization only—not flood probability, extent or depth.':'Hourly rain tints visible contour/DEM layers where their data exists; this is an illustrative index, not simulated inundation.');
+ if(typeof bridge.setScenario==='function')bridge.setScenario(state.hour,state.weather);
 }
 function refreshHud(){updateHud();restyleDem()}
 function stopPlayback(){state.playing=false;if(state.timer)clearInterval(state.timer);state.timer=null;setText('fwPlay','▶ Play');$('fwPlay').classList.remove('fw-btn-active')}
