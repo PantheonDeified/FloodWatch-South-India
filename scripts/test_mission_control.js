@@ -21,7 +21,7 @@ for (const [label, pattern] of [
   ['full-width map above information panels', /grid-template-areas:"map" "side"/],
   ['map legend moved below the map', /readoutGrid\.appendChild\(el\)/],
   ['map feature popups docked below map', /map\.on\('popupopen'/],
-  ['HUD below map instead of absolute overlay', /\.fw-hud,\.fw-playback,\.fw-profile-drawer\{[\\s\\S]{0,300}position:static/],
+  ['HUD below map instead of absolute overlay', /\.fw-hud,\.fw-playback,\.fw-profile-drawer\{[^}]{0,300}position:static/],
   ['whole-region terrain raster supported', /dem-terrain-screening\.json/]
 ]) assert.match(js+css+html, pattern, 'Missing feature or guardrail: '+label);
 assert.match(html, /mission-control\.css/);
