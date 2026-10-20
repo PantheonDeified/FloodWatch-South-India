@@ -144,6 +144,17 @@ details.card[open] summary:after{content:'−'}
       <p class="note" id="summary" style="margin:12px 0 0"></p>
     </div>
 
+    <div class="card" id="liveRiskCard">
+      <h2>🌦️ Live multi-variable screening index</h2>
+      <div class="risk unk" id="liveRiskBanner">
+        <div class="face" id="liveRiskFace">🌧️</div>
+        <div><div class="lvl" id="liveRiskLevel">Waiting for a location</div><div class="num" id="liveRiskPercentage">No index calculated yet.</div></div>
+      </div>
+      <p class="note" id="liveRiskBadge" style="margin:10px 0 0">Choose a point to load rolling 24-hour precipitation.</p>
+      <ul class="why" id="liveRiskFactors"></ul>
+      <p class="note" id="liveRiskNote" style="margin:10px 0 0">The index is experimental, input coverage varies, and the score is not a flood probability or an official warning.</p>
+    </div>
+
     <div class="tiles">
       <div class="tile"><span>Temperature</span><b id="temp">—</b></div>
       <div class="tile"><span>Rain right now</span><b id="rainNow">—</b></div>
@@ -231,6 +242,7 @@ details.card[open] summary:after{content:'−'}
 </main>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="risk_engine.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 if(typeof L==='undefined'){
@@ -282,10 +294,103 @@ function score(b){
   return {level,score:s,r24,r72,pr,cur,pct,peak,damStoragePct,riverScore:hazard.riverScore,damScore:hazard.damScore,weights:hazard.weights,reservoir,hours:idx.slice(0,24).map(rain)};
 }
 
+function firstFiniteField(objects,keys){
+  for(const obj of objects)for(const key of keys){
+    const value=obj&&obj[key];
+    if(value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value)))return Number(value);
+  }
+  return null;
+}
+function firstBooleanField(objects,keys){
+  for(const obj of objects)for(const key of keys){
+    const value=obj&&obj[key];
+    if(typeof value==='boolean')return value;
+    if(typeof value==='string'&&/^(true|false)$/i.test(value.trim()))return value.trim().toLowerCase()==='true';
+  }
+  return null;
+}
+function telemetryFromBundle(b){
+  const flood=b?.f?._floodwatch||b?.w?._floodwatch||{};
+  const gauge=flood.gauge||flood.river_gauge||{};
+  const reservoir=flood.reservoir||{};
+  const fields=[flood,gauge,b?.f?.gauge,b?.f?.telemetry];
+  return {
+    riverLevel:firstFiniteField(fields,['river_level_m','gauge_level_m']),
+    riverDangerMark:firstFiniteField(fields,['river_danger_mark_m','danger_mark_m']),
+    damStoragePct:firstFiniteField([reservoir,flood],['storage_pct']),
+    damSpillwayActive:firstBooleanField([reservoir,flood],['spillway_active','sluice_gates_open'])
+  };
+}
+async function evaluateLiveRisk(bundle,lat,lon,name){
+  if(!window.FloodWatchRiskEngine)throw Error('risk_engine.js did not load; refresh the page.');
+  const telemetry=telemetryFromBundle(bundle);
+  const result=await window.FloodWatchRiskEngine.evaluateZoneFloodRisk({name:name||'Selected location',lat,lon,...telemetry});
+  return {...result,telemetry};
+}
+function riskMarkerIcon(color){
+  const safeColor=/^#[0-9a-f]{6}$/i.test(String(color||''))?color:'#cbd5e1';
+  return L.divIcon({className:'',html:'<div class="pin" style="background:'+safeColor+'"></div>',iconSize:[26,26],iconAnchor:[13,13]});
+}
+function riskUiClass(level){
+  if(level==='LOW')return 'green';
+  if(level==='MODERATE')return 'amber';
+  if(level==='HIGH'||level==='CRITICAL')return 'red';
+  return 'unk';
+}
+function riskPopupContent(name,res){
+  const d=document.createElement('div');
+  const h=document.createElement('b');h.textContent=name;d.appendChild(h);
+  const badge=document.createElement('p');badge.textContent=res.badge;d.appendChild(badge);
+  const value=document.createElement('p');
+  value.textContent=res.percentage==null?'Hazard index unavailable':'Screening index '+res.percentage+'/100 — not a probability';
+  d.appendChild(value);
+  const rain=document.createElement('p');
+  rain.textContent=res.liveRainfall24h_mm==null?'Last 24-hour rainfall: unavailable':'Last 24-hour rainfall: '+res.liveRainfall24h_mm.toFixed(1)+' mm (Open-Meteo estimate)';
+  d.appendChild(rain);
+  const coverage=document.createElement('small');
+  coverage.textContent='Input-weight coverage: '+(res.coveragePct||0)+'%. Not an official warning; check IMD/CWC/NDMA.';
+  d.appendChild(coverage);
+  return d;
+}
+function renderLiveRiskAssessment(res,lat,lon,name){
+  const banner=$('liveRiskBanner');
+  banner.className='risk '+riskUiClass(res.level);
+  banner.style.borderColor=res.color||'#10294a';
+  $('liveRiskFace').textContent=({LOW:'🌦️',MODERATE:'🌧️',HIGH:'🌊',CRITICAL:'🚨',UNAVAILABLE:'❔'})[res.level]||'🌧️';
+  $('liveRiskLevel').textContent=res.level==='UNAVAILABLE'?'Data incomplete':res.level+' screening index';
+  $('liveRiskPercentage').textContent=res.percentage==null
+    ?'No index calculated — required inputs are unavailable.'
+    :'Index '+res.percentage+'/100 · '+(res.coveragePct||0)+'% of configured input weight available (not a probability).';
+  $('liveRiskBadge').textContent=res.badge;
+  const t=res.telemetry||{};
+  const factors=[];
+  factors.push(res.liveRainfall24h_mm==null
+    ?'🌧️ Rolling 24-hour rainfall: unavailable (no fabricated fallback)'
+    :'🌧️ Rolling 24-hour rainfall: '+res.liveRainfall24h_mm.toFixed(1)+' mm · Open-Meteo estimate');
+  factors.push(t.riverLevel!=null&&t.riverDangerMark!=null
+    ?'🏞️ River stage: '+t.riverLevel+' m · danger mark: '+t.riverDangerMark+' m'
+    :'🏞️ River stage + official danger mark: not supplied for this location');
+  factors.push(t.damStoragePct!=null
+    ?'🏗️ Reservoir storage: '+t.damStoragePct+'%'
+    :'🏗️ Reservoir storage: not supplied for this location');
+  factors.push(typeof t.damSpillwayActive==='boolean'
+    ?'🚪 Spillway/gate state: '+(t.damSpillwayActive?'active/open':'not active/closed')
+    :'🚪 Spillway/gate state: not supplied for this location');
+  factors.push('Factors used: '+(res.factorStatus.rainfall==='available'?'rainfall':'')+
+    (res.factorStatus.riverStage==='available'?(res.factorStatus.rainfall==='available'?', ':'')+'river stage':'')+
+    (res.factorStatus.reservoir==='available'&&res.factorStatus.spillway==='available'?', reservoir/spillway':'')+
+    (res.missingFactors&&res.missingFactors.length?' · Missing: '+res.missingFactors.join(', '):''));
+  $('liveRiskFactors').innerHTML=factors.map(v=>'<li>'+esc(v)+'</li>').join('');
+  $('liveRiskNote').textContent=(res.note||'Experimental screening index.')+' Rainfall source: '+(res.rainfallSource||'unavailable')+'.';
+  if(pin&&selectedLatLon&&Math.abs(selectedLatLon.lat-lat)<0.001&&Math.abs(selectedLatLon.lon-lon)<0.001){
+    pin.setIcon(riskMarkerIcon(res.color));
+    pin.bindPopup(riskPopupContent(name||'Selected location',res));
+  }
+}
 let pin=null,token=0,selectedLatLon=null,lastSelectedBundle=null;
 function setPin(lat,lon){
   if(pin)map.removeLayer(pin);
-  pin=L.marker([lat,lon]).addTo(map);
+  pin=L.marker([lat,lon],{icon:riskMarkerIcon('#cbd5e1')}).addTo(map);
 }
 async function selectLocation(lat,lon,name){
   const my=++token;
@@ -293,21 +398,27 @@ async function selectLocation(lat,lon,name){
   setPin(lat,lon);
   $('place').textContent=name||'Finding place name…';
   $('coords').textContent=lat.toFixed(3)+', '+lon.toFixed(3);
-  $('status').textContent='Checking the sky… ⏳';
+  $('status').textContent='Checking forecast and rolling 24-hour rainfall… ⏳';
+  $('liveRiskLevel').textContent='Loading live rainfall…';
+  $('liveRiskPercentage').textContent='Waiting for Open-Meteo response.';
+  $('liveRiskBadge').textContent='Checking live rainfall and available gauge/reservoir inputs…';
   try{
     const [[b],nm]=await Promise.all([fetchBundle([[lat,lon]]),name||reverseName(lat,lon)]);
     if(my!==token)return;
+    const liveRisk=await evaluateLiveRisk(b,lat,lon,nm||name||'Selected location');
+    if(my!==token)return;
     $('place').textContent=nm||'Spot you picked';
     lastSelectedBundle=b;
-    render(b,lat,lon);
+    render(b,lat,lon,liveRisk);
     $('status').textContent='Updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
   }catch(e){
     if(my!==token)return;
     $('status').textContent='Could not load data: '+e.message+'. Try again in a moment.';
   }
 }
-function render(b,lat,lon){
+function render(b,lat,lon,liveRisk){
   const r=applyLstmToPointScore(score(b),lat,lon,lstmStations),L1=LEVELS[r.level],c=b.w.current||{};
+  if(liveRisk)renderLiveRiskAssessment(liveRisk,lat,lon,$('place').textContent);
   $('temp').textContent=c.temperature_2m!=null?Math.round(c.temperature_2m)+'°C':'—';
   $('rainNow').textContent=c.precipitation!=null?c.precipitation.toFixed(1)+' mm':'—';
   $('wind').textContent=c.wind_speed_10m!=null?Math.round(c.wind_speed_10m)+' km/h':'—';
@@ -887,10 +998,9 @@ $('lstmDisconnect').addEventListener('click',async()=>{
 
 // Colour-coded city pins from one batched request; recolour when fresh LSTM stations arrive.
 function recolorCityPins(){
-  cityPinMarkers.forEach(({marker,bundle,city})=>{
-    const r=applyLstmToPointScore(score(bundle),city[1],city[2],lstmStations),col=LEVELS[r.level].color;
-    const icon=L.divIcon({className:'',html:'<div class="pin" style="background:'+col+'"></div>',iconSize:[26,26],iconAnchor:[13,13]});
-    marker.setIcon(icon);
+  cityPinMarkers.forEach(({marker,bundle,city,liveRisk})=>{
+    const r=applyLstmToPointScore(score(bundle),city[1],city[2],lstmStations),col=liveRisk?liveRisk.color:LEVELS[r.level].color;
+    marker.setIcon(riskMarkerIcon(col));
   });
 }
 (async()=>{
@@ -898,9 +1008,17 @@ function recolorCityPins(){
     const bundles=await fetchBundle(CITIES.map(c=>[c[1],c[2]]));
     bundles.forEach((b,i)=>{
       const c=CITIES[i],r=applyLstmToPointScore(score(b),c[1],c[2],lstmStations),col=LEVELS[r.level].color;
-      const icon=L.divIcon({className:'',html:'<div class="pin" style="background:'+col+'"></div>',iconSize:[26,26],iconAnchor:[13,13]});
-      const marker=L.marker([c[1],c[2]],{icon}).addTo(map).on('click',()=>selectLocation(c[1],c[2],c[0]));
-      cityPinMarkers.push({marker,bundle:b,city:c});
+      const marker=L.marker([c[1],c[2]],{icon:riskMarkerIcon(col)}).addTo(map).on('click',()=>selectLocation(c[1],c[2],c[0]));
+      const entry={marker,bundle:b,city:c,liveRisk:null};
+      cityPinMarkers.push(entry);
+      evaluateLiveRisk(b,c[1],c[2],c[0]).then(res=>{
+        entry.liveRisk=res;
+        marker.setIcon(riskMarkerIcon(res.color));
+        marker.bindPopup(riskPopupContent(c[0],res));
+        if(selectedLatLon&&Math.abs(selectedLatLon.lat-c[1])<0.001&&Math.abs(selectedLatLon.lon-c[2])<0.001){
+          renderLiveRiskAssessment(res,c[1],c[2],c[0]);
+        }
+      }).catch(err=>console.warn('[FloodWatch] City risk index unavailable for '+c[0]+':',err.message));
     });
   }catch(e){}
 })();
