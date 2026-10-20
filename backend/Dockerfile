@@ -8,6 +8,8 @@ RUN useradd --create-home --uid 10001 appuser
 COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/main.py ./main.py
+COPY backend/dem_hydrology_engine.py ./dem_hydrology_engine.py
+COPY backend/export_hazard_geojson.py ./export_hazard_geojson.py
 USER appuser
 
 EXPOSE 8000
