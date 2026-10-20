@@ -846,65 +846,82 @@ function addHistorical(){
   });
 }
 const DEM_HAZARD_URL='data/dem-inundation-zones.geojson';
+const DEM_HAZARD_PNG='data/dem-inundation-zones.png';
 const DEM_ROWS=[
-  {c:'#d90429',t:'Very high terrain/rainfall index (≥ 0.75)'},
-  {c:'#f77f00',t:'High terrain/rainfall index (≥ 0.55)'},
-  {c:'#fcbf49',t:'Moderate terrain/rainfall index (≥ 0.25)'},
-  {c:'#2ec4b6',t:'Lower index (< 0.25; not a safety clearance)'}
+  {c:'#d90429',t:'Very high relative terrain wetness (≥ 0.75)'},
+  {c:'#f77f00',t:'High relative terrain wetness (≥ 0.55)'},
+  {c:'#fcbf49',t:'Moderate relative terrain wetness (≥ 0.25)'},
+  {c:'#2ec4b6',t:'Lower relative terrain wetness (< 0.25; not a safety clearance)'}
 ];
 function demIndexColor(value){
   return value>=0.75?'#d90429':value>=0.55?'#f77f00':value>=0.25?'#fcbf49':'#2ec4b6';
 }
 function demPopup(feature){
   const p=feature&&feature.properties||{},box=document.createElement('div');
-  const h=document.createElement('b');h.textContent='DEM terrain/rainfall cell';box.appendChild(h);
+  const h=document.createElement('b');h.textContent='DEM terrain/wetness sample cell';box.appendChild(h);
   const score=document.createElement('p');
   score.textContent=Number.isFinite(Number(p.hazard_index))
-    ?'Screening index: '+Math.round(Number(p.hazard_index)*100)+'/100 — not a flood probability.'
-    :'Screening index unavailable.';
+    ?'Relative topographic wetness index: '+Math.round(Number(p.hazard_index)*100)+'/100 — not flood probability.'
+    :'Terrain/wetness index unavailable.';
   box.appendChild(score);
-  if(p.risk_tier){const tier=document.createElement('p');tier.textContent='Index class: '+p.risk_tier;box.appendChild(tier)}
-  if(p.twi!=null){const twi=document.createElement('p');twi.textContent='Topographic Wetness Index: '+p.twi;box.appendChild(twi)}
-  if(p.slope_degrees!=null){const slope=document.createElement('p');slope.textContent='Terrain slope: '+p.slope_degrees+'°';box.appendChild(slope)}
-  if(p.rainfall_24h_mm!=null){const rain=document.createElement('p');rain.textContent='Rainfall input: '+p.rainfall_24h_mm+' mm/24 h; this uniform input may not represent the whole basin.';box.appendChild(rain)}
-  const note=document.createElement('small');note.textContent='Terrain screening only. It does not model river routing, water depth, drainage structures or calibrated flood extent.';box.appendChild(note);
+  if(p.risk_tier){const tier=document.createElement('p');tier.textContent='Relative index class: '+p.risk_tier;box.appendChild(tier)}
+  if(p.twi!=null){const twi=document.createElement('p');twi.textContent='Topographic Wetness Index (ln[SCA/tan(slope)]): '+p.twi;box.appendChild(twi)}
+  if(p.slope_degrees!=null){const slope=document.createElement('p');slope.textContent='Terrain slope: '+p.slope_degrees+'°; sampled grid spacing ~'+(p.grid_resolution_km_approx||'2.2')+' km';box.appendChild(slope)}
+  if(p.flow_accumulation_cells!=null){const acc=document.createElement('p');acc.textContent='D8 upstream contributing cells: '+Number(p.flow_accumulation_cells).toLocaleString();box.appendChild(acc)}
+  const note=document.createElement('small');note.textContent='Static DEM terrain context only. It does not include current rainfall, river stage, dam releases, water depth, road flooding or a calibrated inundation extent.';box.appendChild(note);
   return box;
 }
 async function addDEMHazardLayer(tok){
   try{
-    const response=await fetch(DEM_HAZARD_URL,{cache:'no-store',headers:{Accept:'application/geo+json, application/json'}});
-    if(!response.ok)throw Error('GeoJSON is not published (HTTP '+response.status+').');
+    const [response,rasterResponse]=await Promise.all([
+      fetch(DEM_HAZARD_URL,{cache:'no-store',headers:{Accept:'application/geo+json, application/json'}}),
+      fetch(DEM_HAZARD_PNG,{cache:'no-store'})
+    ]);
+    if(!response.ok)throw Error('Regional DEM GeoJSON is not published (HTTP '+response.status+').');
+    if(!rasterResponse.ok)throw Error('Regional DEM raster is not published (HTTP '+rasterResponse.status+').');
     const data=await response.json();
     if(tok!==ovTok)return;
     if(!data||data.type!=='FeatureCollection'||!Array.isArray(data.features))throw Error('DEM GeoJSON schema is invalid.');
-    const features=data.features.filter(f=>f&&f.geometry&&f.properties&&Number.isFinite(Number(f.properties.hazard_index)));
-    if(!features.length){
-      showLegend('DEM layer has no mapped cells',DEM_ROWS,
-        'The published DEM layer is empty or contains no cells above its export threshold. This is unknown terrain, not evidence of safety.');
-      return;
+    const m=data.metadata||{},bounds=m.bounds||{};
+    const nums=[bounds.south,bounds.west,bounds.north,bounds.east].map(Number);
+    if(nums.some(v=>!Number.isFinite(v))||bounds.north<=bounds.south||bounds.east<=bounds.west){
+      throw Error('Regional DEM metadata has no valid geographic bounds.');
     }
-    const layer=L.geoJSON({type:'FeatureCollection',features},{
-      style:feature=>{
-        const score=Number(feature.properties.hazard_index);
-        const fillColor=demIndexColor(score);
-        return {fillColor,fillOpacity:0.55,weight:0.5,color:'#ffffff',opacity:0.8};
-      },
-      onEachFeature:(feature,leafletLayer)=>leafletLayer.bindPopup(demPopup(feature))
+    const pngUrl=DEM_HAZARD_PNG+'?v='+encodeURIComponent(m.created_at_utc||'1');
+    const raster=L.imageOverlay(pngUrl,[[Number(bounds.south),Number(bounds.west)],[Number(bounds.north),Number(bounds.east)]],{
+      opacity:0.93,interactive:false,attribution:'Terrain data © Copernicus DEM GLO-90 / DLR / Airbus / EU / ESA'
+    });
+    raster.on('error',()=>{
+      if(tok===ovTok)$('ovNote').textContent='DEM terrain raster failed to render. Check the published PNG asset. No substitute layer is shown.';
     });
     if(tok!==ovTok)return;
-    addOv(layer);
-    const m=data.metadata||{};
-    window.FloodWatchBridge?.registerDemLayer(layer,features,m);
-    const rain=m.rainfall_24h_mm!=null?' Rainfall input: '+m.rainfall_24h_mm+' mm/24 h ('+(m.rainfall_source||'source unspecified')+').':'';
-    const source=m.dem_source?' DEM: '+m.dem_source+'.':'';
-    const note=(m.note||'Experimental DEM-derived terrain index; not an inundation probability.')+
-      source+rain+' '+features.length+' coloured grid cells shown. Unmapped areas mean unknown, not safe.';
-    showLegend('DEM terrain/wetness index',DEM_ROWS,note);
+    addOv(raster);
+    const features=data.features.filter(f=>f&&f.geometry&&f.properties&&Number.isFinite(Number(f.properties.hazard_index)));
+    let layer=null;
+    if(features.length){
+      layer=L.geoJSON({type:'FeatureCollection',features},{
+        style:feature=>{
+          const score=Number(feature.properties.hazard_index);
+          return {fillColor:demIndexColor(score),fillOpacity:0.08,weight:0.65,color:'#ffffff',opacity:0.48};
+        },
+        onEachFeature:(feature,leafletLayer)=>leafletLayer.bindPopup(demPopup(feature))
+      });
+      if(tok!==ovTok)return;
+      addOv(layer);
+      window.FloodWatchBridge?.registerDemLayer(layer,features,m);
+    }
+    const note=(m.note||'Static relative topographic wetness index; not a flood probability.')+
+      ' Coverage: '+(Array.isArray(m.state_coverage)?m.state_coverage.join(', '):'regional state mask')+
+      '. Regional terrain raster is the full colored layer; '+features.length+' sample cells provide clickable details. '+
+      (m.attribution||'Terrain source attribution: Copernicus DEM GLO-90.');
+    showLegend('DEM terrain/wetness index · regional raster',DEM_ROWS,note,
+      [m.dem_source_url||'https://registry.opendata.aws/copernicus-dem/','Copernicus DEM source & licence ↗']);
   }catch(error){
     if(tok!==ovTok)return;
     showLegend('DEM layer unavailable',DEM_ROWS,
-      'No usable DEM GeoJSON is published at '+DEM_HAZARD_URL+'. Supply a real georeferenced DEM, run backend/export_hazard_geojson.py, and publish the generated file. No synthetic terrain or fallback colours are used. '+error.message+
-      ' This experimental terrain index is not a flood probability or official warning.');
+      'A real regional DEM has not been published or one of its files could not load. The build uses public Copernicus GLO-90 tiles and must complete before the map appears. No synthetic terrain is used. '+error.message+
+      ' This static wetness index is not flood probability, flood depth, a safe-route guarantee or an official warning.',
+      ['https://registry.opendata.aws/copernicus-dem/','DEM source ↗']);
   }
 }
 
