@@ -571,7 +571,6 @@ mapEl.addEventListener('mousemove',e=>{
   const ll=map.mouseEventToLatLng(e);
   hTimer=setTimeout(()=>hoverLookup(ll,pos),450);
 });
-mapEl.addEventListener('mouseleave',hideHover);
 map.on('movestart zoomstart',hideHover);
 
 // Click map, search, locate, city chips
