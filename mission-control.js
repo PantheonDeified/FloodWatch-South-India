@@ -68,7 +68,7 @@ controls.innerHTML=
 '<div class="fw-command-strip">'+
 '<div class="fw-command-stat"><span>SELECTED SCREENING INDEX</span><b id="fwThreatScore">—</b><small id="fwThreatState">NO LOCATION SELECTED</small></div>'+
 '<div class="fw-command-stat"><span>FORECAST GRID POINTS</span><b id="fwGridCount">0</b><small>REGIONAL MODEL SAMPLES</small></div>'+
-'<div class="fw-command-status" id="fwThreatBadge"><i></i><span>DATA FEED CHECKING</span></div>'+
+'<div class="fw-command-status" id="fwThreatBadge" role="status" aria-live="polite"><i></i><span>DATA FEED CHECKING</span></div>'+
 '</div>'+
 '<div class="fw-metric-grid">'+
 '<div class="fw-metric"><span>Wind speed</span><b id="fwWind">—</b><small id="fwWindDir">Direction —</small></div>'+
