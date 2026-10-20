@@ -63,10 +63,11 @@ def test_png_colours_match_wetness_legend_and_transparency():
 
 
 def test_state_mask_keeps_only_five_named_states():
+    core_polygon = {"type": "Polygon", "coordinates": [[[76, 9], [77, 9], [77, 11], [76, 11], [76, 9]]]}
     boundary = {"features": [
-        {"properties": {"name": "Kerala"}, "geometry": {
-            "type": "Polygon", "coordinates": [[[76, 9], [77, 9], [77, 11], [76, 11], [76, 9]]]
-        }},
+        {"properties": {"name": state}, "geometry": core_polygon}
+        for state in ("Andhra Pradesh", "Karnataka", "Kerala", "Tamil Nadu", "Telangana")
+    ] + [
         {"properties": {"name": "Goa"}, "geometry": {
             "type": "Polygon", "coordinates": [[[73.5, 14], [74, 14], [74, 15], [73.5, 15], [73.5, 14]]]
         }},
