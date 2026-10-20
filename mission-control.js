@@ -102,7 +102,7 @@ function pickWeather(lat,lon){
 function windFrame(){
  const ctx=state.ctx;if(!ctx)return;
  const w=map.getSize().x,h=map.getSize().y;
- ctx.fillStyle='rgba(6,15,29,0.105)';ctx.fillRect(0,0,w,h);
+ ctx.globalCompositeOperation='destination-out';ctx.fillStyle='rgba(0,0,0,0.12)';ctx.fillRect(0,0,w,h);ctx.globalCompositeOperation='source-over';
  if(!state.weather.length){
    ctx.clearRect(0,0,w,h);
    if(!state.loadingField){ctx.fillStyle='rgba(15,23,42,.8)';ctx.font='12px monospace';ctx.fillText('Wind / precipitation field unavailable',12,20)}
@@ -237,7 +237,7 @@ $('fwParticles').addEventListener('click',()=>{
  const on=$('fwParticles').dataset.enabled!=='1';
  $('fwParticles').dataset.enabled=on?'1':'0';$('fwParticles').classList.toggle('fw-btn-active',on);
  $('fwParticles').textContent=on?'〰 Wind / rain particles':'〰 Particles paused';
- if(on){state.ctx.clearRect(0,0,map.getSize().x,map.getSize().y);state.lastFrame=0}
+ if(on){state.ctx.clearRect(0,0,map.getSize().x,map.getSize().y);state.lastFrame=0;if(!state.raf)state.raf=requestAnimationFrame(animate)}else{cancelAnimationFrame(state.raf);state.raf=0}
 });
 map.on('moveend zoomend',()=>{
  updateCanvasSize();
@@ -355,8 +355,8 @@ function drawProfile(){
  ctx.lineTo(x(vals.length-1),h-pad.b);ctx.lineTo(x(0),h-pad.b);ctx.closePath();ctx.fillStyle='rgba(45,185,240,.14)';ctx.fill();
  ctx.beginPath();vals.forEach((v,i)=>i?ctx.lineTo(x(i),y(v.elevation)):ctx.moveTo(x(i),y(v.elevation)));ctx.strokeStyle='#60dbff';ctx.lineWidth=2.5;ctx.stroke();
  if(ref!==''&&Number.isFinite(+ref)){
-  const ry=y(+ref);ctx.setLineDash([7,4]);ctx.beginPath();ctx.moveTo(pad.l,ry);ctx.lineTo(w-pad.r,ry);ctx.strokeStyle='#4ea9ff';ctx.lineWidth=2;ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle='rgba(43,140,255,.17)';ctx.fillRect(pad.l,Math.max(pad.t,ry),w-pad.l-pad.r,Math.max(0,h-pad.b-Math.max(pad.t,ry)));
+  const ry=y(+ref);ctx.fillStyle='rgba(43,140,255,.17)';ctx.fillRect(pad.l,Math.max(pad.t,ry),w-pad.l-pad.r,Math.max(0,h-pad.b-Math.max(pad.t,ry)));
+  ctx.setLineDash([7,4]);ctx.beginPath();ctx.moveTo(pad.l,ry);ctx.lineTo(w-pad.r,ry);ctx.strokeStyle='#4ea9ff';ctx.lineWidth=2;ctx.stroke();ctx.setLineDash([]);
  }
  ctx.fillStyle='#d9e8f6';ctx.font='11px monospace';ctx.fillText(Math.round(mx)+' m',4,pad.t+7);ctx.fillText(Math.round(mn)+' m',4,h-pad.b);ctx.fillText('0 km',pad.l,h-5);ctx.fillText(fmt(vals[vals.length-1].distance,1)+' km',w-60,h-5);
 }
