@@ -16,6 +16,10 @@ Final hand-in checks: [submission checklist and verified CI evidence](docs/DATAT
 
 New: [Problems solved, early-warning workflow and infrastructure accountability](docs/EARLY_WARNING_AND_ACCOUNTABILITY.md).
 
+## DEM terrain/wetness layer
+
+FloodWatch now includes a DEM conditioning/TWI pipeline and a Leaflet **DEM terrain/wetness index** layer. It needs a real, georeferenced DEM GeoTIFF before it can show terrain polygons; this repository update intentionally does not create a synthetic DEM map. Follow the [DEM pipeline and run instructions](backend/README.md#dem-hydrology-and-leaflet-terrain-layer). The displayed score is an experimental terrain/rainfall index, not an inundation probability, hydraulic simulation or official alert.
+
 ## Backend and ML status
 
 The FastAPI backend is in `backend/`. It includes health/status endpoints, the Open-Meteo weather proxy, a paginated `/api/v1/water-observations` endpoint, and `/api/v1/models/status`. The water endpoint can read a local snapshot or fetch the public repository snapshot. Updating files in GitHub does **not** automatically update the separately running Linux API service; follow [backend deployment notes](backend/README.md).
