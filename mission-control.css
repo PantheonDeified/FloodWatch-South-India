@@ -670,3 +670,19 @@ body,button,input,select,textarea{
  .radar-pulse,.fw-radar-critical,.radar-pulse:before,.radar-pulse:after,.fw-command-status>i{animation:none!important}
  .fw-map-scanline{display:none}
 }
+
+/* Deliberate, user-initiated full-screen map mode; default page remains scrollable. */
+body.fw-map-expanded-active{overflow:hidden}
+.mapcard.fw-map-expanded{
+  position:fixed!important;inset:0!important;z-index:9000!important;
+  width:100vw!important;height:100dvh!important;min-height:0!important;max-height:none!important;
+  margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;
+}
+.mapcard.fw-map-expanded #map{min-height:0!important;height:auto!important}
+.mapcard.fw-map-expanded .map-intro{padding:10px 18px}
+.mapcard.fw-map-expanded .map-intro h2{font-size:18px}
+.mapcard.fw-map-expanded .bar{padding:7px 10px}
+@media(max-width:640px){
+ .mapcard.fw-map-expanded .map-intro{padding:8px 10px}
+ .mapcard.fw-map-expanded .map-intro p{display:none}
+}
