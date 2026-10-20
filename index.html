@@ -363,9 +363,11 @@ async function evaluateLiveRisk(bundle,lat,lon,name){
     damSpillwayActive:inputs.damSpillwayActive
   }};
 }
-function riskMarkerIcon(color){
+function riskMarkerIcon(color,pulse=false){
   const safeColor=/^#[0-9a-f]{6}$/i.test(String(color||''))?color:'#cbd5e1';
-  return L.divIcon({className:'',html:'<div class="pin" style="background:'+safeColor+'"></div>',iconSize:[26,26],iconAnchor:[13,13]});
+  const markerClass=pulse?'radar-pulse fw-radar-critical':'pin fw-map-pin';
+  const markerHtml='<div class="'+markerClass+'" style="--marker-color:'+safeColor+';background:'+safeColor+'" aria-label="'+(pulse?'High screening signal':'Selected map location')+'"></div>';
+  return L.divIcon({className:'fw-risk-marker-icon',html:markerHtml,iconSize:pulse?[24,24]:[26,26],iconAnchor:pulse?[12,12]:[13,13]});
 }
 function riskUiClass(level){
   if(level==='LOW')return 'green';
@@ -431,7 +433,7 @@ function renderLiveRiskAssessment(res,lat,lon,name){
   $('liveRiskFactors').innerHTML=factors.map(v=>'<li>'+esc(v)+'</li>').join('');
   $('liveRiskNote').textContent=(res.note||'Experimental screening index.')+' Rainfall source: '+(res.rainfallSource||'unavailable')+'.';
   if(pin&&selectedLatLon&&Math.abs(selectedLatLon.lat-lat)<0.001&&Math.abs(selectedLatLon.lon-lon)<0.001){
-    pin.setIcon(riskMarkerIcon(res.color));
+    pin.setIcon(riskMarkerIcon(res.color,res.percentage!=null&&(res.level==='HIGH'||res.level==='CRITICAL')));
     pin.bindPopup(riskPopupContent(name||'Selected location',res));
   }
 }
