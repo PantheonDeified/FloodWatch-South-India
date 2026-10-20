@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const engine = require('../risk_engine.js');
 const html = fs.readFileSync('index.html', 'utf8');
+const engineSource = fs.readFileSync('risk_engine.js', 'utf8');
 const tests = [];
 function test(name, fn) { tests.push({ name, fn }); }
 
@@ -13,7 +14,7 @@ test('Frontend loads the engine and renders its colors, badge, and index', () =>
   assert.ok(html.includes("marker.setIcon(riskMarkerIcon(res.color))"));
   assert.ok(html.includes("res.badge"));
   assert.ok(html.includes("res.percentage"));
-  assert.ok(html.includes("fetchLivePrecipitation24h"));
+  assert.ok(engineSource.includes("fetchLivePrecipitation24h"));
   assert.ok(!html.includes("return 15.0"));
 });
 
