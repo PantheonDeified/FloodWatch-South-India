@@ -1,7 +1,7 @@
 # Water-observation snapshot — automated quality audit
 
-- Snapshot generation timestamp: **2026-10-20T21:40:35.734549+00:00**
-- Records in snapshot: **407**
+- Snapshot generation timestamp: **2026-10-21T04:54:25.206607+00:00**
+- Records in snapshot: **413**
 - Resource files checked: **37**
 - Report generated from this snapshot by the GitHub Actions pipeline; source records are not modified.
 
@@ -12,8 +12,8 @@
 | Reservoir/regulator discharge | 8 |
 | Reservoir level | 44 |
 | Reservoir storage | 9 |
-| River discharge | 201 |
-| River level | 145 |
+| River discharge | 202 |
+| River level | 150 |
 
 ## Quality indicators
 
@@ -21,45 +21,46 @@
 |---|---:|---|
 | Missing both coordinates | 34 | Do not plot these records as station points |
 | Missing state | 34 | State coverage cannot be assigned from the record |
-| Labelled outside five core states | 15 | Review geography; do not present as an in-area station by default |
+| Labelled outside five core states | 16 | Review geography; do not present as an in-area station by default |
 | Missing district | 34 | District-level filtering may be incomplete |
-| Source timezone unspecified | 407 | Preserve the reported timestamp; do not assume UTC or local time |
+| Source timezone unspecified | 413 | Preserve the reported timestamp; do not assume UTC or local time |
 | Duplicate station/type/timestamp groups | 0 | Review possible overlap; records are retained in this report |
 
 ## Records by state label
 
 | State label | Records |
 |---|---:|
-| Andhra Pradesh | 102 |
-| Tamil Nadu | 81 |
+| Andhra Pradesh | 103 |
+| Tamil Nadu | 85 |
 | Karnataka | 70 |
 | Telangana | 64 |
 | Kerala | 41 |
 | Unspecified | 34 |
 | Maharashtra | 10 |
 | Chhattisgarh | 4 |
+| Dadra And Nagar Haveli | 1 |
 | Madhya Pradesh | 1 |
 
 ## Records by configured source
 
 | Configured source | Records | Resources represented | Latest timestamp string in snapshot |
 |---|---:|---:|---|
-| Andhra Pradesh reservoir storage and level | 19 | 2 | 2026-08-31T06:00:00 |
-| Andhra Pradesh river discharge | 1 | 1 | 2026-02-28T08:00:00 |
-| Andhra Pradesh river telemetry | 41 | 4 | 2026-10-18T23:00:00 |
-| Central Water Commission river discharge | 200 | 5 | 2026-10-19T08:00:00 |
-| Central Water Commission river telemetry | 74 | 5 | 2026-10-18T23:30:00 |
+| Andhra Pradesh reservoir storage and level | 19 | 2 | 2026-09-30T08:00:00 |
+| Andhra Pradesh river discharge | 2 | 1 | 2026-09-30T08:00:00 |
+| Andhra Pradesh river telemetry | 41 | 4 | 2026-10-19T23:00:00 |
+| Central Water Commission river discharge | 200 | 5 | 2026-10-20T08:00:00 |
+| Central Water Commission river telemetry | 79 | 5 | 2026-10-19T23:30:00 |
 | Flood Flow Canal Head Regulator discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Kaddam head regulator release/discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Kakatiya Canal Head Regulator discharge | 1 | 1 | 2026-08-20T15:00:00 |
-| Karnataka reservoir data | 34 | 1 | 2026-10-20T12:10:00 |
+| Karnataka reservoir data | 34 | 1 | 2026-10-21T12:10:00 |
 | Lakshmi Canal Head Regulator discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Lower Manair Canal Head Regulator discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Lower Manair Dam 2 discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Saraswati Canal Head Regulator discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Sri Ram Sagar Dam release/discharge | 1 | 1 | 2026-08-20T15:00:00 |
-| Tamil Nadu river telemetry | 4 | 1 | 2026-10-18T23:00:00 |
-| Telangana river telemetry | 26 | 2 | 2026-10-18T23:00:00 |
+| Tamil Nadu river telemetry | 4 | 1 | 2026-10-19T23:00:00 |
+| Telangana river telemetry | 26 | 2 | 2026-10-19T23:00:00 |
 
 ## Collection outcomes
 
@@ -112,8 +113,8 @@ These statuses describe what the collector could retrieve during this run; they 
 | Reservoir level | m | 10 |
 | Reservoir level | source-defined | 34 |
 | Reservoir storage | source-defined | 9 |
-| River discharge | m3/s | 201 |
-| River level | m | 145 |
+| River discharge | m3/s | 202 |
+| River level | m | 150 |
 
 Unit labels such as `source-defined` are intentionally not converted or assumed equivalent. Verify them against the original resource metadata before comparing values across stations.
 
