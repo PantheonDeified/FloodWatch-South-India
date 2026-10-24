@@ -218,3 +218,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local FloodWatch data and model artifacts (source archives, features, weights, reports)
+data_pipeline/raw/
+data_pipeline/processed/
+data_pipeline/output/

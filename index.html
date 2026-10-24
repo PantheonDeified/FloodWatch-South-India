@@ -165,7 +165,22 @@ details.card[open] summary:after{content:'−'}
       <div class="coords" id="coords">Pick any spot, or jump to a city:</div>
       <div class="chips" id="chips"></div>
       <div class="status" id="status"></div>
+      <div class="row"><button type="button" id="saveCurrentPlace">☆ Save this place</button></div>
+      <p class="note" id="sourceHealth" aria-live="polite">Forecast freshness and input coverage will appear after a location loads.</p>
     </div>
+
+    <details class="card" id="watchlistCard" open>
+      <summary><b>📍 Saved places &amp; browser alerts</b> <span class="badge" id="watchCount">0</span></summary>
+      <p class="note">Save places in this browser and opt in to notifications when the experimental screening index crosses your chosen level. Score snapshots are kept locally for later event review. This page must stay open; alerts are not official warnings.</p>
+      <div class="infra">
+        <label>Alert when the index reaches
+          <select id="watchThreshold"><option value="35">Elevated (35+)</option><option value="65">High (65+)</option></select>
+        </label>
+      </div>
+      <div class="row"><button type="button" id="enableWatchAlerts">Enable browser alerts</button><button type="button" id="checkWatchNow">Check saved places</button><button type="button" id="exportWatchArchive">Export score history</button></div>
+      <div class="status" id="watchStatus" aria-live="polite">Saved places and alert settings stay in this browser.</div>
+      <div id="watchList"></div>
+    </details>
 
     <div class="card">
       <div class="risk unk" id="risk">
@@ -202,14 +217,14 @@ details.card[open] summary:after{content:'−'}
     </div>
 
     <details class="card" id="lstmCard">
-      <summary><b>🧠 Regional LSTM risk contribution</b> <span class="badge" id="lstmBadge">Not connected</span></summary>
+      <summary><b>🧠 Regional LSTM risk contribution</b> <span class="badge" id="lstmBadge">Loading snapshot</span></summary>
       <p class="note">FloodWatch automatically loads the latest scheduled regional LSTM station forecast. An optional HTTPS backend URL enables on-demand inference; the published forecast snapshot is the fallback. LSTM output is discharge, not calibrated flood probability or an official warning.</p>
       <form id="lstmForm" class="infra">
         <label>Optional live backend HTTPS base URL<input id="lstmApiBase" type="url" maxlength="500" placeholder="https://your-live-api.example.com" autocomplete="url"></label>
         <div class="row"><button type="submit">Connect &amp; load LSTM</button><button type="button" id="lstmDisconnect">Use scheduled snapshot</button></div>
       </form>
       <div class="status" id="lstmStatus" aria-live="polite">Loading the latest scheduled regional LSTM forecast…</div>
-      <p class="note">Only forecasts with recent source-history timestamps, usable coordinates and a station-relative historic-discharge rank can contribute. Influence fades to zero beyond 65 km from a station; this distance is an approximation, not proof of river-network connectivity.</p>
+      <p class="note">A station contributes only when the public HydroBASINS polygons show it is in the same sub-basin as this point or its basin's downstream chain reaches this point's basin (up to six basin links). The weight fades by basin-link count. Points outside the mapped network receive no LSTM adjustment. Basin linkage is still a regional screening approximation, not a surveyed river path.</p>
     </details>
 
     <details class="card" id="infraCard">
@@ -339,18 +354,22 @@ function calculateFloodHazardScore(rainfall24hMm,riverPercentile,damStoragePct){
 function score(b){
   const h=b.w.hourly||{},times=h.time||[],cutoff=Date.now()-30*60*1000;
   const idx=times.map((t,i)=>[i,Date.parse(t+'Z')]).filter(x=>x[1]>=cutoff).map(x=>x[0]);
-  const rain=i=>+h.precipitation?.[i]||0;
-  const r24=idx.slice(0,24).reduce((s,i)=>s+rain(i),0),r72=idx.slice(0,72).reduce((s,i)=>s+rain(i),0);
-  const pr=Math.max(0,...idx.slice(0,24).map(i=>+h.precipitation_probability?.[i]||0));
+  const numeric=value=>value==null||value===''?NaN:Number(value);
+  const rain=i=>numeric(h.precipitation?.[i]);
+  const rain24=idx.slice(0,24).map(rain),rain72=idx.slice(0,72).map(rain);
+  const rainCoverage=rain24.filter(Number.isFinite).length/24;
+  const r24=rain24.reduce((s,v)=>s+(Number.isFinite(v)?v:0),0),r72=rain72.reduce((s,v)=>s+(Number.isFinite(v)?v:0),0);
+  const prob24=idx.slice(0,24).map(i=>numeric(h.precipitation_probability?.[i])),probabilityCoverage=prob24.filter(Number.isFinite).length/24;
+  const pr=prob24.some(Number.isFinite)?Math.max(...prob24.filter(Number.isFinite)):null;
   const cur=+b.w.current?.precipitation||0;
-  if(idx.length<24)return {level:'unk',score:null,hours:[]};
+  if(idx.length<24||rainCoverage<1)return {level:'unk',score:null,hours:rain24.filter(Number.isFinite),rainCoverage,probabilityCoverage,forecastHours:idx.length};
   let pct=null,peak=null; const d=b.f?.daily;
   if(d&&d.time){const today=new Date().toISOString().slice(0,10),hist=[],fut=[];d.time.forEach((t,i)=>{const v=d.river_discharge[i];if(v==null)return;if(t<today)hist.push(v);else if(t>today)fut.push(v)});if(hist.length>=20&&fut.length){peak=Math.max(...fut.slice(0,7));const lo=hist.filter(v=>v<peak).length,eq=hist.filter(v=>v===peak).length;pct=100*(lo+eq/2)/hist.length;}}
   const reservoir=b.f?._floodwatch?.reservoir||null;
   const damStoragePct=Number.isFinite(Number(reservoir?.storage_pct))?Number(reservoir.storage_pct):null;
   const hazard=calculateFloodHazardScore(r24,pct,damStoragePct);
   const s=hazard.score,level=s>=65?'red':s>=35?'amber':'green';
-  return {level,score:s,r24,r72,pr,cur,pct,peak,damStoragePct,riverScore:hazard.riverScore,damScore:hazard.damScore,weights:hazard.weights,reservoir,hours:idx.slice(0,24).map(rain)};
+  return {level,score:s,r24,r72,pr,cur,pct,peak,damStoragePct,riverScore:hazard.riverScore,damScore:hazard.damScore,weights:hazard.weights,reservoir,rainCoverage,probabilityCoverage,forecastHours:idx.length,hours:rain24.filter(Number.isFinite)};
 }
 
 function firstFiniteField(objects,keys){
@@ -514,14 +533,19 @@ function render(b,lat,lon,liveRisk){
   if(r.score!=null){
     why.push('🌧️ '+r.r24.toFixed(0)+' mm of rain expected in 24 hours');
     why.push('📅 '+r.r72.toFixed(0)+' mm over the next 72 hours');
-    why.push('☔ Up to '+Math.round(r.pr)+'% chance of rain');
+    why.push(r.pr==null?'☔ Rain probability: unavailable':'☔ Up to '+Math.round(r.pr)+'% chance of rain');
     why.push(r.pct!=null?'🏞️ GloFAS river factor: '+Math.round(r.pct)+'th percentile':'🏞️ GloFAS river factor: unavailable here');
-    if(r.lstmSignal)why.push('🧠 LSTM: predicted peak discharge is above '+Math.round(r.lstmSignal.percentile)+'% of historical observations at '+r.lstmSignal.station.station_id+' ('+Math.round(r.lstmSignal.distanceKm)+' km away). This is a discharge rank, not flood probability.');
+    if(r.lstmSignal)why.push('🧠 LSTM: predicted peak discharge ranks above '+Math.round(r.lstmSignal.percentile)+'% of this station’s historical observations; its basin is '+(r.lstmSignal.basinHops===0?'the same mapped sub-basin':r.lstmSignal.basinHops+' connected downstream basin link'+(r.lstmSignal.basinHops===1?'':'s'))+' from this point. This is a discharge rank, not flood probability.');
     why.push(r.damStoragePct!=null?'🏗️ Reservoir storage: '+Math.round(r.damStoragePct)+'%'+(r.reservoir?.reservoir_name?' — '+r.reservoir.reservoir_name:''):'🏗️ Reservoir factor: no verified nearby storage record');
     why.push('⚖️ Score weights: '+r.weights);
   }
   $('why').innerHTML=why.map(t=>'<li>'+t+'</li>').join('');
   $('summary').textContent='🤖 '+summarize(r,$('place').textContent);
+  const modelTime=String(b.w.current?.time||''),modelStamp=Date.parse(modelTime.endsWith('Z')?modelTime:modelTime+'Z');
+  const modelAge=Number.isFinite(modelStamp)?Math.max(0,(Date.now()-modelStamp)/3600000):null;
+  const freshness=Number.isFinite(modelStamp)?'Weather model time '+new Date(modelStamp).toLocaleString([], {dateStyle:'medium',timeStyle:'short',timeZone:'UTC'})+' UTC'+(modelAge!=null?' ('+(modelAge<1?Math.round(modelAge*60)+' min':modelAge.toFixed(1)+' h')+' old)':''):'Weather model time not supplied';
+  const rainHours=Math.round((r.rainCoverage||0)*24);
+  $('sourceHealth').textContent=freshness+' · Rain forecast coverage '+rainHours+'/24 hours · Rain-probability coverage '+Math.round((r.probabilityCoverage||0)*24)+'/24 hours · River-model percentile '+(r.pct==null?'unavailable':'available')+' · Reservoir input '+(r.damStoragePct==null?'unavailable':'available')+'. Missing inputs are not treated as zero.';
   const max=Math.max(2,...r.hours);
   $('bars').innerHTML=r.hours.map(v=>'<i title="'+v.toFixed(1)+' mm" style="height:'+Math.max(4,v/max*100)+'%"></i>').join('');
   $('flow').textContent=r.pct!=null
@@ -658,7 +682,52 @@ const HIST_ROWS=[{t:'Andhra Pradesh: flood-hazard zones from satellite floods, 1
 const CY_ROWS=[{c:'#ff4b55',t:'GDACS red alert'},{c:'#ff9f43',t:'GDACS orange alert'},{c:'#f4d35e',t:'GDACS green alert (lowest class, not “safe”)'}];
 const HIST_SRC=['https://bhuvan-app1.nrsc.gov.in/disaster/usrtasks/flood_hz/flood_hz.php?uname=empty','Open NRSC flood atlas ↗'];
 let ovLayers=[],ovTok=0,maskPromise=null,contourState=null,infraRecords=[];
-const LSTM_STORAGE_KEY='floodwatch.regionalLstmApiBase.v1',LSTM_RADIUS_KM=65;
+const LSTM_STORAGE_KEY='floodwatch.regionalLstmApiBase.v1',BASIN_URL='data/south-india-basins.geojson',MAX_UPSTREAM_BASIN_LINKS=6;
+let basinFeatures=[],basinsById=new Map(),basinLoadPromise=null,basinPointCache=new Map();
+function coordinateBounds(value,bounds){
+  if(Array.isArray(value)&&value.length>=2&&typeof value[0]==='number'&&typeof value[1]==='number'){
+    bounds[0]=Math.min(bounds[0],value[0]);bounds[1]=Math.min(bounds[1],value[1]);bounds[2]=Math.max(bounds[2],value[0]);bounds[3]=Math.max(bounds[3],value[1]);return;
+  }
+  if(Array.isArray(value))for(const child of value)coordinateBounds(child,bounds);
+}
+async function loadBasinNetwork(){
+  if(basinFeatures.length)return basinFeatures;
+  if(!basinLoadPromise)basinLoadPromise=fetch(BASIN_URL,{cache:'force-cache'}).then(r=>{if(!r.ok)throw Error('HydroBASINS data returned HTTP '+r.status);return r.json()}).then(g=>{
+    if(!Array.isArray(g.features)||!g.features.length)throw Error('HydroBASINS file has no polygons.');
+    basinFeatures=g.features.filter(f=>f?.geometry&&f?.properties?.HYBAS_ID!=null).map(f=>{const bounds=[Infinity,Infinity,-Infinity,-Infinity];coordinateBounds(f.geometry.coordinates,bounds);return {...f,bounds}});
+    basinsById=new Map(basinFeatures.map(f=>[String(f.properties.HYBAS_ID),f]));
+    return basinFeatures;
+  }).catch(e=>{basinLoadPromise=null;throw e});
+  return basinLoadPromise;
+}
+function basinAt(lat,lon){
+  if(!Number.isFinite(Number(lat))||!Number.isFinite(Number(lon))||!basinFeatures.length)return null;
+  const key=Number(lat).toFixed(5)+','+Number(lon).toFixed(5);
+  if(basinPointCache.has(key))return basinPointCache.get(key);
+  let found=null;
+  for(const f of basinFeatures){
+    const b=f.bounds;if(lon<b[0]||lon>b[2]||lat<b[1]||lat>b[3])continue;
+    for(const rings of polysOf(f.geometry)){
+      if(!inRing(lon,lat,rings[0]))continue;
+      let hole=false;for(let i=1;i<rings.length;i++)if(inRing(lon,lat,rings[i])){hole=true;break}
+      if(!hole){found=String(f.properties.HYBAS_ID);break}
+    }
+    if(found)break;
+  }
+  basinPointCache.set(key,found);return found;
+}
+function upstreamBasinHops(stationBasinId,targetBasinId){
+  if(!stationBasinId||!targetBasinId)return null;
+  let id=String(stationBasinId);const seen=new Set();
+  for(let hops=0;hops<=MAX_UPSTREAM_BASIN_LINKS;hops++){
+    if(id===String(targetBasinId))return hops;
+    if(seen.has(id))return null;seen.add(id);
+    const next=basinsById.get(id)?.properties?.NEXT_DOWN;
+    if(next==null||Number(next)===0)return null;
+    id=String(next);
+  }
+  return null;
+}
 let lstmStations=[],lstmLoadPromise=null,lstmLoadedAt=0,cityPinMarkers=[];
 function getLstmApiBase(){
   let raw=($('lstmApiBase')?.value||'').trim();
@@ -673,7 +742,7 @@ function normalizeLstmApiBase(raw){
 }
 function lstmStatus(message,connected,badgeLabel){
   $('lstmStatus').textContent=message;
-  $('lstmBadge').textContent=badgeLabel||(connected?'Connected':'Not connected');
+  $('lstmBadge').textContent=badgeLabel||(connected?'Forecast loaded':'Snapshot unavailable');
   $('lstmBadge').classList.toggle('on',!!connected);
 }
 const LSTM_STATIC_FORECAST_URL='https://raw.githubusercontent.com/PantheonDeified/FloodWatch-South-India/main/data/regional-lstm-forecast.json';
@@ -736,14 +805,17 @@ async function refreshLstmForecast(force){
         Number(s.station_latitude)>=7&&Number(s.station_latitude)<=21.8&&
         Number(s.station_longitude)>=73&&Number(s.station_longitude)<=87;
     });
+    try{await loadBasinNetwork()}catch(e){basinFeatures=[];basinsById=new Map()}
     lstmStations=eligible.map(s=>{
       const age=sourceHistoryAgeDays(s);
-      return {...s,history_age_days:age,forecast_is_live:age<=3,station_latitude:Number(s.station_latitude),station_longitude:Number(s.station_longitude),peak_discharge_percentile_all_available_history:Math.max(0,Math.min(100,Number(s.peak_discharge_percentile_all_available_history)))};
+      const station_latitude=Number(s.station_latitude),station_longitude=Number(s.station_longitude);
+      return {...s,history_age_days:age,forecast_is_live:age<=3,station_latitude,station_longitude,basin_id:basinAt(station_latitude,station_longitude),peak_discharge_percentile_all_available_history:Math.max(0,Math.min(100,Number(s.peak_discharge_percentile_all_available_history)))};
     });
     lstmLoadedAt=Date.now();
     if(lstmStations.length){
       const prefix=apiError?'Live API unavailable ('+apiError+'); using the scheduled snapshot. ':'';
-      lstmStatus(prefix+'Loaded '+lstmStations.length+' recent station forecasts from '+sourceLabel+'. The LSTM modifies nearby risk scores by at most 25%; colours are experimental estimates, not calibrated flood probabilities.',true,base&&!apiError?'Connected':'Snapshot loaded');
+      const mapped=lstmStations.filter(s=>s.basin_id).length;
+      lstmStatus(prefix+'Loaded '+lstmStations.length+' recent station forecasts from '+sourceLabel+'; '+mapped+' match a mapped HydroBASINS polygon. Only same-basin or upstream-connected stations can adjust the experimental score (maximum 25%).',true,base&&!apiError?'Connected':'Snapshot loaded');
       recolorCityPins();
       if(lastSelectedBundle&&selectedLatLon)render(lastSelectedBundle,selectedLatLon.lat,selectedLatLon.lon);
     }else{
@@ -760,14 +832,15 @@ async function refreshLstmForecast(force){
 function apiErrorForDisplay(error){return String(error?.message||error)}
 function nearestLstmSignal(lat,lon,stations){
   if(!Number.isFinite(+lat)||!Number.isFinite(+lon))return null;
+  const targetBasinId=basinAt(+lat,+lon);if(!targetBasinId)return null;
   let best=null;
   for(const station of (stations||[])){
-    if(station.forecast_is_live!==true||station.coordinates_available!==true)continue;
+    if(station.forecast_is_live!==true||station.coordinates_available!==true||!station.basin_id)continue;
     const raw=station.peak_discharge_percentile_all_available_history;
     if(raw==null||!Number.isFinite(Number(raw)))continue;
-    const distanceKm=kmBetween(+lat,+lon,station.station_latitude,station.station_longitude);
-    if(!Number.isFinite(distanceKm)||distanceKm>LSTM_RADIUS_KM)continue;
-    if(!best||distanceKm<best.distanceKm)best={station,percentile:Math.max(0,Math.min(100,Number(raw))),distanceKm};
+    const basinHops=upstreamBasinHops(station.basin_id,targetBasinId);if(basinHops==null)continue;
+    const tieDistance=kmBetween(+lat,+lon,station.station_latitude,station.station_longitude);
+    if(!best||basinHops<best.basinHops||(basinHops===best.basinHops&&tieDistance<best.tieDistance))best={station,percentile:Math.max(0,Math.min(100,Number(raw))),basinHops,tieDistance,targetBasinId};
   }
   return best;
 }
@@ -775,7 +848,7 @@ function applyLstmToPointScore(result,lat,lon,stations){
   if(!result||!Number.isFinite(result.score))return result;
   const signal=nearestLstmSignal(lat,lon,stations);
   if(!signal)return result;
-  const blendWeight=0.25*clamp(1-signal.distanceKm/LSTM_RADIUS_KM);
+  const blendWeight=0.25*Math.exp(-0.35*signal.basinHops);
   if(blendWeight<=0)return result;
   const original=result.score,adjusted=100*clamp(((1-blendWeight)*original+blendWeight*signal.percentile)/100);
   return {...result,score:adjusted,level:adjusted>=65?'red':adjusted>=35?'amber':'green',lstmSignal:signal,lstmOriginalScore:original,lstmBlendWeight:blendWeight};
@@ -1058,7 +1131,7 @@ function applyLstmCellScore(base,cell,stations){
   if(base==null||!Number.isFinite(base))return base;
   const signal=nearestLstmSignal(cell.lat,cell.lon,stations);
   if(!signal)return base;
-  const weight=0.25*clamp(1-signal.distanceKm/LSTM_RADIUS_KM);
+  const weight=0.25*Math.exp(-0.35*signal.basinHops);
   return 100*clamp(((1-weight)*base+weight*signal.percentile)/100);
 }
 function scenarioRainScore(cell,scenario){
@@ -1146,6 +1219,90 @@ $('infraClear').addEventListener('click',()=>{
   if(!infraRecords.length||!confirm('Delete all saved entries in this browser? Export first if you need a copy.'))return;
   infraRecords=[];infraChanged();
 });
+
+// Saved places and opt-in browser notifications. This page must remain open to check forecasts.
+const WATCH_KEY='floodwatch.savedPlaces.v1',WATCH_STATE_KEY='floodwatch.savedPlaceAlertState.v1',WATCH_ARCHIVE_KEY='floodwatch.savedPlaceScoreArchive.v1';
+let savedPlaces=[],watchCheckBusy=false,lastWatchCheckAt=0;
+try{const rows=JSON.parse(localStorage.getItem(WATCH_KEY)||'[]');if(Array.isArray(rows))savedPlaces=rows.filter(r=>r&&Number.isFinite(+r.lat)&&Number.isFinite(+r.lon)&&+r.lat>=7&&+r.lat<=21.8&&+r.lon>=73&&+r.lon<=87).slice(0,10)}catch(e){}
+function readWatchArchive(){try{const rows=JSON.parse(localStorage.getItem(WATCH_ARCHIVE_KEY)||'[]');return Array.isArray(rows)?rows:[]}catch(e){return []}}
+function archiveWatchScore(place,result,bundle){
+  if(!Number.isFinite(result.score))return;
+  const at=Date.now(),slot=Math.floor(at/(6*60*60*1000)),rows=readWatchArchive();
+  if(rows.some(r=>r.location_id===place.key&&r.six_hour_slot===slot))return;
+  const currentTime=String(bundle?.w?.current?.time||'');
+  rows.push({location_id:place.key,location_name:place.name||'Saved place',latitude:+place.lat,longitude:+place.lon,feature_date:new Date(at).toISOString().slice(0,10),forecast_created_at_utc:new Date(at).toISOString(),forecast_model_time_utc:currentTime,score:Math.round(result.score*100)/100,score_version:'experimental-map-index-v2',rain_24h_mm:Number.isFinite(result.r24)?Math.round(result.r24*100)/100:null,rain_72h_mm:Number.isFinite(result.r72)?Math.round(result.r72*100)/100:null,rain_coverage_pct:Math.round((result.rainCoverage||0)*100),glofas_percentile:Number.isFinite(result.pct)?Math.round(result.pct*100)/100:null,lstm_station_id:result.lstmSignal?.station?.station_id||'',six_hour_slot:slot});
+  if(rows.length>5000)rows.splice(0,rows.length-5000);
+  try{localStorage.setItem(WATCH_ARCHIVE_KEY,JSON.stringify(rows))}catch(e){$('watchStatus').textContent='Score archive could not be saved; browser storage may be full.'}
+}
+function persistWatchList(){try{localStorage.setItem(WATCH_KEY,JSON.stringify(savedPlaces));return true}catch(e){$('watchStatus').textContent='Browser storage is unavailable. Allow site storage to save places.';return false}}
+function watchAlertState(){try{const s=JSON.parse(localStorage.getItem(WATCH_STATE_KEY)||'{}');return s&&typeof s==='object'?s:{}}catch(e){return {}}}
+function renderWatchList(){
+  $('watchCount').textContent=savedPlaces.length;
+  $('watchList').innerHTML=savedPlaces.length?savedPlaces.map((p,i)=>'<div class="infra-entry"><b>'+esc(p.name||'Saved place '+(i+1))+'</b><div class="note">'+Number(p.lat).toFixed(3)+', '+Number(p.lon).toFixed(3)+'</div><div class="row"><button type="button" data-watch-open="'+i+'">Open on map</button><button type="button" data-watch-remove="'+i+'">Remove</button></div></div>').join(''):'<div class="note" style="margin-top:8px">No saved places yet. Select a map point and choose “Save this place”.</div>';
+  if(typeof Notification!=='undefined'&&Notification.permission==='granted'){$('enableWatchAlerts').textContent='Browser alerts enabled';$('enableWatchAlerts').classList.add('on')}
+  else{$('enableWatchAlerts').textContent='Enable browser alerts';$('enableWatchAlerts').classList.remove('on')}
+}
+function saveSelectedPlace(){
+  if(!selectedLatLon){$('watchStatus').textContent='Pick a map point before saving a place.';return}
+  const {lat,lon}=selectedLatLon;if(lat<7||lat>21.8||lon<73||lon>87){$('watchStatus').textContent='Saved places are limited to the South India map region.';return}
+  const key=lat.toFixed(4)+','+lon.toFixed(4);if(savedPlaces.some(p=>p.key===key)){$('watchStatus').textContent='This place is already saved.';return}
+  if(savedPlaces.length>=10){$('watchStatus').textContent='The browser watchlist holds 10 places. Remove one before adding another.';return}
+  savedPlaces.push({key,lat:+lat,lon:+lon,name:$('place').textContent||'Saved place'});
+  if(!persistWatchList())return;renderWatchList();$('watchStatus').textContent='Saved in this browser. Enable browser alerts if you want threshold notifications.';
+}
+async function checkSavedPlaceAlerts(force){
+  if(watchCheckBusy||!savedPlaces.length||(!force&&Date.now()-lastWatchCheckAt<5*60*1000))return;
+  watchCheckBusy=true;lastWatchCheckAt=Date.now();$('watchStatus').textContent='Checking forecasts for '+savedPlaces.length+' saved place'+(savedPlaces.length===1?'':'s')+'…';
+  try{
+    const bundles=await fetchBundle(savedPlaces.map(p=>[+p.lat,+p.lon]));
+    const threshold=Number($('watchThreshold').value)||35,state=watchAlertState();let checked=0,unknown=0,notified=0;
+    for(let i=0;i<savedPlaces.length;i++){
+      const place=savedPlaces[i],r=applyLstmToPointScore(score(bundles[i]),+place.lat,+place.lon,lstmStations);
+      if(!Number.isFinite(r.score)){unknown++;continue}checked++;
+      archiveWatchScore(place,r,bundles[i]);
+      const previous=state[place.key],lastScore=Number(previous?.score),lastAlert=Number(previous?.alertedAt)||0;
+      const hadBaseline=Number.isFinite(lastScore)&&previous.threshold===threshold;
+      if(hadBaseline&&lastScore<threshold&&r.score>=threshold&&Date.now()-lastAlert>6*60*60*1000&&typeof Notification!=='undefined'&&Notification.permission==='granted'){
+        try{
+          const flow=r.pct==null?'GloFAS river model unavailable':'GloFAS peak is above '+Math.round(r.pct)+'% of its recent range';
+          const notification=new Notification('FloodWatch screening index crossed your threshold',{body:(place.name||'Saved place')+': '+Math.round(r.score)+'/100 · Open-Meteo rain '+(Number.isFinite(r.r24)?Math.round(r.r24)+' mm/24h':'unavailable')+' · '+flow+'. Check official IMD/CWC/NDMA guidance.',tag:'floodwatch-'+place.key});
+          notification.onclick=()=>{window.focus();map.setView([place.lat,place.lon],10);selectLocation(place.lat,place.lon,place.name);notification.close()};
+          state[place.key].alertedAt=Date.now();notified++
+        }catch(e){}
+      }
+      state[place.key]={...(state[place.key]||{}),score:r.score,threshold,checkedAt:Date.now(),alertedAt:Number(state[place.key]?.alertedAt)||lastAlert};
+    }
+    try{localStorage.setItem(WATCH_STATE_KEY,JSON.stringify(state))}catch(e){}
+    $('watchStatus').textContent='Checked '+checked+'/'+savedPlaces.length+' places · '+unknown+' lacked enough forecast data'+(notified?' · '+notified+' notification'+(notified===1?'':'s')+' sent':'')+'. Next automatic check in about 15 minutes while this page is open.';
+  }catch(e){$('watchStatus').textContent='Could not check saved-place forecasts: '+e.message}
+  finally{watchCheckBusy=false}
+}
+renderWatchList();
+$('saveCurrentPlace').addEventListener('click',saveSelectedPlace);
+$('enableWatchAlerts').addEventListener('click',async()=>{
+  if(typeof Notification==='undefined'){$('watchStatus').textContent='This browser does not support notifications.';return}
+  if(Notification.permission==='granted'){$('watchStatus').textContent='Browser notifications are enabled. The page checks saved places about every 15 minutes while open.';checkSavedPlaceAlerts(true);return}
+  if(Notification.permission==='denied'){$('watchStatus').textContent='Notifications are blocked in browser settings. Allow them for this site, then try again.';return}
+  const permission=await Notification.requestPermission();renderWatchList();$('watchStatus').textContent=permission==='granted'?'Browser notifications enabled. Saved-place checks run about every 15 minutes while this page is open.': 'Notifications were not enabled.';
+  if(permission==='granted')checkSavedPlaceAlerts(true);
+});
+$('checkWatchNow').addEventListener('click',()=>checkSavedPlaceAlerts(true));
+$('exportWatchArchive').addEventListener('click',()=>{
+  const rows=readWatchArchive();if(!rows.length){$('watchStatus').textContent='No score history yet. Keep saved places enabled while this page is open, then export again.';return}
+  const columns=['location_id','location_name','latitude','longitude','feature_date','forecast_created_at_utc','forecast_model_time_utc','score','score_version','rain_24h_mm','rain_72h_mm','rain_coverage_pct','glofas_percentile','lstm_station_id'];
+  const quote=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const csv=[columns.join(','),...rows.map(r=>columns.map(c=>quote(r[c])).join(','))].join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='floodwatch-map-score-history.csv';a.click();URL.revokeObjectURL(url);
+  $('watchStatus').textContent='Exported '+rows.length+' browser-local score snapshots. Add reviewed event labels before calculating event metrics.';
+});
+$('watchList').addEventListener('click',e=>{
+  const open=e.target.closest('[data-watch-open]'),remove=e.target.closest('[data-watch-remove]');
+  if(open){const p=savedPlaces[+open.dataset.watchOpen];if(p){map.setView([p.lat,p.lon],10);selectLocation(p.lat,p.lon,p.name)}}
+  if(remove){const i=+remove.dataset.watchRemove;if(Number.isInteger(i)&&i>=0&&i<savedPlaces.length){savedPlaces.splice(i,1);persistWatchList();renderWatchList();$('watchStatus').textContent='Removed from this browser.'}}
+});
+checkSavedPlaceAlerts();
+setInterval(()=>{if(!document.hidden)checkSavedPlaceAlerts()},15*60*1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkSavedPlaceAlerts()});
 
 try{
   const savedLstmApi=localStorage.getItem(LSTM_STORAGE_KEY)||'';

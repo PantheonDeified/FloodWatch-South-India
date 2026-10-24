@@ -1,0 +1,1 @@
+location_id,location_name,latitude,longitude,feature_date,forecast_created_at_utc,forecast_model_time_utc,score,score_version,rain_24h_mm,rain_72h_mm,rain_coverage_pct,glofas_percentile,lstm_station_id

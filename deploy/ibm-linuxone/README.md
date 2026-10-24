@@ -1,6 +1,6 @@
 # IBM LinuxONE / Ubuntu 24.04 deployment
 
-This runbook deploys the lightweight FastAPI service first, then enables the regional discharge LSTM on the same VM when the ML runtime and training artifacts are ready. The model API endpoint serves discharge predictions only; it does not issue flood alerts or write to the map's risk score.
+This runbook deploys the lightweight FastAPI service first, then enables the regional discharge LSTM on the same VM when the ML runtime and training artifacts are ready. The model API endpoint serves discharge predictions only and does not issue official flood alerts. The browser frontend can use recent API or scheduled-snapshot discharge ranks as a limited modifier to experimental map scores after checking HydroBASINS basin connectivity.
 
 ## 1. Connect from Windows with `FloodWatchKey.pem`
 
