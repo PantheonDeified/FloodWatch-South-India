@@ -54,29 +54,36 @@ const haversineKm = (a,b,c,d) => {
 };
 const nearestStart = html.indexOf('function nearestLstmSignal(');
 const nearestEnd = html.indexOf('\nfunction applyLstmToPointScore', nearestStart);
-const nearest = new Function('kmBetween','LSTM_RADIUS_KM',html.slice(nearestStart,nearestEnd)+
-  '\nreturn nearestLstmSignal;')(haversineKm,65);
+const testBasinAt=(lat,lon)=>Math.abs(lat-13.08)<.001&&Math.abs(lon-80.27)<.001?'A':Math.abs(lat-17.39)<.001&&Math.abs(lon-78.49)<.001?'B':null;
+const testUpstreamHops=(stationId,targetId)=>stationId===targetId?0:stationId==='U'&&targetId==='A'?1:null;
+const nearest = new Function('kmBetween','basinAt','upstreamBasinHops',html.slice(nearestStart,nearestEnd)+
+  '\nreturn nearestLstmSignal;')(haversineKm,testBasinAt,testUpstreamHops);
 const applyPointStart = html.indexOf('function applyLstmToPointScore(');
 const applyPointEnd = html.indexOf('\n\nfunction clearOverlay',applyPointStart);
-const applyPoint = new Function('nearestLstmSignal','clamp','LSTM_RADIUS_KM',
-  html.slice(applyPointStart,applyPointEnd)+'\nreturn applyLstmToPointScore;')(nearest,clamp,65);
+const applyPoint = new Function('nearestLstmSignal','clamp',
+  html.slice(applyPointStart,applyPointEnd)+'\nreturn applyLstmToPointScore;')(nearest,clamp);
 const applyCellStart = html.indexOf('function applyLstmCellScore(');
 const applyCellEnd = html.indexOf('\nfunction adjustedScores',applyCellStart);
-const applyCell = new Function('nearestLstmSignal','clamp','LSTM_RADIUS_KM',
-  html.slice(applyCellStart,applyCellEnd)+'\nreturn applyLstmCellScore;')(nearest,clamp,65);
+const applyCell = new Function('nearestLstmSignal','clamp',
+  html.slice(applyCellStart,applyCellEnd)+'\nreturn applyLstmCellScore;')(nearest,clamp);
 const station = {
   station_id:'TEST-GAUGE', station_latitude:13.08, station_longitude:80.27,
+  basin_id:'A',
   coordinates_available:true, forecast_is_live:true,
   peak_discharge_percentile_all_available_history:100
 };
 
-test('Nearest eligible station is found at its coordinates', () =>
+test('Same-basin eligible station is found at its coordinates', () =>
   assert.equal(nearest(13.08,80.27,[station]).station.station_id,'TEST-GAUGE'));
 test('Stale source history is not used for the LSTM overlay', () =>
   assert.equal(nearest(13.08,80.27,[{...station,forecast_is_live:false}]),null));
 test('Stations without usable coordinates are ignored', () =>
   assert.equal(nearest(13.08,80.27,[{...station,coordinates_available:false}]),null));
-test('Stations beyond the configured 65 km radius are ignored', () =>
+test('A disconnected station is ignored even when the point is geographically close', () =>
+  assert.equal(nearest(13.1,80.3,[station]),null));
+test('Station upstream through a mapped downstream link can contribute', () =>
+  assert.equal(nearest(13.08,80.27,[{...station,basin_id:'U'}]).basinHops,1));
+test('A station in a different basin is ignored', () =>
   assert.equal(nearest(17.39,78.49,[station]),null));
 test('Station-relative discharge modifies a supported selected-point score', () => {
   const result = applyPoint({score:50,level:'amber'},13.08,80.27,[station]);
@@ -87,6 +94,11 @@ test('At a gauge, LSTM blending is capped at 25 percent', () => {
   const result = applyPoint({score:50,level:'amber'},13.08,80.27,[station]);
   assert.equal(result.score,62.5);
   assert.equal(result.lstmBlendWeight,0.25);
+});
+test('Upstream-basin influence fades by network links', () => {
+  const result=applyPoint({score:50,level:'amber'},13.08,80.27,[{...station,basin_id:'U'}]);
+  assert(result.score>50&&result.score<62.5);
+  assert(result.lstmBlendWeight<0.25);
 });
 test('No nearby LSTM station leaves the existing score unchanged', () =>
   assert.equal(applyPoint({score:50,level:'amber'},17.39,78.49,[station]).score,50));
@@ -126,8 +138,9 @@ test('Map can load scheduled regional LSTM forecasts without a backend URL', () 
   assert(html.includes('scheduled GitHub Actions inference snapshot'));
   assert(html.includes('all_stations=true'));
 });
-test('LSTM influence is distance limited and clearly not a calibrated probability', () => {
-  assert(html.includes('LSTM_RADIUS_KM=65'));
+test('LSTM influence requires a basin link and is clearly not a calibrated probability', () => {
+  assert(html.includes('MAX_UPSTREAM_BASIN_LINKS=6'));
+  assert(html.includes('HydroBASINS'));
   assert(html.includes('not calibrated flood probabilities'));
   assert(html.includes('This is a discharge rank, not flood probability.'));
 });

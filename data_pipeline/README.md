@@ -253,3 +253,46 @@ the current workflow should report zero stations allowed for weather joins.
 A reviewer must validate station identity and coordinates from a reliable source
 before updating a reviewed catalogue; passing this structural screen still does
 not establish data accuracy or forecast skill.
+
+## Rainfall-forced discharge experiment
+
+The separate `scripts/train_rainfall_forced_lstm.py` experiment adds daily rainfall forecast values for each future lead day to the single-station LSTM input. Build a weather/discharge feature table as described above, then train:
+
+```bash
+python data_pipeline/scripts/train_rainfall_forced_lstm.py \
+  --features data_pipeline/output/station_features.csv \
+  --station-id VERIFIED_STATION_ID \
+  --output-dir data_pipeline/output/rainfall-forced-model
+```
+
+The trainer writes model weights, normalizers and a chronological persistence comparison. Its historical backtest supplies ERA5-Land rainfall from the target dates, which was observed after each forecast origin. This is a perfect-forcing upper-bound experiment, not a deployable forecast-skill estimate. No model is automatically selected or deployed.
+
+For a research inference, prepare a CSV with one row per forecast date and columns `date,precipitation_sum`; `station_id` may also be included. Precipitation is in mm/day. Supply the current station feature history and an actual daily weather forecast for each lead date:
+
+```bash
+python data_pipeline/scripts/predict_rainfall_forced_lstm.py \
+  --features data_pipeline/output/station_features.csv \
+  --station-id VERIFIED_STATION_ID \
+  --rainfall-forecast data_pipeline/output/rainfall_forecast.csv \
+  --model-file data_pipeline/output/rainfall-forced-model/rainfall_forced_lstm_VERIFIED_STATION_ID.pt \
+  --scalers-file data_pipeline/output/rainfall-forced-model/rainfall_forced_lstm_VERIFIED_STATION_ID.scalers.json \
+  --report-file data_pipeline/output/rainfall-forced-model/rainfall_forced_lstm_VERIFIED_STATION_ID.report.json \
+  --output data_pipeline/output/rainfall_forced_forecast.csv
+```
+
+Inference rejects missing forecast days and incomplete recent history. Output is discharge only, not flood probability, stage, inundation or a public warning. This experiment is independent of the deployed multi-station regional model and currently has no API endpoint or scheduled artifact.
+
+## Verifying the map index against flood events
+
+The website's **Saved places & browser alerts** card keeps the user's score snapshots in browser storage and exports them as `floodwatch-map-score-history.csv`. The user must keep the page open for periodic samples. Prepare one reviewed label per location and feature date from `flood_event_verification.template.csv`. Use `verified_flood_event` for a source-documented event onset within three days; use `verified_no_event` only when the source is known to cover the complete window. Set `label_review_status=reviewed`, confidence to `high` or `moderate`, and retain an HTTPS source link. Do not turn an unreported day into a negative label.
+
+Run the chronological map-score evaluation:
+
+```bash
+python data_pipeline/scripts/evaluate_map_score_events.py \
+  --scores path/to/floodwatch-map-score-history.csv \
+  --labels path/to/reviewed-event-labels.csv \
+  --out-dir data_pipeline/output/map-score-event-review
+```
+
+The script fits a logistic calibration on the earliest 70% of dates, chooses an alert threshold on the next 15%, and reports once on the latest 15%. It requires both verified event and no-event examples in all three periods. The report includes raw-index ROC-AUC/average precision, calibrated Brier/log loss, reliability bins, recall, false-positive rate and lead time. A probability estimate is research-only and should not be displayed as an operational flood probability without independent review and sufficient events.
