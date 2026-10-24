@@ -42,7 +42,7 @@ jobs:
       - name: Build backend container image
         run: docker build -f backend/Dockerfile -t floodwatch-api:ci .
       - name: Start backend container for HTTP smoke checks
-        run: docker run --detach --rm --name floodwatch-api --publish 127.0.0.1:8000:8000 floodwatch-api:ci
+        run: docker run --detach --name floodwatch-api --publish 127.0.0.1:8000:8000 floodwatch-api:ci
       - name: Smoke-test backend HTTP endpoints
         run: |
           python - <<'PY'
@@ -68,7 +68,7 @@ jobs:
                       if not isinstance(payload, dict):
                           raise RuntimeError(f"{path}: expected a JSON object")
                       return payload
-                  except (HTTPError, URLError, TimeoutError, json.JSONDecodeError, RuntimeError) as exc:
+                  except (HTTPError, URLError, TimeoutError, OSError, json.JSONDecodeError, RuntimeError) as exc:
                       last_error = exc
                       if attempt + 1 < retries:
                           time.sleep(1)
@@ -97,6 +97,9 @@ jobs:
       - name: Stop backend container
         if: always()
         run: docker stop floodwatch-api || true
+      - name: Remove backend container
+        if: always()
+        run: docker rm -f floodwatch-api || true
       - name: Run API tests
         working-directory: backend
         run: python -m pytest -q tests
