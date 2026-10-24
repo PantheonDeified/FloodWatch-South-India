@@ -141,7 +141,7 @@ test('Map can load scheduled regional LSTM forecasts without a backend URL', () 
 test('LSTM influence requires a basin link and is clearly not a calibrated probability', () => {
   assert(html.includes('MAX_UPSTREAM_BASIN_LINKS=6'));
   assert(html.includes('HydroBASINS'));
-  assert(html.includes('not calibrated flood probabilities'));
+  assert(html.includes('not calibrated flood probability'));
   assert(html.includes('This is a discharge rank, not flood probability.'));
 });
 
