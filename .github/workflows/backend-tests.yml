@@ -18,6 +18,7 @@ permissions:
 jobs:
   backend-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -40,6 +41,62 @@ jobs:
           bash deploy/ibm-linuxone/run-regional-lstm.sh --help
       - name: Build backend container image
         run: docker build -f backend/Dockerfile -t floodwatch-api:ci .
+      - name: Start backend container for HTTP smoke checks
+        run: docker run --detach --rm --name floodwatch-api --publish 127.0.0.1:8000:8000 floodwatch-api:ci
+      - name: Smoke-test backend HTTP endpoints
+        run: |
+          python - <<'PY'
+          import json
+          import time
+          from urllib.error import HTTPError, URLError
+          from urllib.request import Request, urlopen
+
+          base = "http://127.0.0.1:8000"
+
+          def get_json(path, retries=1):
+              last_error = None
+              for attempt in range(retries):
+                  try:
+                      request = Request(
+                          base + path,
+                          headers={"Accept": "application/json", "User-Agent": "FloodWatch-local-api-smoke/1.0"},
+                      )
+                      with urlopen(request, timeout=10) as response:
+                          if response.status != 200:
+                              raise RuntimeError(f"{path}: expected HTTP 200, got {response.status}")
+                          payload = json.loads(response.read().decode("utf-8"))
+                      if not isinstance(payload, dict):
+                          raise RuntimeError(f"{path}: expected a JSON object")
+                      return payload
+                  except (HTTPError, URLError, TimeoutError, json.JSONDecodeError, RuntimeError) as exc:
+                      last_error = exc
+                      if attempt + 1 < retries:
+                          time.sleep(1)
+              raise SystemExit(f"FAIL {path}: {last_error}")
+
+          health = get_json("/health", retries=30)
+          if health.get("status") != "healthy":
+              raise SystemExit(f"FAIL /health: unexpected body {health}")
+          print("PASS local backend /health")
+
+          status = get_json("/api/v1/status")
+          if status.get("project") != "FloodWatch South India":
+              raise SystemExit(f"FAIL /api/v1/status: unexpected body {status}")
+          print("PASS local backend /api/v1/status")
+
+          model = get_json("/api/v1/models/status")
+          if not isinstance(model.get("runtime_assets"), dict):
+              raise SystemExit("FAIL /api/v1/models/status: runtime asset status is missing")
+          if model.get("on_demand_inference_available") is not False:
+              raise SystemExit("FAIL /api/v1/models/status: image without model weights must not claim inference is ready")
+          print("PASS local backend /api/v1/models/status (inference correctly reports unavailable without model assets)")
+          PY
+      - name: Print backend container logs on failure
+        if: failure()
+        run: docker logs floodwatch-api || true
+      - name: Stop backend container
+        if: always()
+        run: docker stop floodwatch-api || true
       - name: Run API tests
         working-directory: backend
         run: python -m pytest -q tests
