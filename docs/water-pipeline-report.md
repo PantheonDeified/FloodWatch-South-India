@@ -1,7 +1,7 @@
 # Water-observation snapshot — automated quality audit
 
-- Snapshot generation timestamp: **2026-10-29T22:48:23.001441+00:00**
-- Records in snapshot: **417**
+- Snapshot generation timestamp: **2026-10-30T05:54:44.314545+00:00**
+- Records in snapshot: **418**
 - Resource files checked: **37**
 - Report generated from this snapshot by the GitHub Actions pipeline; source records are not modified.
 
@@ -13,7 +13,7 @@
 | Reservoir level | 44 |
 | Reservoir storage | 9 |
 | River discharge | 206 |
-| River level | 150 |
+| River level | 151 |
 
 ## Quality indicators
 
@@ -23,7 +23,7 @@
 | Missing state | 34 | State coverage cannot be assigned from the record |
 | Labelled outside five core states | 16 | Review geography; do not present as an in-area station by default |
 | Missing district | 34 | District-level filtering may be incomplete |
-| Source timezone unspecified | 417 | Preserve the reported timestamp; do not assume UTC or local time |
+| Source timezone unspecified | 418 | Preserve the reported timestamp; do not assume UTC or local time |
 | Duplicate station/type/timestamp groups | 0 | Review possible overlap; records are retained in this report |
 
 ## Records by state label
@@ -32,7 +32,7 @@
 |---|---:|
 | Andhra Pradesh | 103 |
 | Tamil Nadu | 87 |
-| Karnataka | 71 |
+| Karnataka | 72 |
 | Telangana | 64 |
 | Kerala | 42 |
 | Unspecified | 34 |
@@ -47,20 +47,20 @@
 |---|---:|---:|---|
 | Andhra Pradesh reservoir storage and level | 19 | 2 | 2026-09-30T08:00:00 |
 | Andhra Pradesh river discharge | 2 | 1 | 2026-09-30T08:00:00 |
-| Andhra Pradesh river telemetry | 41 | 4 | 2026-10-28T23:00:00 |
-| Central Water Commission river discharge | 204 | 5 | 2026-10-28T10:00:00 |
-| Central Water Commission river telemetry | 79 | 5 | 2026-10-23T15:30:00 |
+| Andhra Pradesh river telemetry | 41 | 4 | 2026-10-29T15:00:00 |
+| Central Water Commission river discharge | 204 | 5 | 2026-10-29T09:00:00 |
+| Central Water Commission river telemetry | 80 | 5 | 2026-10-29T03:30:00 |
 | Flood Flow Canal Head Regulator discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Kaddam head regulator release/discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Kakatiya Canal Head Regulator discharge | 1 | 1 | 2026-08-20T15:00:00 |
-| Karnataka reservoir data | 34 | 1 | 2026-10-29T12:10:00 |
+| Karnataka reservoir data | 34 | 1 | 2026-10-30T12:10:00 |
 | Lakshmi Canal Head Regulator discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Lower Manair Canal Head Regulator discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Lower Manair Dam 2 discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Saraswati Canal Head Regulator discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Sri Ram Sagar Dam release/discharge | 1 | 1 | 2026-08-20T15:00:00 |
-| Tamil Nadu river telemetry | 4 | 1 | 2026-10-28T23:00:00 |
-| Telangana river telemetry | 26 | 2 | 2026-10-28T23:00:00 |
+| Tamil Nadu river telemetry | 4 | 1 | 2026-10-29T15:00:00 |
+| Telangana river telemetry | 26 | 2 | 2026-10-29T15:00:00 |
 
 ## Collection outcomes
 
@@ -114,7 +114,7 @@ These statuses describe what the collector could retrieve during this run; they 
 | Reservoir level | source-defined | 34 |
 | Reservoir storage | source-defined | 9 |
 | River discharge | m3/s | 206 |
-| River level | m | 150 |
+| River level | m | 151 |
 
 Unit labels such as `source-defined` are intentionally not converted or assumed equivalent. Verify them against the original resource metadata before comparing values across stations.
 
