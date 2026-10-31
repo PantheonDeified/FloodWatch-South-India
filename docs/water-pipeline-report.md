@@ -1,6 +1,6 @@
 # Water-observation snapshot — automated quality audit
 
-- Snapshot generation timestamp: **2026-10-30T22:25:09.088737+00:00**
+- Snapshot generation timestamp: **2026-10-31T05:49:26.541553+00:00**
 - Records in snapshot: **418**
 - Resource files checked: **37**
 - Report generated from this snapshot by the GitHub Actions pipeline; source records are not modified.
@@ -47,20 +47,20 @@
 |---|---:|---:|---|
 | Andhra Pradesh reservoir storage and level | 19 | 2 | 2026-09-30T08:00:00 |
 | Andhra Pradesh river discharge | 2 | 1 | 2026-09-30T08:00:00 |
-| Andhra Pradesh river telemetry | 41 | 4 | 2026-10-29T15:00:00 |
-| Central Water Commission river discharge | 204 | 5 | 2026-10-29T09:00:00 |
-| Central Water Commission river telemetry | 80 | 5 | 2026-10-29T03:30:00 |
+| Andhra Pradesh river telemetry | 41 | 4 | 2026-10-30T23:00:00 |
+| Central Water Commission river discharge | 204 | 5 | 2026-10-30T10:00:00 |
+| Central Water Commission river telemetry | 80 | 5 | 2026-10-30T03:30:00 |
 | Flood Flow Canal Head Regulator discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Kaddam head regulator release/discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Kakatiya Canal Head Regulator discharge | 1 | 1 | 2026-08-20T15:00:00 |
-| Karnataka reservoir data | 34 | 1 | 2026-10-30T12:10:00 |
+| Karnataka reservoir data | 34 | 1 | 2026-10-31T12:10:00 |
 | Lakshmi Canal Head Regulator discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Lower Manair Canal Head Regulator discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Lower Manair Dam 2 discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Saraswati Canal Head Regulator discharge | 1 | 1 | 2026-08-20T14:00:00 |
 | Sri Ram Sagar Dam release/discharge | 1 | 1 | 2026-08-20T15:00:00 |
-| Tamil Nadu river telemetry | 4 | 1 | 2026-10-29T15:00:00 |
-| Telangana river telemetry | 26 | 2 | 2026-10-29T15:00:00 |
+| Tamil Nadu river telemetry | 4 | 1 | 2026-10-30T23:00:00 |
+| Telangana river telemetry | 26 | 2 | 2026-10-30T23:00:00 |
 
 ## Collection outcomes
 
