@@ -142,8 +142,7 @@ details.card[open] summary:after{content:'−'}
     <div class="bar">
       <form id="searchForm"><input id="search" placeholder="Search a town or district…" aria-label="Search a place" autocomplete="off"><button type="submit">Find</button></form>
       <button id="locate" type="button">📍 Me</button>
-      <button id="radar" type="button" class="on" title="RainViewer near-real-time radar">🛰️ Rain radar</button>
-      <select id="weatherMode" aria-label="Forecast weather map layer" title="Open-Meteo model field, not satellite imagery"><option value="clouds" selected>☁ Cloud cover · model</option><option value="rain">🌧 Forecast rain · model</option><option value="combined">☁ + 🌧 Clouds and rain</option><option value="off">Weather overlay off</option></select>
+      <button id="radar" type="button" class="on">🛰️ Rain radar</button>
       <button id="resetMapView" type="button" title="Reset to the five-state South India view">⌂ Region view</button>
       <button id="mapExpand" type="button" aria-pressed="false" title="Expand map to full screen">⛶ Full-screen map</button>
       <select id="baseMapStyle" aria-label="Basemap style"><option value="dark" selected>◉ Dark Matter</option><option value="street">Street map</option><option value="satellite">Satellite</option></select>
@@ -332,7 +331,7 @@ const LEVELS={green:{face:'😎',text:'Chill',color:'#3ddc97'},amber:{face:'😬
 
 async function fetchBundle(pts){
   const la=pts.map(p=>p[0].toFixed(3)).join(','),lo=pts.map(p=>p[1].toFixed(3)).join(',');
-  const wq='https://api.open-meteo.com/v1/forecast?latitude='+la+'&longitude='+lo+'&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=precipitation,precipitation_probability,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,soil_moisture_0_to_7cm&forecast_days=4&timezone=UTC';
+  const wq='https://api.open-meteo.com/v1/forecast?latitude='+la+'&longitude='+lo+'&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=precipitation,precipitation_probability,wind_speed_10m,wind_direction_10m,soil_moisture_0_to_7cm&forecast_days=4&timezone=UTC';
   const fq='https://flood-api.open-meteo.com/v1/flood?latitude='+la+'&longitude='+lo+'&daily=river_discharge&past_days=60&forecast_days=7&timezone=GMT';
   const get=(u,n)=>fetch(u,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error(n+' returned HTTP '+r.status);return r.json()});
   const [w,f]=await Promise.allSettled([get(wq,'Weather'),get(fq,'River model')]);

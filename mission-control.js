@@ -101,7 +101,6 @@ controls.innerHTML=
 '<div class="fw-metric-grid">'+
 '<div class="fw-metric"><span>Wind speed</span><b id="fwWind">—</b><small id="fwWindDir">Direction —</small></div>'+
 '<div class="fw-metric"><span>Hourly rain</span><b id="fwRain">—</b><small id="fwRainProb">Precipitation —</small></div>'+
-'<div class="fw-metric"><span>Cloud cover · model</span><b id="fwCloud">—</b><small id="fwCloudMeta">Forecast field · not satellite</small></div>'+
 '<div class="fw-metric"><span>Surface soil moisture</span><b id="fwSoil">—</b><small>Modelled 0–7 cm · m³/m³</small></div>'+
 '<div class="fw-metric"><span>Rain in last 24h</span><b id="fwRain24">—</b><small>Open-Meteo model estimate</small></div>'+
 '</div>'+
@@ -144,7 +143,6 @@ controls.innerHTML=
 '<div class="fw-smallnote">SRTM 90 m elevation is coarse terrain context, not a building-height survey. A reference line is user-entered and hypothetical; it is not a measured or projected water surface.</div>'+
 '</section>';
 document.querySelector('main').insertAdjacentElement('afterend',controls);
-host.appendChild(controls);
 /* Reuse the map-readout section already present in index.html. Creating a second
    element with the same ID duplicated the legend and could move the live readout. */
 const mapReadouts=document.getElementById('fwMapReadouts');
@@ -302,21 +300,6 @@ if(stopSimButton)stopSimButton.addEventListener('click',()=>{
 });
 const mapStyleSelect=$('baseMapStyle');
 if(mapStyleSelect)mapStyleSelect.addEventListener('change',()=>playTactileClick(620,.04));
-const weatherCanvas=document.createElement('canvas');
-weatherCanvas.className='fw-weather-canvas';
-weatherCanvas.setAttribute('aria-hidden','true');
-map.getContainer().appendChild(weatherCanvas);
-const weatherCtx=weatherCanvas.getContext('2d',{alpha:true});
-const weatherBuffer=document.createElement('canvas');
-const weatherBufferCtx=weatherBuffer.getContext('2d');
-const weatherModeSelect=$('weatherMode');
-let weatherMode=weatherModeSelect?weatherModeSelect.value:'clouds';
-const atmosphereLegend=document.createElement('div');
-atmosphereLegend.className='fw-weather-legend';
-atmosphereLegend.setAttribute('aria-live','polite');
-atmosphereLegend.setAttribute('role','status');
-atmosphereLegend.innerHTML='<b id="fwWeatherLegendTitle">CLOUD COVER</b><span id="fwWeatherLegendSource">Open-Meteo forecast · not satellite imagery</span><div class="fw-weather-scale"><span id="fwWeatherLow">0%</span><i id="fwWeatherRamp"></i><span id="fwWeatherHigh">100%</span></div>';
-map.getContainer().appendChild(atmosphereLegend);
 const canvas=document.createElement('canvas');
 canvas.className='fw-particle-canvas';
 canvas.setAttribute('aria-hidden','true');
@@ -331,13 +314,10 @@ function updateCanvasSize(){
  const r=map.getContainer().getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);
  canvas.width=Math.max(1,Math.round(r.width*dpr));canvas.height=Math.max(1,Math.round(r.height*dpr));
  canvas.style.width=r.width+'px';canvas.style.height=r.height+'px';
- weatherCanvas.width=Math.max(1,Math.round(r.width*dpr));weatherCanvas.height=Math.max(1,Math.round(r.height*dpr));
- weatherCanvas.style.width=r.width+'px';weatherCanvas.style.height=r.height+'px';
- state.ctx.setTransform(dpr,0,0,dpr,0,0);weatherCtx.setTransform(dpr,0,0,dpr,0,0);
+ state.ctx.setTransform(dpr,0,0,dpr,0,0);
  state.fieldScreen=state.weather.map(w=>({x:map.latLngToContainerPoint([w.lat,w.lon]).x,y:map.latLngToContainerPoint([w.lat,w.lon]).y,w}));
  if(!state.particles.length)resetParticles();
  if(!state.rain.length)resetRain();
- renderAtmosphere();
 }
 function resetParticles(){
  const w=map.getSize().x,h=map.getSize().y;
@@ -361,98 +341,8 @@ function atHour(hourly,offset){
  if(!hourly)return null;
  const ix=baseIndex(hourly)+offset;
  const get=k=>Array.isArray(hourly[k])&&ix>=0&&ix<hourly[k].length&&hourly[k][ix]!=null&&Number.isFinite(+hourly[k][ix])?+hourly[k][ix]:null;
- return {time:hourly.time&&hourly.time[ix],rain:get('precipitation'),prob:get('precipitation_probability'),cloud:get('cloud_cover'),cloudLow:get('cloud_cover_low'),cloudMid:get('cloud_cover_mid'),cloudHigh:get('cloud_cover_high'),speed:get('wind_speed_10m'),dir:get('wind_direction_10m'),soil:get('soil_moisture_0_to_7cm')};
+ return {time:hourly.time&&hourly.time[ix],rain:get('precipitation'),prob:get('precipitation_probability'),speed:get('wind_speed_10m'),dir:get('wind_direction_10m'),soil:get('soil_moisture_0_to_7cm')};
 }
-
-function rainPalette(value){
- const t=clamp(Math.log1p(Math.max(0,value))/Math.log(13),0,1);
- const stops=[[0,[42,123,255]],[.28,[37,204,238]],[.52,[75,220,149]],[.72,[255,222,75]],[.88,[255,142,51]],[1,[239,67,79]]];
- for(let i=1;i<stops.length;i++){
-  if(t<=stops[i][0]){
-   const [a,ca]=stops[i-1],[b,cb]=stops[i],q=(t-a)/(b-a);
-   return ca.map((v,j)=>Math.round(v+(cb[j]-v)*q));
-  }
- }
- return stops[stops.length-1][1];
-}
-function renderAtmosphere(){
- if(!weatherCtx)return;
- const size=map.getSize(),w=size.x,h=size.y,dpr=Math.min(2,window.devicePixelRatio||1);
- weatherCtx.setTransform(dpr,0,0,dpr,0,0);
- weatherCtx.clearRect(0,0,w,h);
- if(weatherMode==='off'){
-  atmosphereLegend.hidden=true;
-  return;
- }
- atmosphereLegend.hidden=false;
- const title=$('fwWeatherLegendTitle'),source=$('fwWeatherLegendSource'),low=$('fwWeatherLow'),high=$('fwWeatherHigh'),ramp=$('fwWeatherRamp');
- if(weatherMode==='clouds'){
-  if(title)title.textContent='MODELLED CLOUD COVER';
-  if(source)source.textContent='Open-Meteo hourly forecast · not satellite imagery';
-  if(low)low.textContent='0%';if(high)high.textContent='100%';
-  if(ramp)ramp.className='is-clouds';
- }else if(weatherMode==='rain'){
-  if(title)title.textContent='MODELLED PRECIPITATION';
-  if(source)source.textContent='Open-Meteo hourly forecast · mm/h';
-  if(low)low.textContent='0';if(high)high.textContent='12+ mm/h';
-  if(ramp)ramp.className='is-rain';
- }else{
-  if(title)title.textContent='MODELLED CLOUDS + RAIN';
-  if(source)source.textContent='Open-Meteo forecast · rain colours, cloud haze';
-  if(low)low.textContent='Cloud';if(high)high.textContent='Rain';
-  if(ramp)ramp.className='is-combined';
- }
- const nodes=state.fieldScreen.map(c=>{
-  const v=atHour(c.w.hourly,state.hour);
-  return {x:c.x,y:c.y,cloud:v&&v.cloud,low:v&&v.cloudLow,mid:v&&v.cloudMid,high:v&&v.cloudHigh,rain:v&&v.rain};
- }).filter(n=>[n.cloud,n.low,n.mid,n.high,n.rain].some(Number.isFinite));
- if(!nodes.length){
-  if(source)source.textContent=state.loadingField?'Loading gridded forecast…':'Weather model field unavailable';
-  return;
- }
- const step=9,bw=Math.max(1,Math.ceil(w/step)),bh=Math.max(1,Math.ceil(h/step));
- if(weatherBuffer.width!==bw||weatherBuffer.height!==bh){weatherBuffer.width=bw;weatherBuffer.height=bh}
- const image=weatherBufferCtx.createImageData(bw,bh),data=image.data;
- for(let py=0;py<bh;py++){
-  const y=(py+.5)*step;
-  for(let px=0;px<bw;px++){
-   const x=(px+.5)*step;
-   let cloudSum=0,cloudWeight=0,rainSum=0,rainWeight=0;
-   for(const n of nodes){
-    const dx=n.x-x,dy=n.y-y,d2=dx*dx+dy*dy,weight=1/Math.pow(d2+1800,1.08);
-    const cloud=Number.isFinite(n.cloud)?n.cloud:Math.max(Number.isFinite(n.low)?n.low:0,Number.isFinite(n.mid)?n.mid:0,Number.isFinite(n.high)?n.high:0);
-    if(Number.isFinite(cloud)){cloudSum+=cloud*weight;cloudWeight+=weight}
-    if(Number.isFinite(n.rain)){rainSum+=Math.max(0,n.rain)*weight;rainWeight+=weight}
-   }
-   const cloud=cloudWeight?cloudSum/cloudWeight:null,rain=rainWeight?rainSum/rainWeight:null;
-   let color=[232,242,249],alpha=0;
-   if(weatherMode==='clouds'||weatherMode==='combined'){
-    if(cloud!=null){
-     const texture=.95+.05*Math.sin((x+y)*.012+state.hour*.14);
-     alpha=Math.round(142*Math.pow(clamp(cloud/100,0,1),1.28)*texture);
-    }
-   }
-   if((weatherMode==='rain'||weatherMode==='combined')&&rain!=null&&rain>.025){
-    const rainColor=rainPalette(rain),rainAlpha=Math.round(200*Math.pow(clamp(Math.log1p(rain)/Math.log(13),0,1),.62));
-    if(weatherMode==='rain'){color=rainColor;alpha=rainAlpha}
-    else{
-     const mix=clamp(rain/1.2,0,1);
-     color=color.map((v,i)=>Math.round(v+(rainColor[i]-v)*mix));
-     alpha=Math.max(alpha*.65,rainAlpha);
-    }
-   }
-   if(alpha<3)continue;
-   const index=(py*bw+px)*4;
-   data[index]=color[0];data[index+1]=color[1];data[index+2]=color[2];data[index+3]=Math.min(224,alpha);
-  }
- }
- weatherBufferCtx.putImageData(image,0,0);
- weatherCtx.save();
- weatherCtx.filter='blur(9px)';
- weatherCtx.drawImage(weatherBuffer,0,0,bw,bh,0,0,w,h);
- weatherCtx.restore();
-}
-
 function pickWeather(lat,lon){
  let best=null,d=Infinity;
  for(const p of state.weather){const q=(p.lat-lat)*(p.lat-lat)*111*111+(p.lon-lon)*(p.lon-lon)*Math.cos(lat*Math.PI/180)**2*111*111;if(q<d){d=q;best=p}}
@@ -498,7 +388,7 @@ function animate(t){
 function weatherUrl(points){
  const lat=points.map(p=>p.lat.toFixed(3)).join(','),lon=points.map(p=>p.lon.toFixed(3)).join(',');
  return 'https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(lat)+'&longitude='+encodeURIComponent(lon)+
- '&hourly=precipitation,precipitation_probability,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,soil_moisture_0_to_7cm&forecast_days=2&timezone=UTC';
+ '&hourly=precipitation,precipitation_probability,wind_speed_10m,wind_direction_10m,soil_moisture_0_to_7cm&forecast_days=2&timezone=UTC';
 }
 function gridForView(){
  const b=map.getBounds(),sw=b.getSouthWest(),ne=b.getNorthEast();
@@ -550,12 +440,9 @@ function updateHud(){
   setText('fwRain',weather.rain==null?'—':fmt(weather.rain)+' mm');
   setText('fwRainProb',weather.prob==null?'Probability —':'Rain chance '+Math.round(weather.prob)+'%');
   setText('fwSoil',weather.soil==null?'—':fmt(weather.soil,3)+' m³/m³');
-  setText('fwCloud',weather.cloud==null?'—':Math.round(weather.cloud)+'%');
-  setText('fwCloudMeta',weather.cloudLow!=null&&weather.cloudHigh!=null?'Low '+Math.round(weather.cloudLow)+'% · high '+Math.round(weather.cloudHigh)+'%':'Hourly model field · not satellite');
   setText('fwTimeValue',(weather.time?new Date(String(weather.time)+'Z').toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC':'Forecast')+' · T+'+state.hour+'h');
  }else{
-  ['fwWind','fwWindDir','fwRain','fwRainProb','fwSoil','fwCloud'].forEach(id=>setText(id,'—'));
-  setText('fwCloudMeta','Hourly model field · not satellite');
+  ['fwWind','fwWindDir','fwRain','fwRainProb','fwSoil'].forEach(id=>setText(id,'—'));
   setText('fwTimeValue','Forecast unavailable · T+'+state.hour+'h');
  }
  const risk=sel&&sel.liveRisk;
@@ -593,17 +480,12 @@ function updateHud(){
  }else{$('fwRainSpark').innerHTML='';setText('fwSparkTotal','Unavailable')}
  setText('fwHudNote',sel?'Selected spot: '+fmt(sel.lat,3)+', '+fmt(sel.lon,3)+'. Gauge/dam data are latest available and do not advance with the weather scrubber.':'Select a point for location-specific gauge/rainfall context. Weather grid is regional and modelled.');
  setText('fwScenarioLabel',state.dem?'Terrain/rain scenario colours are a visualization only—not flood probability, extent or depth.':'Hourly rain tints visible contour/DEM layers where their data exists; this is an illustrative index, not simulated inundation.');
- renderAtmosphere();
  if(typeof bridge.setScenario==='function')bridge.setScenario(state.hour,state.weather);
 }
 function refreshHud(){updateHud();restyleDem()}
 function stopPlayback(){state.playing=false;if(state.timer)clearInterval(state.timer);state.timer=null;setText('fwPlay','▶ Play');$('fwPlay').classList.remove('fw-btn-active')}
 function advanceHour(){state.hour=state.hour>=24?0:state.hour+1;$('fwTimeline').value=String(state.hour);updateHud();restyleDem()}
 $('fwTimeline').addEventListener('input',e=>{state.hour=clamp(+e.target.value,0,24);updateHud();restyleDem();const now=performance.now();if(now-state.lastScrubBeep>180){playTactileClick(430,.035);state.lastScrubBeep=now}});
-if(weatherModeSelect)weatherModeSelect.addEventListener('change',()=>{
- weatherMode=weatherModeSelect.value||'off';
- renderAtmosphere();
-});
 $('fwPlay').addEventListener('click',()=>{
  if(state.playing){stopPlayback();playTactileClick(520,.05);return}
  playTactileClick(780,.05);
