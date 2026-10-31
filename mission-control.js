@@ -310,13 +310,30 @@ const weatherCtx=weatherCanvas.getContext('2d',{alpha:true});
 const weatherBuffer=document.createElement('canvas');
 const weatherBufferCtx=weatherBuffer.getContext('2d');
 const weatherModeSelect=$('weatherMode');
-let weatherMode=weatherModeSelect?weatherModeSelect.value:'clouds';
+let weatherMode=weatherModeSelect?weatherModeSelect.value:'satellite';
 const atmosphereLegend=document.createElement('div');
 atmosphereLegend.className='fw-weather-legend';
 atmosphereLegend.setAttribute('aria-live','polite');
 atmosphereLegend.setAttribute('role','status');
 atmosphereLegend.innerHTML='<b id="fwWeatherLegendTitle">CLOUD COVER</b><span id="fwWeatherLegendSource">Open-Meteo forecast · not satellite imagery</span><div class="fw-weather-scale"><span id="fwWeatherLow">0%</span><i id="fwWeatherRamp"></i><span id="fwWeatherHigh">100%</span></div>';
 map.getContainer().appendChild(atmosphereLegend);
+const himawariLayerId='Himawari_AHI_Band13_Clean_Infrared';
+const himawariMatrixSet='GoogleMapsCompatible_Level6';
+const himawariPaneName='fwSatelliteCloudPane';
+const himawariPane=map.getPane(himawariPaneName)||map.createPane(himawariPaneName);
+himawariPane.style.zIndex='370';
+himawariPane.style.pointerEvents='none';
+const satelliteCloudLayer=L.tileLayer(
+ 'https://gibs-{s}.earthdata.nasa.gov/wmts/epsg3857/nrt/'+himawariLayerId+'/default/{time}/'+himawariMatrixSet+'/{z}/{y}/{x}.png',
+ {
+  subdomains:'abc',layer:himawariLayerId,time:'default',tileMatrixSet:himawariMatrixSet,
+  pane:himawariPaneName,opacity:.78,maxNativeZoom:6,maxZoom:16,tileSize:256,noWrap:true,continuousWorld:true,
+  bounds:[[-85.05112878,-179.999999975],[85.05112878,179.999999975]],
+  attribution:'Imagery provided by NASA ESDIS GIBS · Himawari-9/AHI Band 13 infrared'
+ }
+);
+const himawariDomainsUrl='https://gibs.earthdata.nasa.gov/wmts/epsg3857/nrt/wmts.cgi?SERVICE=WMTS&REQUEST=DescribeDomains&VERSION=1.0.0&LAYER='+encodeURIComponent(himawariLayerId)+'&TILEMATRIXSET='+encodeURIComponent(himawariMatrixSet);
+let himawariFrameTime='default',himawariStatus='Loading latest Himawari-9 infrared imagery…',himawariLoading=false,himawariTimer=null;
 const canvas=document.createElement('canvas');
 canvas.className='fw-particle-canvas';
 canvas.setAttribute('aria-hidden','true');
@@ -375,6 +392,55 @@ function rainPalette(value){
  }
  return stops[stops.length-1][1];
 }
+function setHimawariStatus(message){
+ himawariStatus=message;
+ if(weatherMode==='satellite'){
+  const source=$('fwWeatherLegendSource');
+  if(source)source.textContent=message;
+ }
+}
+async function refreshHimawariFrame(){
+ if(himawariLoading)return;
+ himawariLoading=true;
+ try{
+  const response=await fetch(himawariDomainsUrl,{cache:'no-store',headers:{Accept:'application/xml,text/xml'}});
+  if(!response.ok)throw Error('NASA GIBS HTTP '+response.status);
+  const xml=await response.text();
+  const stamps=(xml.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/g)||[]).filter(v=>Number.isFinite(Date.parse(v)));
+  if(!stamps.length)throw Error('No satellite timestamps were returned');
+  const latestStamp=stamps.reduce((best,value)=>Date.parse(value)>Date.parse(best)?value:best,stamps[0]);
+  const latest=new Date(latestStamp).toISOString().replace('.000Z','Z');
+  if(latest!==himawariFrameTime){
+   himawariFrameTime=latest;
+   satelliteCloudLayer.options.time=latest;
+   if(map.hasLayer(satelliteCloudLayer))satelliteCloudLayer.redraw();
+  }
+  const label=new Date(latest).toLocaleString([],{
+   timeZone:'UTC',year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false
+  });
+  setHimawariStatus('NASA GIBS · Himawari-9 IR · '+label+' UTC');
+ }catch(e){
+  if(himawariFrameTime==='default'){
+   satelliteCloudLayer.options.time='default';
+   setHimawariStatus('NASA GIBS latest-frame lookup unavailable · provider default shown.');
+  }else{
+   setHimawariStatus('NASA GIBS · Himawari-9 IR · latest frame '+himawariFrameTime.replace('T',' ').replace('Z',' UTC'));
+  }
+ }finally{
+  himawariLoading=false;
+ }
+}
+function syncWeatherMode(){
+ if(weatherMode==='satellite'){
+  if(!map.hasLayer(satelliteCloudLayer))satelliteCloudLayer.addTo(map);
+  refreshHimawariFrame();
+  if(!himawariTimer)himawariTimer=setInterval(refreshHimawariFrame,5*60*1000);
+ }else{
+  if(himawariTimer){clearInterval(himawariTimer);himawariTimer=null}
+  if(map.hasLayer(satelliteCloudLayer))map.removeLayer(satelliteCloudLayer);
+ }
+ renderAtmosphere();
+}
 function renderAtmosphere(){
  if(!weatherCtx)return;
  const size=map.getSize(),w=size.x,h=size.y,dpr=Math.min(2,window.devicePixelRatio||1);
@@ -386,6 +452,14 @@ function renderAtmosphere(){
  }
  atmosphereLegend.hidden=false;
  const title=$('fwWeatherLegendTitle'),source=$('fwWeatherLegendSource'),low=$('fwWeatherLow'),high=$('fwWeatherHigh'),ramp=$('fwWeatherRamp');
+ const scale=atmosphereLegend.querySelector('.fw-weather-scale');
+ if(weatherMode==='satellite'){
+  if(scale)scale.style.display='none';
+  if(title)title.textContent='HIMAWARI-9 SATELLITE CLOUDS';
+  if(source)source.textContent=himawariStatus;
+  return;
+ }
+ if(scale)scale.style.display='';
  if(weatherMode==='clouds'){
   if(title)title.textContent='MODELLED CLOUD COVER';
   if(source)source.textContent='Open-Meteo hourly forecast · not satellite imagery';
@@ -602,8 +676,9 @@ function advanceHour(){state.hour=state.hour>=24?0:state.hour+1;$('fwTimeline').
 $('fwTimeline').addEventListener('input',e=>{state.hour=clamp(+e.target.value,0,24);updateHud();restyleDem();const now=performance.now();if(now-state.lastScrubBeep>180){playTactileClick(430,.035);state.lastScrubBeep=now}});
 if(weatherModeSelect)weatherModeSelect.addEventListener('change',()=>{
  weatherMode=weatherModeSelect.value||'off';
- renderAtmosphere();
+ syncWeatherMode();
 });
+syncWeatherMode();
 $('fwPlay').addEventListener('click',()=>{
  if(state.playing){stopPlayback();playTactileClick(520,.05);return}
  playTactileClick(780,.05);

@@ -143,7 +143,7 @@ details.card[open] summary:after{content:'−'}
       <form id="searchForm"><input id="search" placeholder="Search a town or district…" aria-label="Search a place" autocomplete="off"><button type="submit">Find</button></form>
       <button id="locate" type="button">📍 Me</button>
       <button id="radar" type="button" class="on" title="RainViewer near-real-time radar">🛰️ Rain radar</button>
-      <select id="weatherMode" aria-label="Forecast weather map layer" title="Open-Meteo model field, not satellite imagery"><option value="clouds" selected>☁ Cloud cover · model</option><option value="rain">🌧 Forecast rain · model</option><option value="combined">☁ + 🌧 Clouds and rain</option><option value="off">Weather overlay off</option></select>
+      <select id="weatherMode" aria-label="Weather and satellite map layer" title="Choose live satellite imagery or a forecast model layer"><option value="satellite" selected>🛰 Satellite clouds · Himawari-9</option><option value="clouds">☁ Cloud cover · model</option><option value="rain">🌧 Forecast rain · model</option><option value="combined">☁ + 🌧 Clouds and rain · model</option><option value="off">Weather overlay off</option></select>
       <button id="resetMapView" type="button" title="Reset to the five-state South India view">⌂ Region view</button>
       <button id="mapExpand" type="button" aria-pressed="false" title="Expand map to full screen">⛶ Full-screen map</button>
       <select id="baseMapStyle" aria-label="Basemap style"><option value="dark" selected>◉ Dark Matter</option><option value="street">Street map</option><option value="satellite">Satellite</option></select>
@@ -284,6 +284,7 @@ details.card[open] summary:after{content:'−'}
       <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener noreferrer">Open-Meteo forecast</a>,
       <a href="https://open-meteo.com/en/docs/flood-api" target="_blank" rel="noopener noreferrer">GloFAS river model</a>,
       <a href="https://www.rainviewer.com/api.html" target="_blank" rel="noopener noreferrer">RainViewer radar</a>,
+      <a href="https://nasa-gibs.github.io/gibs-api-docs/available-visualizations/" target="_blank" rel="noopener noreferrer">Himawari-9 infrared satellite imagery via NASA GIBS</a>,
       <a href="https://nominatim.openstreetmap.org/" target="_blank" rel="noopener noreferrer">OpenStreetMap place names</a>.
     </div>
   </aside>
