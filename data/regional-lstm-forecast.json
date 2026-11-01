@@ -9,57 +9,57 @@
   "forecast_is_live": true,
   "history_freshness": "recent_source_history",
   "history_age_days": 1,
-  "forecast_origin_date": "2026-10-30",
-  "history_window_start": "2026-08-02",
-  "history_window_end": "2026-10-30",
+  "forecast_origin_date": "2026-10-31",
+  "history_window_start": "2026-08-03",
+  "history_window_end": "2026-10-31",
   "valid_history_days": 90,
   "history_days_required": 90,
-  "last_observed_discharge_m3_s": 26.85204,
-  "predicted_peak_discharge_m3_s": 29.174632569580076,
-  "peak_discharge_percentile_all_available_history": 19.276375798114927,
-  "history_discharge_sample_count": 19734,
+  "last_observed_discharge_m3_s": 30.032555,
+  "predicted_peak_discharge_m3_s": 31.070718091735838,
+  "peak_discharge_percentile_all_available_history": 20.51684823916899,
+  "history_discharge_sample_count": 19735,
   "forecast": [
     {
-      "date": "2026-10-31",
-      "predicted_discharge_m3_s": 28.628887673645018,
-      "lstm_discharge_m3_s": 33.95943069458008,
-      "persistence_baseline_discharge_m3_s": 26.85204
-    },
-    {
       "date": "2026-11-01",
-      "predicted_discharge_m3_s": 28.40165092590332,
-      "lstm_discharge_m3_s": 33.05048370361328,
-      "persistence_baseline_discharge_m3_s": 26.85204
+      "predicted_discharge_m3_s": 30.561956685791014,
+      "lstm_discharge_m3_s": 32.15016174316406,
+      "persistence_baseline_discharge_m3_s": 30.032555
     },
     {
       "date": "2026-11-02",
-      "predicted_discharge_m3_s": 28.349633713989256,
-      "lstm_discharge_m3_s": 32.84241485595703,
-      "persistence_baseline_discharge_m3_s": 26.85204
+      "predicted_discharge_m3_s": 30.33883933425903,
+      "lstm_discharge_m3_s": 31.257692337036133,
+      "persistence_baseline_discharge_m3_s": 30.032555
     },
     {
       "date": "2026-11-03",
-      "predicted_discharge_m3_s": 29.174632569580076,
-      "lstm_discharge_m3_s": 36.14241027832031,
-      "persistence_baseline_discharge_m3_s": 26.85204
+      "predicted_discharge_m3_s": 30.293667596588133,
+      "lstm_discharge_m3_s": 31.07700538635254,
+      "persistence_baseline_discharge_m3_s": 30.032555
     },
     {
       "date": "2026-11-04",
-      "predicted_discharge_m3_s": 28.38946773651123,
-      "lstm_discharge_m3_s": 33.00175094604492,
-      "persistence_baseline_discharge_m3_s": 26.85204
+      "predicted_discharge_m3_s": 31.070718091735838,
+      "lstm_discharge_m3_s": 34.18520736694336,
+      "persistence_baseline_discharge_m3_s": 30.032555
     },
     {
       "date": "2026-11-05",
-      "predicted_discharge_m3_s": 29.072650452880858,
-      "lstm_discharge_m3_s": 35.73448181152344,
-      "persistence_baseline_discharge_m3_s": 26.85204
+      "predicted_discharge_m3_s": 30.303161901245115,
+      "lstm_discharge_m3_s": 31.11498260498047,
+      "persistence_baseline_discharge_m3_s": 30.032555
     },
     {
       "date": "2026-11-06",
-      "predicted_discharge_m3_s": 28.47454788330078,
-      "lstm_discharge_m3_s": 33.342071533203125,
-      "persistence_baseline_discharge_m3_s": 26.85204
+      "predicted_discharge_m3_s": 30.950763982543943,
+      "lstm_discharge_m3_s": 33.70539093017578,
+      "persistence_baseline_discharge_m3_s": 30.032555
+    },
+    {
+      "date": "2026-11-07",
+      "predicted_discharge_m3_s": 30.401227277526853,
+      "lstm_discharge_m3_s": 31.507244110107422,
+      "persistence_baseline_discharge_m3_s": 30.032555
     }
   ],
   "station_forecasts": [
@@ -74,57 +74,252 @@
       "forecast_is_live": true,
       "history_freshness": "recent_source_history",
       "history_age_days": 1,
-      "forecast_origin_date": "2026-10-30",
-      "history_window_start": "2026-08-02",
-      "history_window_end": "2026-10-30",
+      "forecast_origin_date": "2026-10-31",
+      "history_window_start": "2026-08-03",
+      "history_window_end": "2026-10-31",
       "valid_history_days": 90,
       "history_days_required": 90,
-      "last_observed_discharge_m3_s": 26.85204,
-      "predicted_peak_discharge_m3_s": 29.174632569580076,
-      "peak_discharge_percentile_all_available_history": 19.276375798114927,
-      "history_discharge_sample_count": 19734,
+      "last_observed_discharge_m3_s": 30.032555,
+      "predicted_peak_discharge_m3_s": 31.070718091735838,
+      "peak_discharge_percentile_all_available_history": 20.51684823916899,
+      "history_discharge_sample_count": 19735,
       "forecast": [
         {
-          "date": "2026-10-31",
-          "predicted_discharge_m3_s": 28.628887673645018,
-          "lstm_discharge_m3_s": 33.95943069458008,
-          "persistence_baseline_discharge_m3_s": 26.85204
-        },
-        {
           "date": "2026-11-01",
-          "predicted_discharge_m3_s": 28.40165092590332,
-          "lstm_discharge_m3_s": 33.05048370361328,
-          "persistence_baseline_discharge_m3_s": 26.85204
+          "predicted_discharge_m3_s": 30.561956685791014,
+          "lstm_discharge_m3_s": 32.15016174316406,
+          "persistence_baseline_discharge_m3_s": 30.032555
         },
         {
           "date": "2026-11-02",
-          "predicted_discharge_m3_s": 28.349633713989256,
-          "lstm_discharge_m3_s": 32.84241485595703,
-          "persistence_baseline_discharge_m3_s": 26.85204
+          "predicted_discharge_m3_s": 30.33883933425903,
+          "lstm_discharge_m3_s": 31.257692337036133,
+          "persistence_baseline_discharge_m3_s": 30.032555
         },
         {
           "date": "2026-11-03",
-          "predicted_discharge_m3_s": 29.174632569580076,
-          "lstm_discharge_m3_s": 36.14241027832031,
-          "persistence_baseline_discharge_m3_s": 26.85204
+          "predicted_discharge_m3_s": 30.293667596588133,
+          "lstm_discharge_m3_s": 31.07700538635254,
+          "persistence_baseline_discharge_m3_s": 30.032555
         },
         {
           "date": "2026-11-04",
-          "predicted_discharge_m3_s": 28.38946773651123,
-          "lstm_discharge_m3_s": 33.00175094604492,
-          "persistence_baseline_discharge_m3_s": 26.85204
+          "predicted_discharge_m3_s": 31.070718091735838,
+          "lstm_discharge_m3_s": 34.18520736694336,
+          "persistence_baseline_discharge_m3_s": 30.032555
         },
         {
           "date": "2026-11-05",
-          "predicted_discharge_m3_s": 29.072650452880858,
-          "lstm_discharge_m3_s": 35.73448181152344,
-          "persistence_baseline_discharge_m3_s": 26.85204
+          "predicted_discharge_m3_s": 30.303161901245115,
+          "lstm_discharge_m3_s": 31.11498260498047,
+          "persistence_baseline_discharge_m3_s": 30.032555
         },
         {
           "date": "2026-11-06",
-          "predicted_discharge_m3_s": 28.47454788330078,
-          "lstm_discharge_m3_s": 33.342071533203125,
-          "persistence_baseline_discharge_m3_s": 26.85204
+          "predicted_discharge_m3_s": 30.950763982543943,
+          "lstm_discharge_m3_s": 33.70539093017578,
+          "persistence_baseline_discharge_m3_s": 30.032555
+        },
+        {
+          "date": "2026-11-07",
+          "predicted_discharge_m3_s": 30.401227277526853,
+          "lstm_discharge_m3_s": 31.507244110107422,
+          "persistence_baseline_discharge_m3_s": 30.032555
+        }
+      ]
+    },
+    {
+      "station_id": "karnataka|saigaon|18.05000000|77.04972222",
+      "state": "Karnataka",
+      "station_latitude": 18.05,
+      "station_longitude": 77.04972222,
+      "coordinates_available": true,
+      "model_type": "validation_selected_lstm_persistence_blend",
+      "validation_blend_alpha": 0.25,
+      "forecast_is_live": true,
+      "history_freshness": "recent_source_history",
+      "history_age_days": 1,
+      "forecast_origin_date": "2026-10-31",
+      "history_window_start": "2026-08-03",
+      "history_window_end": "2026-10-31",
+      "valid_history_days": 90,
+      "history_days_required": 90,
+      "last_observed_discharge_m3_s": 0.0,
+      "predicted_peak_discharge_m3_s": 0.2737071216106415,
+      "peak_discharge_percentile_all_available_history": 71.48964156527458,
+      "history_discharge_sample_count": 3041,
+      "forecast": [
+        {
+          "date": "2026-11-01",
+          "predicted_discharge_m3_s": 0.13228583335876465,
+          "lstm_discharge_m3_s": 0.5291433334350586,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-02",
+          "predicted_discharge_m3_s": 0.16128936409950256,
+          "lstm_discharge_m3_s": 0.6451574563980103,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-03",
+          "predicted_discharge_m3_s": 0.18098019063472748,
+          "lstm_discharge_m3_s": 0.7239207625389099,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-04",
+          "predicted_discharge_m3_s": 0.18442456424236298,
+          "lstm_discharge_m3_s": 0.7376982569694519,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "predicted_discharge_m3_s": 0.2737071216106415,
+          "lstm_discharge_m3_s": 1.094828486442566,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "predicted_discharge_m3_s": 0.22945721447467804,
+          "lstm_discharge_m3_s": 0.9178288578987122,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-07",
+          "predicted_discharge_m3_s": 0.2087702751159668,
+          "lstm_discharge_m3_s": 0.8350811004638672,
+          "persistence_baseline_discharge_m3_s": 0.0
+        }
+      ]
+    },
+    {
+      "station_id": "karnataka|sadalga (seasonal)|16.56361111|74.52750000",
+      "state": "Karnataka",
+      "station_latitude": 16.56361111,
+      "station_longitude": 74.5275,
+      "coordinates_available": true,
+      "model_type": "validation_selected_lstm_persistence_blend",
+      "validation_blend_alpha": 0.25,
+      "forecast_is_live": true,
+      "history_freshness": "recent_source_history",
+      "history_age_days": 1,
+      "forecast_origin_date": "2026-10-31",
+      "history_window_start": "2026-08-03",
+      "history_window_end": "2026-10-31",
+      "valid_history_days": 90,
+      "history_days_required": 90,
+      "last_observed_discharge_m3_s": 0.0,
+      "predicted_peak_discharge_m3_s": 0.2742043733596802,
+      "peak_discharge_percentile_all_available_history": 64.3626864047023,
+      "history_discharge_sample_count": 18374,
+      "forecast": [
+        {
+          "date": "2026-11-01",
+          "predicted_discharge_m3_s": 0.1318453997373581,
+          "lstm_discharge_m3_s": 0.5273815989494324,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-02",
+          "predicted_discharge_m3_s": 0.1613827347755432,
+          "lstm_discharge_m3_s": 0.6455309391021729,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-03",
+          "predicted_discharge_m3_s": 0.18178188800811768,
+          "lstm_discharge_m3_s": 0.7271275520324707,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-04",
+          "predicted_discharge_m3_s": 0.1864001303911209,
+          "lstm_discharge_m3_s": 0.7456005215644836,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "predicted_discharge_m3_s": 0.2742043733596802,
+          "lstm_discharge_m3_s": 1.0968174934387207,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "predicted_discharge_m3_s": 0.23104366660118103,
+          "lstm_discharge_m3_s": 0.9241746664047241,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-07",
+          "predicted_discharge_m3_s": 0.20709992945194244,
+          "lstm_discharge_m3_s": 0.8283997178077698,
+          "persistence_baseline_discharge_m3_s": 0.0
+        }
+      ]
+    },
+    {
+      "station_id": "karnataka|janwada|18.03250000|77.47250000",
+      "state": "Karnataka",
+      "station_latitude": 18.0325,
+      "station_longitude": 77.4725,
+      "coordinates_available": true,
+      "model_type": "validation_selected_lstm_persistence_blend",
+      "validation_blend_alpha": 0.25,
+      "forecast_is_live": true,
+      "history_freshness": "recent_source_history",
+      "history_age_days": 1,
+      "forecast_origin_date": "2026-10-31",
+      "history_window_start": "2026-08-03",
+      "history_window_end": "2026-10-31",
+      "valid_history_days": 90,
+      "history_days_required": 90,
+      "last_observed_discharge_m3_s": 0.0,
+      "predicted_peak_discharge_m3_s": 0.27358371019363403,
+      "peak_discharge_percentile_all_available_history": 61.05150214592275,
+      "history_discharge_sample_count": 1864,
+      "forecast": [
+        {
+          "date": "2026-11-01",
+          "predicted_discharge_m3_s": 0.13229987025260925,
+          "lstm_discharge_m3_s": 0.529199481010437,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-02",
+          "predicted_discharge_m3_s": 0.1612566113471985,
+          "lstm_discharge_m3_s": 0.645026445388794,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-03",
+          "predicted_discharge_m3_s": 0.1810792088508606,
+          "lstm_discharge_m3_s": 0.7243168354034424,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-04",
+          "predicted_discharge_m3_s": 0.18420447409152985,
+          "lstm_discharge_m3_s": 0.7368178963661194,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-05",
+          "predicted_discharge_m3_s": 0.27358371019363403,
+          "lstm_discharge_m3_s": 1.0943348407745361,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-06",
+          "predicted_discharge_m3_s": 0.22911131381988525,
+          "lstm_discharge_m3_s": 0.916445255279541,
+          "persistence_baseline_discharge_m3_s": 0.0
+        },
+        {
+          "date": "2026-11-07",
+          "predicted_discharge_m3_s": 0.20892895758152008,
+          "lstm_discharge_m3_s": 0.8357158303260803,
+          "persistence_baseline_discharge_m3_s": 0.0
         }
       ]
     },
@@ -138,7 +333,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": true,
       "history_freshness": "recent_source_history",
-      "history_age_days": 1,
+      "history_age_days": 2,
       "forecast_origin_date": "2026-10-30",
       "history_window_start": "2026-08-02",
       "history_window_end": "2026-10-30",
@@ -203,7 +398,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": true,
       "history_freshness": "recent_source_history",
-      "history_age_days": 1,
+      "history_age_days": 2,
       "forecast_origin_date": "2026-10-30",
       "history_window_start": "2026-08-02",
       "history_window_end": "2026-10-30",
@@ -259,71 +454,6 @@
       ]
     },
     {
-      "station_id": "karnataka|sadalga (seasonal)|16.56361111|74.52750000",
-      "state": "Karnataka",
-      "station_latitude": 16.56361111,
-      "station_longitude": 74.5275,
-      "coordinates_available": true,
-      "model_type": "validation_selected_lstm_persistence_blend",
-      "validation_blend_alpha": 0.25,
-      "forecast_is_live": true,
-      "history_freshness": "recent_source_history",
-      "history_age_days": 1,
-      "forecast_origin_date": "2026-10-30",
-      "history_window_start": "2026-08-02",
-      "history_window_end": "2026-10-30",
-      "valid_history_days": 90,
-      "history_days_required": 90,
-      "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.27711018919944763,
-      "peak_discharge_percentile_all_available_history": 64.36074674794536,
-      "history_discharge_sample_count": 18373,
-      "forecast": [
-        {
-          "date": "2026-10-31",
-          "predicted_discharge_m3_s": 0.13333112001419067,
-          "lstm_discharge_m3_s": 0.5333244800567627,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-11-01",
-          "predicted_discharge_m3_s": 0.16338589787483215,
-          "lstm_discharge_m3_s": 0.6535435914993286,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-11-02",
-          "predicted_discharge_m3_s": 0.1833781599998474,
-          "lstm_discharge_m3_s": 0.7335126399993896,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-11-03",
-          "predicted_discharge_m3_s": 0.18867193162441254,
-          "lstm_discharge_m3_s": 0.7546877264976501,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-11-04",
-          "predicted_discharge_m3_s": 0.27711018919944763,
-          "lstm_discharge_m3_s": 1.1084407567977905,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-11-05",
-          "predicted_discharge_m3_s": 0.23382996022701263,
-          "lstm_discharge_m3_s": 0.9353198409080505,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-11-06",
-          "predicted_discharge_m3_s": 0.21007007360458374,
-          "lstm_discharge_m3_s": 0.840280294418335,
-          "persistence_baseline_discharge_m3_s": 0.0
-        }
-      ]
-    },
-    {
       "station_id": "andhra pradesh|melaganur|15.84555556|77.02527778",
       "state": "Andhra Pradesh",
       "station_latitude": 15.845555559999998,
@@ -333,7 +463,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": true,
       "history_freshness": "recent_source_history",
-      "history_age_days": 1,
+      "history_age_days": 2,
       "forecast_origin_date": "2026-10-30",
       "history_window_start": "2026-08-02",
       "history_window_end": "2026-10-30",
@@ -398,7 +528,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": true,
       "history_freshness": "recent_source_history",
-      "history_age_days": 1,
+      "history_age_days": 2,
       "forecast_origin_date": "2026-10-30",
       "history_window_start": "2026-08-02",
       "history_window_end": "2026-10-30",
@@ -463,7 +593,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": true,
       "history_freshness": "recent_source_history",
-      "history_age_days": 1,
+      "history_age_days": 2,
       "forecast_origin_date": "2026-10-30",
       "history_window_start": "2026-08-02",
       "history_window_end": "2026-10-30",
@@ -528,7 +658,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": true,
       "history_freshness": "recent_source_history",
-      "history_age_days": 1,
+      "history_age_days": 2,
       "forecast_origin_date": "2026-10-30",
       "history_window_start": "2026-08-02",
       "history_window_end": "2026-10-30",
@@ -593,7 +723,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": true,
       "history_freshness": "recent_source_history",
-      "history_age_days": 1,
+      "history_age_days": 2,
       "forecast_origin_date": "2026-10-30",
       "history_window_start": "2026-08-02",
       "history_window_end": "2026-10-30",
@@ -658,7 +788,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": true,
       "history_freshness": "recent_source_history",
-      "history_age_days": 1,
+      "history_age_days": 2,
       "forecast_origin_date": "2026-10-30",
       "history_window_start": "2026-08-02",
       "history_window_end": "2026-10-30",
@@ -723,7 +853,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": true,
       "history_freshness": "recent_source_history",
-      "history_age_days": 1,
+      "history_age_days": 2,
       "forecast_origin_date": "2026-10-30",
       "history_window_start": "2026-08-02",
       "history_window_end": "2026-10-30",
@@ -788,7 +918,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 5,
+      "history_age_days": 6,
       "forecast_origin_date": "2026-10-26",
       "history_window_start": "2026-07-29",
       "history_window_end": "2026-10-26",
@@ -853,7 +983,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 5,
+      "history_age_days": 6,
       "forecast_origin_date": "2026-10-26",
       "history_window_start": "2026-07-29",
       "history_window_end": "2026-10-26",
@@ -918,7 +1048,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 5,
+      "history_age_days": 6,
       "forecast_origin_date": "2026-10-26",
       "history_window_start": "2026-07-29",
       "history_window_end": "2026-10-26",
@@ -983,7 +1113,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 6,
+      "history_age_days": 7,
       "forecast_origin_date": "2026-10-25",
       "history_window_start": "2026-07-28",
       "history_window_end": "2026-10-25",
@@ -1048,7 +1178,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 8,
+      "history_age_days": 9,
       "forecast_origin_date": "2026-10-23",
       "history_window_start": "2026-07-26",
       "history_window_end": "2026-10-23",
@@ -1113,7 +1243,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 11,
+      "history_age_days": 12,
       "forecast_origin_date": "2026-10-20",
       "history_window_start": "2026-07-23",
       "history_window_end": "2026-10-20",
@@ -1178,7 +1308,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 11,
+      "history_age_days": 12,
       "forecast_origin_date": "2026-10-20",
       "history_window_start": "2026-07-23",
       "history_window_end": "2026-10-20",
@@ -1243,7 +1373,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 11,
+      "history_age_days": 12,
       "forecast_origin_date": "2026-10-20",
       "history_window_start": "2026-07-23",
       "history_window_end": "2026-10-20",
@@ -1308,7 +1438,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 11,
+      "history_age_days": 12,
       "forecast_origin_date": "2026-10-20",
       "history_window_start": "2026-07-23",
       "history_window_end": "2026-10-20",
@@ -1373,7 +1503,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 11,
+      "history_age_days": 12,
       "forecast_origin_date": "2026-10-20",
       "history_window_start": "2026-07-23",
       "history_window_end": "2026-10-20",
@@ -1438,7 +1568,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 11,
+      "history_age_days": 12,
       "forecast_origin_date": "2026-10-20",
       "history_window_start": "2026-07-23",
       "history_window_end": "2026-10-20",
@@ -1503,7 +1633,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 13,
+      "history_age_days": 14,
       "forecast_origin_date": "2026-10-18",
       "history_window_start": "2026-07-21",
       "history_window_end": "2026-10-18",
@@ -1568,58 +1698,123 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 16,
+      "history_age_days": 17,
       "forecast_origin_date": "2026-10-15",
       "history_window_start": "2026-07-18",
       "history_window_end": "2026-10-15",
-      "valid_history_days": 78,
+      "valid_history_days": 87,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 5.0765076,
-      "predicted_peak_discharge_m3_s": 5.838242792971802,
-      "peak_discharge_percentile_all_available_history": 37.1825876662636,
-      "history_discharge_sample_count": 1654,
+      "predicted_peak_discharge_m3_s": 5.634746336825562,
+      "peak_discharge_percentile_all_available_history": 37.161755862898374,
+      "history_discharge_sample_count": 1663,
       "forecast": [
         {
           "date": "2026-10-16",
-          "predicted_discharge_m3_s": 5.476856136210633,
-          "lstm_discharge_m3_s": 6.677901744842529,
+          "predicted_discharge_m3_s": 5.3091136454422,
+          "lstm_discharge_m3_s": 6.006931781768799,
           "persistence_baseline_discharge_m3_s": 5.0765076
         },
         {
           "date": "2026-10-17",
-          "predicted_discharge_m3_s": 5.554067993052674,
-          "lstm_discharge_m3_s": 6.986749172210693,
+          "predicted_discharge_m3_s": 5.374734663851929,
+          "lstm_discharge_m3_s": 6.269415855407715,
           "persistence_baseline_discharge_m3_s": 5.0765076
         },
         {
           "date": "2026-10-18",
-          "predicted_discharge_m3_s": 5.530767822154236,
-          "lstm_discharge_m3_s": 6.893548488616943,
+          "predicted_discharge_m3_s": 5.348254823573304,
+          "lstm_discharge_m3_s": 6.163496494293213,
           "persistence_baseline_discharge_m3_s": 5.0765076
         },
         {
           "date": "2026-10-19",
-          "predicted_discharge_m3_s": 5.708247804530335,
-          "lstm_discharge_m3_s": 7.603468418121338,
+          "predicted_discharge_m3_s": 5.509412312396241,
+          "lstm_discharge_m3_s": 6.808126449584961,
           "persistence_baseline_discharge_m3_s": 5.0765076
         },
         {
           "date": "2026-10-20",
-          "predicted_discharge_m3_s": 5.671608471759034,
-          "lstm_discharge_m3_s": 7.456911087036133,
+          "predicted_discharge_m3_s": 5.473962807543946,
+          "lstm_discharge_m3_s": 6.666328430175781,
           "persistence_baseline_discharge_m3_s": 5.0765076
         },
         {
           "date": "2026-10-21",
-          "predicted_discharge_m3_s": 5.838242792971802,
-          "lstm_discharge_m3_s": 8.123448371887207,
+          "predicted_discharge_m3_s": 5.634746336825562,
+          "lstm_discharge_m3_s": 7.309462547302246,
           "persistence_baseline_discharge_m3_s": 5.0765076
         },
         {
           "date": "2026-10-22",
-          "predicted_discharge_m3_s": 5.663452768214417,
-          "lstm_discharge_m3_s": 7.424288272857666,
+          "predicted_discharge_m3_s": 5.493590378649903,
+          "lstm_discharge_m3_s": 6.744838714599609,
           "persistence_baseline_discharge_m3_s": 5.0765076
+        }
+      ]
+    },
+    {
+      "station_id": "karnataka|avershe|13.52138889|74.88000000",
+      "state": "Karnataka",
+      "station_latitude": 13.521388889999999,
+      "station_longitude": 74.88,
+      "coordinates_available": true,
+      "model_type": "validation_selected_lstm_persistence_blend",
+      "validation_blend_alpha": 0.25,
+      "forecast_is_live": false,
+      "history_freshness": "stale_historical_replay",
+      "history_age_days": 20,
+      "forecast_origin_date": "2026-10-12",
+      "history_window_start": "2026-07-15",
+      "history_window_end": "2026-10-12",
+      "valid_history_days": 76,
+      "history_days_required": 90,
+      "last_observed_discharge_m3_s": 18.906,
+      "predicted_peak_discharge_m3_s": 18.806404010772702,
+      "peak_discharge_percentile_all_available_history": 60.2872097705006,
+      "history_discharge_sample_count": 7451,
+      "forecast": [
+        {
+          "date": "2026-10-13",
+          "predicted_discharge_m3_s": 18.2227596206665,
+          "lstm_discharge_m3_s": 16.173038482666016,
+          "persistence_baseline_discharge_m3_s": 18.906
+        },
+        {
+          "date": "2026-10-14",
+          "predicted_discharge_m3_s": 18.22997512054443,
+          "lstm_discharge_m3_s": 16.201900482177734,
+          "persistence_baseline_discharge_m3_s": 18.906
+        },
+        {
+          "date": "2026-10-15",
+          "predicted_discharge_m3_s": 18.432122127532956,
+          "lstm_discharge_m3_s": 17.010488510131836,
+          "persistence_baseline_discharge_m3_s": 18.906
+        },
+        {
+          "date": "2026-10-16",
+          "predicted_discharge_m3_s": 18.739445106506345,
+          "lstm_discharge_m3_s": 18.23978042602539,
+          "persistence_baseline_discharge_m3_s": 18.906
+        },
+        {
+          "date": "2026-10-17",
+          "predicted_discharge_m3_s": 18.55274523925781,
+          "lstm_discharge_m3_s": 17.49298095703125,
+          "persistence_baseline_discharge_m3_s": 18.906
+        },
+        {
+          "date": "2026-10-18",
+          "predicted_discharge_m3_s": 18.806404010772702,
+          "lstm_discharge_m3_s": 18.50761604309082,
+          "persistence_baseline_discharge_m3_s": 18.906
+        },
+        {
+          "date": "2026-10-19",
+          "predicted_discharge_m3_s": 18.553603069305417,
+          "lstm_discharge_m3_s": 17.49641227722168,
+          "persistence_baseline_discharge_m3_s": 18.906
         }
       ]
     },
@@ -1633,14 +1828,14 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 20,
+      "history_age_days": 21,
       "forecast_origin_date": "2026-10-11",
       "history_window_start": "2026-07-14",
       "history_window_end": "2026-10-11",
       "valid_history_days": 79,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 1.385610580444336,
+      "predicted_peak_discharge_m3_s": 1.385610818862915,
       "peak_discharge_percentile_all_available_history": 16.54596716236387,
       "history_discharge_sample_count": 18089,
       "forecast": [
@@ -1658,8 +1853,8 @@
         },
         {
           "date": "2026-10-14",
-          "predicted_discharge_m3_s": 1.1345582008361816,
-          "lstm_discharge_m3_s": 4.538232803344727,
+          "predicted_discharge_m3_s": 1.1345583200454712,
+          "lstm_discharge_m3_s": 4.538233280181885,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -1676,8 +1871,8 @@
         },
         {
           "date": "2026-10-17",
-          "predicted_discharge_m3_s": 1.385610580444336,
-          "lstm_discharge_m3_s": 5.542442321777344,
+          "predicted_discharge_m3_s": 1.385610818862915,
+          "lstm_discharge_m3_s": 5.54244327545166,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -1698,7 +1893,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 21,
+      "history_age_days": 22,
       "forecast_origin_date": "2026-10-10",
       "history_window_start": "2026-07-13",
       "history_window_end": "2026-10-10",
@@ -1763,7 +1958,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 21,
+      "history_age_days": 22,
       "forecast_origin_date": "2026-10-10",
       "history_window_start": "2026-07-13",
       "history_window_end": "2026-10-10",
@@ -1828,7 +2023,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 31,
+      "history_age_days": 32,
       "forecast_origin_date": "2026-09-30",
       "history_window_start": "2026-07-03",
       "history_window_end": "2026-09-30",
@@ -1884,136 +2079,6 @@
       ]
     },
     {
-      "station_id": "karnataka|saigaon|18.05000000|77.04972222",
-      "state": "Karnataka",
-      "station_latitude": 18.05,
-      "station_longitude": 77.04972222,
-      "coordinates_available": true,
-      "model_type": "validation_selected_lstm_persistence_blend",
-      "validation_blend_alpha": 0.25,
-      "forecast_is_live": false,
-      "history_freshness": "stale_historical_replay",
-      "history_age_days": 31,
-      "forecast_origin_date": "2026-09-30",
-      "history_window_start": "2026-07-03",
-      "history_window_end": "2026-09-30",
-      "valid_history_days": 90,
-      "history_days_required": 90,
-      "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.31457704305648804,
-      "peak_discharge_percentile_all_available_history": 71.46179401993355,
-      "history_discharge_sample_count": 3010,
-      "forecast": [
-        {
-          "date": "2026-10-01",
-          "predicted_discharge_m3_s": 0.14352554082870483,
-          "lstm_discharge_m3_s": 0.5741021633148193,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-10-02",
-          "predicted_discharge_m3_s": 0.17433199286460876,
-          "lstm_discharge_m3_s": 0.6973279714584351,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-10-03",
-          "predicted_discharge_m3_s": 0.19018104672431946,
-          "lstm_discharge_m3_s": 0.7607241868972778,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-10-04",
-          "predicted_discharge_m3_s": 0.2028512805700302,
-          "lstm_discharge_m3_s": 0.8114051222801208,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-10-05",
-          "predicted_discharge_m3_s": 0.31457704305648804,
-          "lstm_discharge_m3_s": 1.2583081722259521,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-10-06",
-          "predicted_discharge_m3_s": 0.26784273982048035,
-          "lstm_discharge_m3_s": 1.0713709592819214,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-10-07",
-          "predicted_discharge_m3_s": 0.2724528908729553,
-          "lstm_discharge_m3_s": 1.0898115634918213,
-          "persistence_baseline_discharge_m3_s": 0.0
-        }
-      ]
-    },
-    {
-      "station_id": "karnataka|janwada|18.03250000|77.47250000",
-      "state": "Karnataka",
-      "station_latitude": 18.0325,
-      "station_longitude": 77.4725,
-      "coordinates_available": true,
-      "model_type": "validation_selected_lstm_persistence_blend",
-      "validation_blend_alpha": 0.25,
-      "forecast_is_live": false,
-      "history_freshness": "stale_historical_replay",
-      "history_age_days": 31,
-      "forecast_origin_date": "2026-09-30",
-      "history_window_start": "2026-07-03",
-      "history_window_end": "2026-09-30",
-      "valid_history_days": 90,
-      "history_days_required": 90,
-      "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.3144345283508301,
-      "peak_discharge_percentile_all_available_history": 60.39279869067103,
-      "history_discharge_sample_count": 1833,
-      "forecast": [
-        {
-          "date": "2026-10-01",
-          "predicted_discharge_m3_s": 0.14350667595863342,
-          "lstm_discharge_m3_s": 0.5740267038345337,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-10-02",
-          "predicted_discharge_m3_s": 0.17431418597698212,
-          "lstm_discharge_m3_s": 0.6972567439079285,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-10-03",
-          "predicted_discharge_m3_s": 0.19028569757938385,
-          "lstm_discharge_m3_s": 0.7611427903175354,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-10-04",
-          "predicted_discharge_m3_s": 0.20264224708080292,
-          "lstm_discharge_m3_s": 0.8105689883232117,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-10-05",
-          "predicted_discharge_m3_s": 0.3144345283508301,
-          "lstm_discharge_m3_s": 1.2577381134033203,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-10-06",
-          "predicted_discharge_m3_s": 0.2674873471260071,
-          "lstm_discharge_m3_s": 1.0699493885040283,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-10-07",
-          "predicted_discharge_m3_s": 0.27260735630989075,
-          "lstm_discharge_m3_s": 1.090429425239563,
-          "persistence_baseline_discharge_m3_s": 0.0
-        }
-      ]
-    },
-    {
       "station_id": "andhra pradesh|anakapalli|17.68888889|82.99638889",
       "state": "Andhra Pradesh",
       "station_latitude": 17.68888889,
@@ -2023,7 +2088,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 31,
+      "history_age_days": 32,
       "forecast_origin_date": "2026-09-30",
       "history_window_start": "2026-07-03",
       "history_window_end": "2026-09-30",
@@ -2088,57 +2153,57 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 31,
+      "history_age_days": 32,
       "forecast_origin_date": "2026-09-30",
       "history_window_start": "2026-07-03",
       "history_window_end": "2026-09-30",
-      "valid_history_days": 80,
+      "valid_history_days": 81,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 54.053986,
-      "predicted_peak_discharge_m3_s": 56.32137233538818,
-      "peak_discharge_percentile_all_available_history": 62.80436607892527,
-      "history_discharge_sample_count": 2382,
+      "predicted_peak_discharge_m3_s": 56.31961471362305,
+      "peak_discharge_percentile_all_available_history": 62.819974821653375,
+      "history_discharge_sample_count": 2383,
       "forecast": [
         {
           "date": "2026-10-01",
-          "predicted_discharge_m3_s": 54.9878771953125,
-          "lstm_discharge_m3_s": 57.78955078125,
+          "predicted_discharge_m3_s": 54.98644763751221,
+          "lstm_discharge_m3_s": 57.78383255004883,
           "persistence_baseline_discharge_m3_s": 54.053986
         },
         {
           "date": "2026-10-02",
-          "predicted_discharge_m3_s": 54.55873805804443,
-          "lstm_discharge_m3_s": 56.072994232177734,
+          "predicted_discharge_m3_s": 54.55726844592285,
+          "lstm_discharge_m3_s": 56.067115783691406,
           "persistence_baseline_discharge_m3_s": 54.053986
         },
         {
           "date": "2026-10-03",
-          "predicted_discharge_m3_s": 54.78929168505859,
-          "lstm_discharge_m3_s": 56.995208740234375,
+          "predicted_discharge_m3_s": 54.78781921191406,
+          "lstm_discharge_m3_s": 56.98931884765625,
           "persistence_baseline_discharge_m3_s": 54.053986
         },
         {
           "date": "2026-10-04",
-          "predicted_discharge_m3_s": 56.32137233538818,
-          "lstm_discharge_m3_s": 63.123531341552734,
+          "predicted_discharge_m3_s": 56.31961471362305,
+          "lstm_discharge_m3_s": 63.11650085449219,
           "persistence_baseline_discharge_m3_s": 54.053986
         },
         {
           "date": "2026-10-05",
-          "predicted_discharge_m3_s": 55.26371318621826,
-          "lstm_discharge_m3_s": 58.89289474487305,
+          "predicted_discharge_m3_s": 55.26201469226074,
+          "lstm_discharge_m3_s": 58.88610076904297,
           "persistence_baseline_discharge_m3_s": 54.053986
         },
         {
           "date": "2026-10-06",
-          "predicted_discharge_m3_s": 55.94783717913818,
-          "lstm_discharge_m3_s": 61.629390716552734,
+          "predicted_discharge_m3_s": 55.946217840148925,
+          "lstm_discharge_m3_s": 61.6229133605957,
           "persistence_baseline_discharge_m3_s": 54.053986
         },
         {
           "date": "2026-10-07",
-          "predicted_discharge_m3_s": 54.78496486468506,
-          "lstm_discharge_m3_s": 56.977901458740234,
+          "predicted_discharge_m3_s": 54.78355533404541,
+          "lstm_discharge_m3_s": 56.97226333618164,
           "persistence_baseline_discharge_m3_s": 54.053986
         }
       ]
@@ -2153,7 +2218,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 31,
+      "history_age_days": 32,
       "forecast_origin_date": "2026-09-30",
       "history_window_start": "2026-07-03",
       "history_window_end": "2026-09-30",
@@ -2218,7 +2283,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 31,
+      "history_age_days": 32,
       "forecast_origin_date": "2026-09-30",
       "history_window_start": "2026-07-03",
       "history_window_end": "2026-09-30",
@@ -2283,7 +2348,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 31,
+      "history_age_days": 32,
       "forecast_origin_date": "2026-09-30",
       "history_window_start": "2026-07-03",
       "history_window_end": "2026-09-30",
@@ -2348,14 +2413,14 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 32,
+      "history_age_days": 33,
       "forecast_origin_date": "2026-09-29",
       "history_window_start": "2026-07-02",
       "history_window_end": "2026-09-29",
       "valid_history_days": 73,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 51.676,
-      "predicted_peak_discharge_m3_s": 52.67140391540528,
+      "predicted_peak_discharge_m3_s": 52.67141059112549,
       "peak_discharge_percentile_all_available_history": 55.91582038419185,
       "history_discharge_sample_count": 16346,
       "forecast": [
@@ -2373,20 +2438,20 @@
         },
         {
           "date": "2026-10-02",
-          "predicted_discharge_m3_s": 51.41871455383301,
-          "lstm_discharge_m3_s": 50.64685821533203,
+          "predicted_discharge_m3_s": 51.41871836853028,
+          "lstm_discharge_m3_s": 50.646873474121094,
           "persistence_baseline_discharge_m3_s": 51.676
         },
         {
           "date": "2026-10-03",
-          "predicted_discharge_m3_s": 52.67140391540528,
-          "lstm_discharge_m3_s": 55.657615661621094,
+          "predicted_discharge_m3_s": 52.67141059112549,
+          "lstm_discharge_m3_s": 55.65764236450195,
           "persistence_baseline_discharge_m3_s": 51.676
         },
         {
           "date": "2026-10-04",
-          "predicted_discharge_m3_s": 51.77110293579102,
-          "lstm_discharge_m3_s": 52.05641174316406,
+          "predicted_discharge_m3_s": 51.77110579681397,
+          "lstm_discharge_m3_s": 52.05642318725586,
           "persistence_baseline_discharge_m3_s": 51.676
         },
         {
@@ -2413,7 +2478,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 51,
+      "history_age_days": 52,
       "forecast_origin_date": "2026-09-10",
       "history_window_start": "2026-06-13",
       "history_window_end": "2026-09-10",
@@ -2478,7 +2543,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 61,
+      "history_age_days": 62,
       "forecast_origin_date": "2026-08-31",
       "history_window_start": "2026-06-03",
       "history_window_end": "2026-08-31",
@@ -2543,7 +2608,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 61,
+      "history_age_days": 62,
       "forecast_origin_date": "2026-08-31",
       "history_window_start": "2026-06-03",
       "history_window_end": "2026-08-31",
@@ -2599,6 +2664,71 @@
       ]
     },
     {
+      "station_id": "karnataka|gokak|16.18138889|74.80111111",
+      "state": "Karnataka",
+      "station_latitude": 16.18138889,
+      "station_longitude": 74.80111111,
+      "coordinates_available": true,
+      "model_type": "validation_selected_lstm_persistence_blend",
+      "validation_blend_alpha": 0.25,
+      "forecast_is_live": false,
+      "history_freshness": "stale_historical_replay",
+      "history_age_days": 62,
+      "forecast_origin_date": "2026-08-31",
+      "history_window_start": "2026-06-03",
+      "history_window_end": "2026-08-31",
+      "valid_history_days": 88,
+      "history_days_required": 90,
+      "last_observed_discharge_m3_s": 54.0,
+      "predicted_peak_discharge_m3_s": 57.336387634277344,
+      "peak_discharge_percentile_all_available_history": 82.08333333333333,
+      "history_discharge_sample_count": 240,
+      "forecast": [
+        {
+          "date": "2026-09-01",
+          "predicted_discharge_m3_s": 54.97388172149658,
+          "lstm_discharge_m3_s": 57.89552688598633,
+          "persistence_baseline_discharge_m3_s": 54.0
+        },
+        {
+          "date": "2026-09-02",
+          "predicted_discharge_m3_s": 54.028072357177734,
+          "lstm_discharge_m3_s": 54.11228942871094,
+          "persistence_baseline_discharge_m3_s": 54.0
+        },
+        {
+          "date": "2026-09-03",
+          "predicted_discharge_m3_s": 55.36179542541504,
+          "lstm_discharge_m3_s": 59.447181701660156,
+          "persistence_baseline_discharge_m3_s": 54.0
+        },
+        {
+          "date": "2026-09-04",
+          "predicted_discharge_m3_s": 57.29026985168457,
+          "lstm_discharge_m3_s": 67.16107940673828,
+          "persistence_baseline_discharge_m3_s": 54.0
+        },
+        {
+          "date": "2026-09-05",
+          "predicted_discharge_m3_s": 55.609575271606445,
+          "lstm_discharge_m3_s": 60.43830108642578,
+          "persistence_baseline_discharge_m3_s": 54.0
+        },
+        {
+          "date": "2026-09-06",
+          "predicted_discharge_m3_s": 57.336387634277344,
+          "lstm_discharge_m3_s": 67.34555053710938,
+          "persistence_baseline_discharge_m3_s": 54.0
+        },
+        {
+          "date": "2026-09-07",
+          "predicted_discharge_m3_s": 56.266289710998535,
+          "lstm_discharge_m3_s": 63.06515884399414,
+          "persistence_baseline_discharge_m3_s": 54.0
+        }
+      ]
+    },
+    {
       "station_id": "andhra pradesh|paleru bridge|16.94888889|80.04916667",
       "state": "Andhra Pradesh",
       "station_latitude": 16.94888889,
@@ -2608,7 +2738,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 61,
+      "history_age_days": 62,
       "forecast_origin_date": "2026-08-31",
       "history_window_start": "2026-06-03",
       "history_window_end": "2026-08-31",
@@ -2673,7 +2803,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 61,
+      "history_age_days": 62,
       "forecast_origin_date": "2026-08-31",
       "history_window_start": "2026-06-03",
       "history_window_end": "2026-08-31",
@@ -2729,71 +2859,6 @@
       ]
     },
     {
-      "station_id": "karnataka|gokak|16.18138889|74.80111111",
-      "state": "Karnataka",
-      "station_latitude": 16.18138889,
-      "station_longitude": 74.80111111,
-      "coordinates_available": true,
-      "model_type": "validation_selected_lstm_persistence_blend",
-      "validation_blend_alpha": 0.25,
-      "forecast_is_live": false,
-      "history_freshness": "stale_historical_replay",
-      "history_age_days": 78,
-      "forecast_origin_date": "2026-08-14",
-      "history_window_start": "2026-05-17",
-      "history_window_end": "2026-08-14",
-      "valid_history_days": 84,
-      "history_days_required": 90,
-      "last_observed_discharge_m3_s": 79.39106,
-      "predicted_peak_discharge_m3_s": 89.29793176452637,
-      "peak_discharge_percentile_all_available_history": 89.95433789954338,
-      "history_discharge_sample_count": 219,
-      "forecast": [
-        {
-          "date": "2026-08-15",
-          "predicted_discharge_m3_s": 84.04109010498047,
-          "lstm_discharge_m3_s": 97.99118041992188,
-          "persistence_baseline_discharge_m3_s": 79.39106
-        },
-        {
-          "date": "2026-08-16",
-          "predicted_discharge_m3_s": 82.68909272949219,
-          "lstm_discharge_m3_s": 92.58319091796875,
-          "persistence_baseline_discharge_m3_s": 79.39106
-        },
-        {
-          "date": "2026-08-17",
-          "predicted_discharge_m3_s": 87.3511620501709,
-          "lstm_discharge_m3_s": 111.2314682006836,
-          "persistence_baseline_discharge_m3_s": 79.39106
-        },
-        {
-          "date": "2026-08-18",
-          "predicted_discharge_m3_s": 89.29793176452637,
-          "lstm_discharge_m3_s": 119.01854705810547,
-          "persistence_baseline_discharge_m3_s": 79.39106
-        },
-        {
-          "date": "2026-08-19",
-          "predicted_discharge_m3_s": 86.49904069702148,
-          "lstm_discharge_m3_s": 107.82298278808594,
-          "persistence_baseline_discharge_m3_s": 79.39106
-        },
-        {
-          "date": "2026-08-20",
-          "predicted_discharge_m3_s": 88.45196161071777,
-          "lstm_discharge_m3_s": 115.6346664428711,
-          "persistence_baseline_discharge_m3_s": 79.39106
-        },
-        {
-          "date": "2026-08-21",
-          "predicted_discharge_m3_s": 87.2940388659668,
-          "lstm_discharge_m3_s": 111.00297546386719,
-          "persistence_baseline_discharge_m3_s": 79.39106
-        }
-      ]
-    },
-    {
       "station_id": "tamil nadu|thiruvarambu|8.36416667|77.25888889",
       "state": "Tamil Nadu",
       "station_latitude": 8.36416667,
@@ -2803,7 +2868,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 92,
+      "history_age_days": 93,
       "forecast_origin_date": "2026-07-31",
       "history_window_start": "2026-05-03",
       "history_window_end": "2026-07-31",
@@ -2868,7 +2933,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 92,
+      "history_age_days": 93,
       "forecast_origin_date": "2026-07-31",
       "history_window_start": "2026-05-03",
       "history_window_end": "2026-07-31",
@@ -2933,7 +2998,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 92,
+      "history_age_days": 93,
       "forecast_origin_date": "2026-07-31",
       "history_window_start": "2026-05-03",
       "history_window_end": "2026-07-31",
@@ -2998,7 +3063,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 92,
+      "history_age_days": 93,
       "forecast_origin_date": "2026-07-31",
       "history_window_start": "2026-05-03",
       "history_window_end": "2026-07-31",
@@ -3063,7 +3128,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 106,
+      "history_age_days": 107,
       "forecast_origin_date": "2026-07-17",
       "history_window_start": "2026-04-19",
       "history_window_end": "2026-07-17",
@@ -3128,58 +3193,58 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 121,
-      "forecast_origin_date": "2026-07-02",
-      "history_window_start": "2026-04-04",
-      "history_window_end": "2026-07-02",
-      "valid_history_days": 85,
+      "history_age_days": 115,
+      "forecast_origin_date": "2026-07-09",
+      "history_window_start": "2026-04-11",
+      "history_window_end": "2026-07-09",
+      "valid_history_days": 84,
       "history_days_required": 90,
-      "last_observed_discharge_m3_s": 26.11431,
-      "predicted_peak_discharge_m3_s": 30.927177469177245,
-      "peak_discharge_percentile_all_available_history": 69.28262528618671,
-      "history_discharge_sample_count": 7862,
+      "last_observed_discharge_m3_s": 265.45908,
+      "predicted_peak_discharge_m3_s": 293.8774749780273,
+      "peak_discharge_percentile_all_available_history": 98.10625317742756,
+      "history_discharge_sample_count": 7868,
       "forecast": [
         {
-          "date": "2026-07-03",
-          "predicted_discharge_m3_s": 26.862382451934813,
-          "lstm_discharge_m3_s": 29.106599807739258,
-          "persistence_baseline_discharge_m3_s": 26.11431
+          "date": "2026-07-10",
+          "predicted_discharge_m3_s": 279.70346374755854,
+          "lstm_discharge_m3_s": 322.4366149902344,
+          "persistence_baseline_discharge_m3_s": 265.45908
         },
         {
-          "date": "2026-07-04",
-          "predicted_discharge_m3_s": 26.81599621002197,
-          "lstm_discharge_m3_s": 28.92105484008789,
-          "persistence_baseline_discharge_m3_s": 26.11431
+          "date": "2026-07-11",
+          "predicted_discharge_m3_s": 275.723963930664,
+          "lstm_discharge_m3_s": 306.51861572265625,
+          "persistence_baseline_discharge_m3_s": 265.45908
         },
         {
-          "date": "2026-07-05",
-          "predicted_discharge_m3_s": 28.722596208496093,
-          "lstm_discharge_m3_s": 36.547454833984375,
-          "persistence_baseline_discharge_m3_s": 26.11431
+          "date": "2026-07-12",
+          "predicted_discharge_m3_s": 293.8774749780273,
+          "lstm_discharge_m3_s": 379.1326599121094,
+          "persistence_baseline_discharge_m3_s": 265.45908
         },
         {
-          "date": "2026-07-06",
-          "predicted_discharge_m3_s": 29.967341463012694,
-          "lstm_discharge_m3_s": 41.52643585205078,
-          "persistence_baseline_discharge_m3_s": 26.11431
+          "date": "2026-07-13",
+          "predicted_discharge_m3_s": 288.4690353417968,
+          "lstm_discharge_m3_s": 357.4989013671875,
+          "persistence_baseline_discharge_m3_s": 265.45908
         },
         {
-          "date": "2026-07-07",
-          "predicted_discharge_m3_s": 28.14226440612793,
-          "lstm_discharge_m3_s": 34.22612762451172,
-          "persistence_baseline_discharge_m3_s": 26.11431
+          "date": "2026-07-14",
+          "predicted_discharge_m3_s": 282.50971527343745,
+          "lstm_discharge_m3_s": 333.66162109375,
+          "persistence_baseline_discharge_m3_s": 265.45908
         },
         {
-          "date": "2026-07-08",
-          "predicted_discharge_m3_s": 30.927177469177245,
-          "lstm_discharge_m3_s": 45.365779876708984,
-          "persistence_baseline_discharge_m3_s": 26.11431
+          "date": "2026-07-15",
+          "predicted_discharge_m3_s": 289.45595855957026,
+          "lstm_discharge_m3_s": 361.44659423828125,
+          "persistence_baseline_discharge_m3_s": 265.45908
         },
         {
-          "date": "2026-07-09",
-          "predicted_discharge_m3_s": 30.16116146270752,
-          "lstm_discharge_m3_s": 42.30171585083008,
-          "persistence_baseline_discharge_m3_s": 26.11431
+          "date": "2026-07-16",
+          "predicted_discharge_m3_s": 285.9201766992187,
+          "lstm_discharge_m3_s": 347.303466796875,
+          "persistence_baseline_discharge_m3_s": 265.45908
         }
       ]
     },
@@ -3193,7 +3258,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 121,
+      "history_age_days": 122,
       "forecast_origin_date": "2026-07-02",
       "history_window_start": "2026-04-04",
       "history_window_end": "2026-07-02",
@@ -3258,7 +3323,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 123,
+      "history_age_days": 124,
       "forecast_origin_date": "2026-06-30",
       "history_window_start": "2026-04-02",
       "history_window_end": "2026-06-30",
@@ -3323,7 +3388,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 123,
+      "history_age_days": 124,
       "forecast_origin_date": "2026-06-30",
       "history_window_start": "2026-04-02",
       "history_window_end": "2026-06-30",
@@ -3388,7 +3453,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 123,
+      "history_age_days": 124,
       "forecast_origin_date": "2026-06-30",
       "history_window_start": "2026-04-02",
       "history_window_end": "2026-06-30",
@@ -3453,7 +3518,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 123,
+      "history_age_days": 124,
       "forecast_origin_date": "2026-06-30",
       "history_window_start": "2026-04-02",
       "history_window_end": "2026-06-30",
@@ -3518,7 +3583,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 123,
+      "history_age_days": 124,
       "forecast_origin_date": "2026-06-30",
       "history_window_start": "2026-04-02",
       "history_window_end": "2026-06-30",
@@ -3583,7 +3648,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 123,
+      "history_age_days": 124,
       "forecast_origin_date": "2026-06-30",
       "history_window_start": "2026-04-02",
       "history_window_end": "2026-06-30",
@@ -3648,7 +3713,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 123,
+      "history_age_days": 124,
       "forecast_origin_date": "2026-06-30",
       "history_window_start": "2026-04-02",
       "history_window_end": "2026-06-30",
@@ -3713,7 +3778,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 123,
+      "history_age_days": 124,
       "forecast_origin_date": "2026-06-30",
       "history_window_start": "2026-04-02",
       "history_window_end": "2026-06-30",
@@ -3778,7 +3843,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 124,
+      "history_age_days": 125,
       "forecast_origin_date": "2026-06-29",
       "history_window_start": "2026-04-01",
       "history_window_end": "2026-06-29",
@@ -3843,7 +3908,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 124,
+      "history_age_days": 125,
       "forecast_origin_date": "2026-06-29",
       "history_window_start": "2026-04-01",
       "history_window_end": "2026-06-29",
@@ -3908,7 +3973,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 140,
+      "history_age_days": 141,
       "forecast_origin_date": "2026-06-13",
       "history_window_start": "2026-03-16",
       "history_window_end": "2026-06-13",
@@ -3973,7 +4038,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 147,
+      "history_age_days": 148,
       "forecast_origin_date": "2026-06-06",
       "history_window_start": "2026-03-09",
       "history_window_end": "2026-06-06",
@@ -4038,7 +4103,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 153,
+      "history_age_days": 154,
       "forecast_origin_date": "2026-05-31",
       "history_window_start": "2026-03-03",
       "history_window_end": "2026-05-31",
@@ -4103,7 +4168,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 153,
+      "history_age_days": 154,
       "forecast_origin_date": "2026-05-31",
       "history_window_start": "2026-03-03",
       "history_window_end": "2026-05-31",
@@ -4168,7 +4233,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 153,
+      "history_age_days": 154,
       "forecast_origin_date": "2026-05-31",
       "history_window_start": "2026-03-03",
       "history_window_end": "2026-05-31",
@@ -4233,7 +4298,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 153,
+      "history_age_days": 154,
       "forecast_origin_date": "2026-05-31",
       "history_window_start": "2026-03-03",
       "history_window_end": "2026-05-31",
@@ -4298,7 +4363,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 153,
+      "history_age_days": 154,
       "forecast_origin_date": "2026-05-31",
       "history_window_start": "2026-03-03",
       "history_window_end": "2026-05-31",
@@ -4363,7 +4428,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 153,
+      "history_age_days": 154,
       "forecast_origin_date": "2026-05-31",
       "history_window_start": "2026-03-03",
       "history_window_end": "2026-05-31",
@@ -4428,7 +4493,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 153,
+      "history_age_days": 154,
       "forecast_origin_date": "2026-05-31",
       "history_window_start": "2026-03-03",
       "history_window_end": "2026-05-31",
@@ -4493,7 +4558,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 208,
+      "history_age_days": 209,
       "forecast_origin_date": "2026-04-06",
       "history_window_start": "2026-01-07",
       "history_window_end": "2026-04-06",
@@ -4558,7 +4623,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 209,
+      "history_age_days": 210,
       "forecast_origin_date": "2026-04-05",
       "history_window_start": "2026-01-06",
       "history_window_end": "2026-04-05",
@@ -4623,7 +4688,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 210,
+      "history_age_days": 211,
       "forecast_origin_date": "2026-04-04",
       "history_window_start": "2026-01-05",
       "history_window_end": "2026-04-04",
@@ -4688,7 +4753,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 214,
+      "history_age_days": 215,
       "forecast_origin_date": "2026-03-31",
       "history_window_start": "2026-01-01",
       "history_window_end": "2026-03-31",
@@ -4753,7 +4818,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 214,
+      "history_age_days": 215,
       "forecast_origin_date": "2026-03-31",
       "history_window_start": "2026-01-01",
       "history_window_end": "2026-03-31",
@@ -4809,71 +4874,6 @@
       ]
     },
     {
-      "station_id": "andhra pradesh|vikkiralapeta|15.29666667|79.91277778",
-      "state": "Andhra Pradesh",
-      "station_latitude": 15.296666669999999,
-      "station_longitude": 79.91277778,
-      "coordinates_available": true,
-      "model_type": "validation_selected_lstm_persistence_blend",
-      "validation_blend_alpha": 0.25,
-      "forecast_is_live": false,
-      "history_freshness": "stale_historical_replay",
-      "history_age_days": 214,
-      "forecast_origin_date": "2026-03-31",
-      "history_window_start": "2026-01-01",
-      "history_window_end": "2026-03-31",
-      "valid_history_days": 85,
-      "history_days_required": 90,
-      "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.07639311999082565,
-      "peak_discharge_percentile_all_available_history": 91.83074989526602,
-      "history_discharge_sample_count": 2387,
-      "forecast": [
-        {
-          "date": "2026-04-01",
-          "predicted_discharge_m3_s": 0.02168790064752102,
-          "lstm_discharge_m3_s": 0.08675160259008408,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-04-02",
-          "predicted_discharge_m3_s": 0.030661478638648987,
-          "lstm_discharge_m3_s": 0.12264591455459595,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-04-03",
-          "predicted_discharge_m3_s": 0.015183698385953903,
-          "lstm_discharge_m3_s": 0.06073479354381561,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-04-04",
-          "predicted_discharge_m3_s": 0.04266654700040817,
-          "lstm_discharge_m3_s": 0.1706661880016327,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-04-05",
-          "predicted_discharge_m3_s": 0.07639311999082565,
-          "lstm_discharge_m3_s": 0.3055724799633026,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-04-06",
-          "predicted_discharge_m3_s": 0.03216613084077835,
-          "lstm_discharge_m3_s": 0.1286645233631134,
-          "persistence_baseline_discharge_m3_s": 0.0
-        },
-        {
-          "date": "2026-04-07",
-          "predicted_discharge_m3_s": 0.04323704540729523,
-          "lstm_discharge_m3_s": 0.1729481816291809,
-          "persistence_baseline_discharge_m3_s": 0.0
-        }
-      ]
-    },
-    {
       "station_id": "andhra pradesh|pallamala|13.71805556|79.79250000",
       "state": "Andhra Pradesh",
       "station_latitude": 13.71805556,
@@ -4883,7 +4883,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 228,
+      "history_age_days": 229,
       "forecast_origin_date": "2026-03-17",
       "history_window_start": "2025-12-18",
       "history_window_end": "2026-03-17",
@@ -4948,7 +4948,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 304,
+      "history_age_days": 305,
       "forecast_origin_date": "2025-12-31",
       "history_window_start": "2025-10-03",
       "history_window_end": "2025-12-31",
@@ -5013,7 +5013,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 304,
+      "history_age_days": 305,
       "forecast_origin_date": "2025-12-31",
       "history_window_start": "2025-10-03",
       "history_window_end": "2025-12-31",
@@ -5078,7 +5078,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 304,
+      "history_age_days": 305,
       "forecast_origin_date": "2025-12-31",
       "history_window_start": "2025-10-03",
       "history_window_end": "2025-12-31",
@@ -5143,7 +5143,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 304,
+      "history_age_days": 305,
       "forecast_origin_date": "2025-12-31",
       "history_window_start": "2025-10-03",
       "history_window_end": "2025-12-31",
@@ -5208,7 +5208,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 304,
+      "history_age_days": 305,
       "forecast_origin_date": "2025-12-31",
       "history_window_start": "2025-10-03",
       "history_window_end": "2025-12-31",
@@ -5273,7 +5273,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 304,
+      "history_age_days": 305,
       "forecast_origin_date": "2025-12-31",
       "history_window_start": "2025-10-03",
       "history_window_end": "2025-12-31",
@@ -5338,7 +5338,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 304,
+      "history_age_days": 305,
       "forecast_origin_date": "2025-12-31",
       "history_window_start": "2025-10-03",
       "history_window_end": "2025-12-31",
@@ -5403,7 +5403,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 304,
+      "history_age_days": 305,
       "forecast_origin_date": "2025-12-31",
       "history_window_start": "2025-10-03",
       "history_window_end": "2025-12-31",
@@ -5468,7 +5468,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 335,
+      "history_age_days": 336,
       "forecast_origin_date": "2025-11-30",
       "history_window_start": "2025-09-02",
       "history_window_end": "2025-11-30",
@@ -5533,7 +5533,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 345,
+      "history_age_days": 346,
       "forecast_origin_date": "2025-11-20",
       "history_window_start": "2025-08-23",
       "history_window_end": "2025-11-20",
@@ -5598,7 +5598,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 346,
+      "history_age_days": 347,
       "forecast_origin_date": "2025-11-19",
       "history_window_start": "2025-08-22",
       "history_window_end": "2025-11-19",
@@ -5663,7 +5663,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 365,
+      "history_age_days": 366,
       "forecast_origin_date": "2025-10-31",
       "history_window_start": "2025-08-03",
       "history_window_end": "2025-10-31",
@@ -5728,7 +5728,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 365,
+      "history_age_days": 366,
       "forecast_origin_date": "2025-10-31",
       "history_window_start": "2025-08-03",
       "history_window_end": "2025-10-31",
@@ -5793,7 +5793,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 488,
+      "history_age_days": 489,
       "forecast_origin_date": "2025-06-30",
       "history_window_start": "2025-04-02",
       "history_window_end": "2025-06-30",
@@ -5858,7 +5858,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 1249,
+      "history_age_days": 1250,
       "forecast_origin_date": "2023-05-31",
       "history_window_start": "2023-03-03",
       "history_window_end": "2023-05-31",
@@ -5923,7 +5923,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 1916,
+      "history_age_days": 1917,
       "forecast_origin_date": "2021-08-02",
       "history_window_start": "2021-05-05",
       "history_window_end": "2021-08-02",
@@ -5988,7 +5988,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 4171,
+      "history_age_days": 4172,
       "forecast_origin_date": "2015-05-31",
       "history_window_start": "2015-03-03",
       "history_window_end": "2015-05-31",
@@ -6053,7 +6053,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 4901,
+      "history_age_days": 4902,
       "forecast_origin_date": "2013-05-31",
       "history_window_start": "2013-03-03",
       "history_window_end": "2013-05-31",
@@ -6118,7 +6118,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 7093,
+      "history_age_days": 7094,
       "forecast_origin_date": "2007-05-31",
       "history_window_start": "2007-03-03",
       "history_window_end": "2007-05-31",
@@ -6183,7 +6183,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 7456,
+      "history_age_days": 7457,
       "forecast_origin_date": "2006-06-02",
       "history_window_start": "2006-03-05",
       "history_window_end": "2006-06-02",
@@ -6248,7 +6248,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 7458,
+      "history_age_days": 7459,
       "forecast_origin_date": "2006-05-31",
       "history_window_start": "2006-03-03",
       "history_window_end": "2006-05-31",
@@ -6313,7 +6313,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 8631,
+      "history_age_days": 8632,
       "forecast_origin_date": "2003-03-15",
       "history_window_start": "2002-12-16",
       "history_window_end": "2003-03-15",
@@ -6378,7 +6378,7 @@
       "validation_blend_alpha": 0.25,
       "forecast_is_live": false,
       "history_freshness": "stale_historical_replay",
-      "history_age_days": 9435,
+      "history_age_days": 9436,
       "forecast_origin_date": "2000-12-31",
       "history_window_start": "2000-10-03",
       "history_window_end": "2000-12-31",
@@ -6447,24 +6447,24 @@
       "samples": 58401
     },
     "raw_lstm_metrics": {
-      "mae_m3s": 57.07683215898831,
-      "rmse_m3s": 692.4787972972268,
-      "nse": 0.3845137495171588,
+      "mae_m3s": 57.076861184704306,
+      "rmse_m3s": 692.4787973408605,
+      "nse": 0.38451374943959427,
       "samples": 58401
     },
     "selected_metrics": {
-      "mae_m3s": 49.70704804435055,
-      "rmse_m3s": 544.9190829757615,
-      "nse": 0.6188732523781296,
+      "mae_m3s": 49.70705530077955,
+      "rmse_m3s": 544.919082979227,
+      "nse": 0.6188732523732818,
       "samples": 58401
     },
-    "selected_rmse_m3s": 544.9190852042511,
+    "selected_rmse_m3s": 544.9190852077166,
     "test_set_used_for_selection": false
   },
   "status": "experimental_research_only",
   "operational_status": "not_validated_for_public_warnings",
-  "model_created_at_utc": "2026-10-31T21:40:56.043446+00:00",
-  "created_at_utc": "2026-10-31T21:41:39.196731+00:00",
+  "model_created_at_utc": "2026-11-01T06:10:57.729762+00:00",
+  "created_at_utc": "2026-11-01T06:11:42.547981+00:00",
   "warning": "This is a historical-discharge-only forecast. Source-history age is not proof of a live sensor feed. Station-relative discharge percentiles are not calibrated flood probabilities or official warnings.",
   "limitations": [
     "Uses historical discharge only; no future rainfall/weather forcing.",
