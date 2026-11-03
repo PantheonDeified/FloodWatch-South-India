@@ -6463,8 +6463,8 @@
   },
   "status": "experimental_research_only",
   "operational_status": "not_validated_for_public_warnings",
-  "model_created_at_utc": "2026-11-03T01:04:03.811107+00:00",
-  "created_at_utc": "2026-11-03T01:04:46.617019+00:00",
+  "model_created_at_utc": "2026-11-03T14:21:01.102259+00:00",
+  "created_at_utc": "2026-11-03T14:21:44.866875+00:00",
   "warning": "This is a historical-discharge-only forecast. Source-history age is not proof of a live sensor feed. Station-relative discharge percentiles are not calibrated flood probabilities or official warnings.",
   "limitations": [
     "Uses historical discharge only; no future rainfall/weather forcing.",
