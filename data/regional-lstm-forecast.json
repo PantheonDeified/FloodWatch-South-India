@@ -15,7 +15,7 @@
   "valid_history_days": 90,
   "history_days_required": 90,
   "last_observed_discharge_m3_s": 0.0,
-  "predicted_peak_discharge_m3_s": 0.22860321402549744,
+  "predicted_peak_discharge_m3_s": 0.22860334813594818,
   "peak_discharge_percentile_all_available_history": 64.41304347826087,
   "history_discharge_sample_count": 18400,
   "forecast": [
@@ -45,8 +45,8 @@
     },
     {
       "date": "2026-12-01",
-      "predicted_discharge_m3_s": 0.22860321402549744,
-      "lstm_discharge_m3_s": 0.7620106935501099,
+      "predicted_discharge_m3_s": 0.22860334813594818,
+      "lstm_discharge_m3_s": 0.7620111107826233,
       "persistence_baseline_discharge_m3_s": 0.0
     },
     {
@@ -80,7 +80,7 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.22860321402549744,
+      "predicted_peak_discharge_m3_s": 0.22860334813594818,
       "peak_discharge_percentile_all_available_history": 64.41304347826087,
       "history_discharge_sample_count": 18400,
       "forecast": [
@@ -110,8 +110,8 @@
         },
         {
           "date": "2026-12-01",
-          "predicted_discharge_m3_s": 0.22860321402549744,
-          "lstm_discharge_m3_s": 0.7620106935501099,
+          "predicted_discharge_m3_s": 0.22860334813594818,
+          "lstm_discharge_m3_s": 0.7620111107826233,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -145,7 +145,7 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.22919544577598572,
+      "predicted_peak_discharge_m3_s": 0.22919537127017975,
       "peak_discharge_percentile_all_available_history": 61.48148148148148,
       "history_discharge_sample_count": 1890,
       "forecast": [
@@ -157,26 +157,26 @@
         },
         {
           "date": "2026-11-28",
-          "predicted_discharge_m3_s": 0.16900187730789185,
-          "lstm_discharge_m3_s": 0.5633395910263062,
+          "predicted_discharge_m3_s": 0.1690017729997635,
+          "lstm_discharge_m3_s": 0.5633392333984375,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-29",
-          "predicted_discharge_m3_s": 0.1740010380744934,
-          "lstm_discharge_m3_s": 0.5800034403800964,
+          "predicted_discharge_m3_s": 0.17400093376636505,
+          "lstm_discharge_m3_s": 0.5800030827522278,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-30",
-          "predicted_discharge_m3_s": 0.1540008783340454,
-          "lstm_discharge_m3_s": 0.5133362412452698,
+          "predicted_discharge_m3_s": 0.15400077402591705,
+          "lstm_discharge_m3_s": 0.5133358836174011,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-12-01",
-          "predicted_discharge_m3_s": 0.22919544577598572,
-          "lstm_discharge_m3_s": 0.7639847993850708,
+          "predicted_discharge_m3_s": 0.22919537127017975,
+          "lstm_discharge_m3_s": 0.7639845609664917,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -187,8 +187,8 @@
         },
         {
           "date": "2026-12-03",
-          "predicted_discharge_m3_s": 0.16891658306121826,
-          "lstm_discharge_m3_s": 0.5630552768707275,
+          "predicted_discharge_m3_s": 0.168916255235672,
+          "lstm_discharge_m3_s": 0.5630541443824768,
           "persistence_baseline_discharge_m3_s": 0.0
         }
       ]
@@ -210,7 +210,7 @@
       "valid_history_days": 87,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 12.2968,
-      "predicted_peak_discharge_m3_s": 11.750936555633544,
+      "predicted_peak_discharge_m3_s": 11.750935840377807,
       "peak_discharge_percentile_all_available_history": 8.740763235145257,
       "history_discharge_sample_count": 19758,
       "forecast": [
@@ -246,14 +246,14 @@
         },
         {
           "date": "2026-12-02",
-          "predicted_discharge_m3_s": 11.750936555633544,
-          "lstm_discharge_m3_s": 10.477254867553711,
+          "predicted_discharge_m3_s": 11.750935840377807,
+          "lstm_discharge_m3_s": 10.477252006530762,
           "persistence_baseline_discharge_m3_s": 12.2968
         },
         {
           "date": "2026-12-03",
-          "predicted_discharge_m3_s": 11.626485872039794,
-          "lstm_discharge_m3_s": 10.062418937683105,
+          "predicted_discharge_m3_s": 11.626485156784057,
+          "lstm_discharge_m3_s": 10.062417030334473,
           "persistence_baseline_discharge_m3_s": 12.2968
         }
       ]
@@ -275,14 +275,14 @@
       "valid_history_days": 87,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 8.898095,
-      "predicted_peak_discharge_m3_s": 8.696953729537963,
+      "predicted_peak_discharge_m3_s": 8.6969544447937,
       "peak_discharge_percentile_all_available_history": 72.08155016642891,
       "history_discharge_sample_count": 16824,
       "forecast": [
         {
           "date": "2026-11-27",
-          "predicted_discharge_m3_s": 8.533567384628295,
-          "lstm_discharge_m3_s": 7.683002948760986,
+          "predicted_discharge_m3_s": 8.533568099884032,
+          "lstm_discharge_m3_s": 7.683004856109619,
           "persistence_baseline_discharge_m3_s": 8.898095
         },
         {
@@ -293,32 +293,32 @@
         },
         {
           "date": "2026-11-29",
-          "predicted_discharge_m3_s": 8.617156938461303,
-          "lstm_discharge_m3_s": 7.961634635925293,
+          "predicted_discharge_m3_s": 8.617158368972778,
+          "lstm_discharge_m3_s": 7.961638927459717,
           "persistence_baseline_discharge_m3_s": 8.898095
         },
         {
           "date": "2026-11-30",
-          "predicted_discharge_m3_s": 8.593923524765014,
-          "lstm_discharge_m3_s": 7.884189605712891,
+          "predicted_discharge_m3_s": 8.593924001602172,
+          "lstm_discharge_m3_s": 7.884191513061523,
           "persistence_baseline_discharge_m3_s": 8.898095
         },
         {
           "date": "2026-12-01",
-          "predicted_discharge_m3_s": 8.416061357406615,
-          "lstm_discharge_m3_s": 7.29131555557251,
+          "predicted_discharge_m3_s": 8.416061834243774,
+          "lstm_discharge_m3_s": 7.291317462921143,
           "persistence_baseline_discharge_m3_s": 8.898095
         },
         {
           "date": "2026-12-02",
-          "predicted_discharge_m3_s": 8.696953729537963,
-          "lstm_discharge_m3_s": 8.22762393951416,
+          "predicted_discharge_m3_s": 8.6969544447937,
+          "lstm_discharge_m3_s": 8.227625846862793,
           "persistence_baseline_discharge_m3_s": 8.898095
         },
         {
           "date": "2026-12-03",
-          "predicted_discharge_m3_s": 8.590073541549682,
-          "lstm_discharge_m3_s": 7.87135648727417,
+          "predicted_discharge_m3_s": 8.59007401838684,
+          "lstm_discharge_m3_s": 7.871358394622803,
           "persistence_baseline_discharge_m3_s": 8.898095
         }
       ]
@@ -340,7 +340,7 @@
       "valid_history_days": 83,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 21.158714,
-      "predicted_peak_discharge_m3_s": 20.112609180340577,
+      "predicted_peak_discharge_m3_s": 20.11260822666626,
       "peak_discharge_percentile_all_available_history": 80.29067706487061,
       "history_discharge_sample_count": 2821,
       "forecast": [
@@ -352,8 +352,8 @@
         },
         {
           "date": "2026-11-28",
-          "predicted_discharge_m3_s": 19.985248359570313,
-          "lstm_discharge_m3_s": 17.247161865234375,
+          "predicted_discharge_m3_s": 19.985250266918946,
+          "lstm_discharge_m3_s": 17.247167587280273,
           "persistence_baseline_discharge_m3_s": 21.158714
         },
         {
@@ -364,8 +364,8 @@
         },
         {
           "date": "2026-11-30",
-          "predicted_discharge_m3_s": 20.09158352268677,
-          "lstm_discharge_m3_s": 17.601612091064453,
+          "predicted_discharge_m3_s": 20.091582569012452,
+          "lstm_discharge_m3_s": 17.601608276367188,
           "persistence_baseline_discharge_m3_s": 21.158714
         },
         {
@@ -376,8 +376,8 @@
         },
         {
           "date": "2026-12-02",
-          "predicted_discharge_m3_s": 20.112609180340577,
-          "lstm_discharge_m3_s": 17.67169761657715,
+          "predicted_discharge_m3_s": 20.11260822666626,
+          "lstm_discharge_m3_s": 17.671693801879883,
           "persistence_baseline_discharge_m3_s": 21.158714
         },
         {
@@ -411,26 +411,26 @@
       "forecast": [
         {
           "date": "2026-11-27",
-          "predicted_discharge_m3_s": 0.37032144899368286,
-          "lstm_discharge_m3_s": 0.9637381434440613,
+          "predicted_discharge_m3_s": 0.3703213893890381,
+          "lstm_discharge_m3_s": 0.9637379050254822,
           "persistence_baseline_discharge_m3_s": 0.116
         },
         {
           "date": "2026-11-28",
-          "predicted_discharge_m3_s": 0.42777859802246093,
-          "lstm_discharge_m3_s": 1.1552619934082031,
+          "predicted_discharge_m3_s": 0.42777850861549377,
+          "lstm_discharge_m3_s": 1.1552616357803345,
           "persistence_baseline_discharge_m3_s": 0.116
         },
         {
           "date": "2026-11-29",
-          "predicted_discharge_m3_s": 0.44008320207595825,
-          "lstm_discharge_m3_s": 1.1962772607803345,
+          "predicted_discharge_m3_s": 0.440083261680603,
+          "lstm_discharge_m3_s": 1.1962774991989136,
           "persistence_baseline_discharge_m3_s": 0.116
         },
         {
           "date": "2026-11-30",
-          "predicted_discharge_m3_s": 0.38628920550346374,
-          "lstm_discharge_m3_s": 1.0169639587402344,
+          "predicted_discharge_m3_s": 0.3862893545150757,
+          "lstm_discharge_m3_s": 1.0169644355773926,
           "persistence_baseline_discharge_m3_s": 0.116
         },
         {
@@ -441,14 +441,14 @@
         },
         {
           "date": "2026-12-02",
-          "predicted_discharge_m3_s": 0.441691007566452,
-          "lstm_discharge_m3_s": 1.2016366720199585,
+          "predicted_discharge_m3_s": 0.44169115657806396,
+          "lstm_discharge_m3_s": 1.2016371488571167,
           "persistence_baseline_discharge_m3_s": 0.116
         },
         {
           "date": "2026-12-03",
-          "predicted_discharge_m3_s": 0.41775035495758056,
-          "lstm_discharge_m3_s": 1.1218345165252686,
+          "predicted_discharge_m3_s": 0.4177504443645477,
+          "lstm_discharge_m3_s": 1.1218347549438477,
           "persistence_baseline_discharge_m3_s": 0.116
         }
       ]
@@ -476,8 +476,8 @@
       "forecast": [
         {
           "date": "2026-11-26",
-          "predicted_discharge_m3_s": 12.097650245944214,
-          "lstm_discharge_m3_s": 10.49507999420166,
+          "predicted_discharge_m3_s": 12.09765119961853,
+          "lstm_discharge_m3_s": 10.49508285522461,
           "persistence_baseline_discharge_m3_s": 12.784466
         },
         {
@@ -506,8 +506,8 @@
         },
         {
           "date": "2026-12-01",
-          "predicted_discharge_m3_s": 12.251931623736573,
-          "lstm_discharge_m3_s": 11.009350776672363,
+          "predicted_discharge_m3_s": 12.25193233899231,
+          "lstm_discharge_m3_s": 11.009353637695312,
           "persistence_baseline_discharge_m3_s": 12.784466
         },
         {
@@ -535,44 +535,44 @@
       "valid_history_days": 84,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 15.679288,
-      "predicted_peak_discharge_m3_s": 14.883840385171508,
+      "predicted_peak_discharge_m3_s": 14.883841577264404,
       "peak_discharge_percentile_all_available_history": 27.97966963151207,
       "history_discharge_sample_count": 19675,
       "forecast": [
         {
           "date": "2026-11-26",
-          "predicted_discharge_m3_s": 14.592145505639648,
-          "lstm_discharge_m3_s": 12.055479049682617,
+          "predicted_discharge_m3_s": 14.592146220895385,
+          "lstm_discharge_m3_s": 12.055481910705566,
           "persistence_baseline_discharge_m3_s": 15.679288
         },
         {
           "date": "2026-11-27",
-          "predicted_discharge_m3_s": 14.660758558007812,
-          "lstm_discharge_m3_s": 12.284189224243164,
+          "predicted_discharge_m3_s": 14.66075927326355,
+          "lstm_discharge_m3_s": 12.284192085266113,
           "persistence_baseline_discharge_m3_s": 15.679288
         },
         {
           "date": "2026-11-28",
-          "predicted_discharge_m3_s": 14.883840385171508,
-          "lstm_discharge_m3_s": 13.027795791625977,
+          "predicted_discharge_m3_s": 14.883841577264404,
+          "lstm_discharge_m3_s": 13.027799606323242,
           "persistence_baseline_discharge_m3_s": 15.679288
         },
         {
           "date": "2026-11-29",
-          "predicted_discharge_m3_s": 14.70870071956787,
-          "lstm_discharge_m3_s": 12.44399642944336,
+          "predicted_discharge_m3_s": 14.708701911660766,
+          "lstm_discharge_m3_s": 12.444000244140625,
           "persistence_baseline_discharge_m3_s": 15.679288
         },
         {
           "date": "2026-11-30",
-          "predicted_discharge_m3_s": 14.473552289697265,
-          "lstm_discharge_m3_s": 11.660168647766113,
+          "predicted_discharge_m3_s": 14.473553243371581,
+          "lstm_discharge_m3_s": 11.660171508789062,
           "persistence_baseline_discharge_m3_s": 15.679288
         },
         {
           "date": "2026-12-01",
-          "predicted_discharge_m3_s": 14.80719834873352,
-          "lstm_discharge_m3_s": 12.772321701049805,
+          "predicted_discharge_m3_s": 14.807199063989257,
+          "lstm_discharge_m3_s": 12.772324562072754,
           "persistence_baseline_discharge_m3_s": 15.679288
         },
         {
@@ -606,32 +606,32 @@
       "forecast": [
         {
           "date": "2026-11-25",
-          "predicted_discharge_m3_s": 2.553517460823059,
-          "lstm_discharge_m3_s": 2.678391456604004,
+          "predicted_discharge_m3_s": 2.5535172820091248,
+          "lstm_discharge_m3_s": 2.6783907413482666,
           "persistence_baseline_discharge_m3_s": 2.5
         },
         {
           "date": "2026-11-26",
-          "predicted_discharge_m3_s": 2.6160218715667725,
-          "lstm_discharge_m3_s": 2.886739492416382,
+          "predicted_discharge_m3_s": 2.6160215735435486,
+          "lstm_discharge_m3_s": 2.8867385387420654,
           "persistence_baseline_discharge_m3_s": 2.5
         },
         {
           "date": "2026-11-27",
-          "predicted_discharge_m3_s": 2.5630159974098206,
-          "lstm_discharge_m3_s": 2.7100532054901123,
+          "predicted_discharge_m3_s": 2.563015639781952,
+          "lstm_discharge_m3_s": 2.710052013397217,
           "persistence_baseline_discharge_m3_s": 2.5
         },
         {
           "date": "2026-11-28",
-          "predicted_discharge_m3_s": 2.56045925617218,
-          "lstm_discharge_m3_s": 2.701530694961548,
+          "predicted_discharge_m3_s": 2.5604586005210876,
+          "lstm_discharge_m3_s": 2.701528549194336,
           "persistence_baseline_discharge_m3_s": 2.5
         },
         {
           "date": "2026-11-29",
-          "predicted_discharge_m3_s": 2.5523722767829895,
-          "lstm_discharge_m3_s": 2.674574136734009,
+          "predicted_discharge_m3_s": 2.5523720383644104,
+          "lstm_discharge_m3_s": 2.6745734214782715,
           "persistence_baseline_discharge_m3_s": 2.5
         },
         {
@@ -642,8 +642,8 @@
         },
         {
           "date": "2026-12-01",
-          "predicted_discharge_m3_s": 2.5938775539398193,
-          "lstm_discharge_m3_s": 2.812925100326538,
+          "predicted_discharge_m3_s": 2.5938771963119507,
+          "lstm_discharge_m3_s": 2.8129239082336426,
           "persistence_baseline_discharge_m3_s": 2.5
         }
       ]
@@ -665,14 +665,14 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.2491365671157837,
+      "predicted_peak_discharge_m3_s": 0.24913643300533295,
       "peak_discharge_percentile_all_available_history": 19.096117122851687,
       "history_discharge_sample_count": 20423,
       "forecast": [
         {
           "date": "2026-11-22",
-          "predicted_discharge_m3_s": 0.14796775579452515,
-          "lstm_discharge_m3_s": 0.4932258129119873,
+          "predicted_discharge_m3_s": 0.14796753227710724,
+          "lstm_discharge_m3_s": 0.49322509765625,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -695,8 +695,8 @@
         },
         {
           "date": "2026-11-26",
-          "predicted_discharge_m3_s": 0.2491365671157837,
-          "lstm_discharge_m3_s": 0.8304551839828491,
+          "predicted_discharge_m3_s": 0.24913643300533295,
+          "lstm_discharge_m3_s": 0.8304547667503357,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -707,8 +707,8 @@
         },
         {
           "date": "2026-11-28",
-          "predicted_discharge_m3_s": 0.1852099597454071,
-          "lstm_discharge_m3_s": 0.6173664927482605,
+          "predicted_discharge_m3_s": 0.18521006405353546,
+          "lstm_discharge_m3_s": 0.6173668503761292,
           "persistence_baseline_discharge_m3_s": 0.0
         }
       ]
@@ -736,32 +736,32 @@
       "forecast": [
         {
           "date": "2026-11-22",
-          "predicted_discharge_m3_s": 1.0630437348248902,
-          "lstm_discharge_m3_s": 1.5867546796798706,
+          "predicted_discharge_m3_s": 1.0630440030457917,
+          "lstm_discharge_m3_s": 1.5867555141448975,
           "persistence_baseline_discharge_m3_s": 0.83859617
         },
         {
           "date": "2026-11-23",
-          "predicted_discharge_m3_s": 1.1249049518468324,
-          "lstm_discharge_m3_s": 1.7929587364196777,
+          "predicted_discharge_m3_s": 1.124905071056122,
+          "lstm_discharge_m3_s": 1.7929590940475464,
           "persistence_baseline_discharge_m3_s": 0.83859617
         },
         {
           "date": "2026-11-24",
-          "predicted_discharge_m3_s": 1.0886923287274781,
-          "lstm_discharge_m3_s": 1.6722499132156372,
+          "predicted_discharge_m3_s": 1.0886925075414124,
+          "lstm_discharge_m3_s": 1.672250509262085,
           "persistence_baseline_discharge_m3_s": 0.83859617
         },
         {
           "date": "2026-11-25",
-          "predicted_discharge_m3_s": 1.0738747928502503,
-          "lstm_discharge_m3_s": 1.6228581666946411,
+          "predicted_discharge_m3_s": 1.0738750610711518,
+          "lstm_discharge_m3_s": 1.6228591203689575,
           "persistence_baseline_discharge_m3_s": 0.83859617
         },
         {
           "date": "2026-11-26",
-          "predicted_discharge_m3_s": 1.1181181285741273,
-          "lstm_discharge_m3_s": 1.7703359127044678,
+          "predicted_discharge_m3_s": 1.1181182477834168,
+          "lstm_discharge_m3_s": 1.7703362703323364,
           "persistence_baseline_discharge_m3_s": 0.83859617
         },
         {
@@ -772,8 +772,8 @@
         },
         {
           "date": "2026-11-28",
-          "predicted_discharge_m3_s": 1.1090551827313844,
-          "lstm_discharge_m3_s": 1.740126132965088,
+          "predicted_discharge_m3_s": 1.1090550635220948,
+          "lstm_discharge_m3_s": 1.7401257753372192,
           "persistence_baseline_discharge_m3_s": 0.83859617
         }
       ]
@@ -795,50 +795,50 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.25631046295166016,
+      "predicted_peak_discharge_m3_s": 0.2563105523586273,
       "peak_discharge_percentile_all_available_history": 21.943748259537735,
       "history_discharge_sample_count": 3591,
       "forecast": [
         {
           "date": "2026-11-22",
-          "predicted_discharge_m3_s": 0.15518075227737427,
-          "lstm_discharge_m3_s": 0.5172691345214844,
+          "predicted_discharge_m3_s": 0.15518085658550262,
+          "lstm_discharge_m3_s": 0.517269492149353,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-23",
-          "predicted_discharge_m3_s": 0.19572992622852325,
-          "lstm_discharge_m3_s": 0.6524330377578735,
+          "predicted_discharge_m3_s": 0.1957300305366516,
+          "lstm_discharge_m3_s": 0.6524333953857422,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-24",
-          "predicted_discharge_m3_s": 0.19592827558517456,
-          "lstm_discharge_m3_s": 0.6530942320823669,
+          "predicted_discharge_m3_s": 0.1959284543991089,
+          "lstm_discharge_m3_s": 0.6530948281288147,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-25",
-          "predicted_discharge_m3_s": 0.18027357757091522,
-          "lstm_discharge_m3_s": 0.6009119153022766,
+          "predicted_discharge_m3_s": 0.18027381598949432,
+          "lstm_discharge_m3_s": 0.6009126901626587,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-26",
-          "predicted_discharge_m3_s": 0.25631046295166016,
-          "lstm_discharge_m3_s": 0.8543682098388672,
+          "predicted_discharge_m3_s": 0.2563105523586273,
+          "lstm_discharge_m3_s": 0.8543684482574463,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-27",
-          "predicted_discharge_m3_s": 0.21888373792171478,
-          "lstm_discharge_m3_s": 0.729612410068512,
+          "predicted_discharge_m3_s": 0.21888385713100433,
+          "lstm_discharge_m3_s": 0.7296128273010254,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-28",
-          "predicted_discharge_m3_s": 0.19065622985363007,
-          "lstm_discharge_m3_s": 0.6355207562446594,
+          "predicted_discharge_m3_s": 0.19065646827220917,
+          "lstm_discharge_m3_s": 0.6355215311050415,
           "persistence_baseline_discharge_m3_s": 0.0
         }
       ]
@@ -860,50 +860,50 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.8379438519477844,
+      "predicted_peak_discharge_m3_s": 0.8379443287849426,
       "peak_discharge_percentile_all_available_history": 12.488596046629498,
       "history_discharge_sample_count": 19730,
       "forecast": [
         {
           "date": "2026-11-22",
-          "predicted_discharge_m3_s": 0.7499218583106995,
-          "lstm_discharge_m3_s": 2.499739408493042,
+          "predicted_discharge_m3_s": 0.749921977519989,
+          "lstm_discharge_m3_s": 2.4997398853302,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-23",
-          "predicted_discharge_m3_s": 0.8379438519477844,
-          "lstm_discharge_m3_s": 2.7931461334228516,
+          "predicted_discharge_m3_s": 0.8379443287849426,
+          "lstm_discharge_m3_s": 2.793147563934326,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-24",
-          "predicted_discharge_m3_s": 0.746402382850647,
-          "lstm_discharge_m3_s": 2.4880077838897705,
+          "predicted_discharge_m3_s": 0.7464026212692261,
+          "lstm_discharge_m3_s": 2.488008737564087,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-25",
-          "predicted_discharge_m3_s": 0.7375743985176086,
-          "lstm_discharge_m3_s": 2.4585812091827393,
+          "predicted_discharge_m3_s": 0.737574577331543,
+          "lstm_discharge_m3_s": 2.4585819244384766,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-26",
-          "predicted_discharge_m3_s": 0.7813870310783386,
-          "lstm_discharge_m3_s": 2.604623317718506,
+          "predicted_discharge_m3_s": 0.7813875079154968,
+          "lstm_discharge_m3_s": 2.6046249866485596,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-27",
-          "predicted_discharge_m3_s": 0.8347826600074768,
-          "lstm_discharge_m3_s": 2.7826087474823,
+          "predicted_discharge_m3_s": 0.8347832560539246,
+          "lstm_discharge_m3_s": 2.7826106548309326,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-28",
-          "predicted_discharge_m3_s": 0.7976221442222595,
-          "lstm_discharge_m3_s": 2.658740282058716,
+          "predicted_discharge_m3_s": 0.7976222634315491,
+          "lstm_discharge_m3_s": 2.658740758895874,
           "persistence_baseline_discharge_m3_s": 0.0
         }
       ]
@@ -925,20 +925,20 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.2414076179265976,
+      "predicted_peak_discharge_m3_s": 0.24140755832195282,
       "peak_discharge_percentile_all_available_history": 45.86557059961315,
       "history_discharge_sample_count": 4136,
       "forecast": [
         {
           "date": "2026-11-22",
-          "predicted_discharge_m3_s": 0.1402365267276764,
-          "lstm_discharge_m3_s": 0.46745508909225464,
+          "predicted_discharge_m3_s": 0.14023663103580475,
+          "lstm_discharge_m3_s": 0.4674554169178009,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-23",
-          "predicted_discharge_m3_s": 0.17638102173805237,
-          "lstm_discharge_m3_s": 0.5879366993904114,
+          "predicted_discharge_m3_s": 0.17638112604618073,
+          "lstm_discharge_m3_s": 0.58793705701828,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -955,8 +955,8 @@
         },
         {
           "date": "2026-11-26",
-          "predicted_discharge_m3_s": 0.2414076179265976,
-          "lstm_discharge_m3_s": 0.8046920299530029,
+          "predicted_discharge_m3_s": 0.24140755832195282,
+          "lstm_discharge_m3_s": 0.8046918511390686,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -996,26 +996,26 @@
       "forecast": [
         {
           "date": "2026-11-22",
-          "predicted_discharge_m3_s": 0.14035242795944214,
-          "lstm_discharge_m3_s": 0.46784138679504395,
+          "predicted_discharge_m3_s": 0.14035262167453766,
+          "lstm_discharge_m3_s": 0.46784207224845886,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-23",
-          "predicted_discharge_m3_s": 0.17653051018714905,
-          "lstm_discharge_m3_s": 0.5884349942207336,
+          "predicted_discharge_m3_s": 0.1765306144952774,
+          "lstm_discharge_m3_s": 0.5884353518486023,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-24",
-          "predicted_discharge_m3_s": 0.1816653609275818,
-          "lstm_discharge_m3_s": 0.6055511832237244,
+          "predicted_discharge_m3_s": 0.1816655993461609,
+          "lstm_discharge_m3_s": 0.6055519580841064,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-25",
-          "predicted_discharge_m3_s": 0.1609453558921814,
-          "lstm_discharge_m3_s": 0.5364844799041748,
+          "predicted_discharge_m3_s": 0.1609455645084381,
+          "lstm_discharge_m3_s": 0.5364851951599121,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -1032,8 +1032,8 @@
         },
         {
           "date": "2026-11-28",
-          "predicted_discharge_m3_s": 0.18023420870304108,
-          "lstm_discharge_m3_s": 0.6007806658744812,
+          "predicted_discharge_m3_s": 0.1802344173192978,
+          "lstm_discharge_m3_s": 0.6007813811302185,
           "persistence_baseline_discharge_m3_s": 0.0
         }
       ]
@@ -1061,8 +1061,8 @@
       "forecast": [
         {
           "date": "2026-11-21",
-          "predicted_discharge_m3_s": 3.5674045446395874,
-          "lstm_discharge_m3_s": 4.298681735992432,
+          "predicted_discharge_m3_s": 3.567404663848877,
+          "lstm_discharge_m3_s": 4.29868221282959,
           "persistence_baseline_discharge_m3_s": 3.254
         },
         {
@@ -1120,26 +1120,26 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 5.454,
-      "predicted_peak_discharge_m3_s": 5.438067987251282,
+      "predicted_peak_discharge_m3_s": 5.4380683448791505,
       "peak_discharge_percentile_all_available_history": 13.234621541276011,
       "history_discharge_sample_count": 17492,
       "forecast": [
         {
           "date": "2026-11-21",
-          "predicted_discharge_m3_s": 5.301625445175171,
-          "lstm_discharge_m3_s": 4.946084499359131,
+          "predicted_discharge_m3_s": 5.301624968338013,
+          "lstm_discharge_m3_s": 4.946083068847656,
           "persistence_baseline_discharge_m3_s": 5.454
         },
         {
           "date": "2026-11-22",
-          "predicted_discharge_m3_s": 5.371748402404785,
-          "lstm_discharge_m3_s": 5.179827690124512,
+          "predicted_discharge_m3_s": 5.371748044776917,
+          "lstm_discharge_m3_s": 5.179826736450195,
           "persistence_baseline_discharge_m3_s": 5.454
         },
         {
           "date": "2026-11-23",
-          "predicted_discharge_m3_s": 5.294857814598084,
-          "lstm_discharge_m3_s": 4.923525810241699,
+          "predicted_discharge_m3_s": 5.294857337760925,
+          "lstm_discharge_m3_s": 4.923524379730225,
           "persistence_baseline_discharge_m3_s": 5.454
         },
         {
@@ -1156,14 +1156,14 @@
         },
         {
           "date": "2026-11-26",
-          "predicted_discharge_m3_s": 5.438067987251282,
-          "lstm_discharge_m3_s": 5.400893211364746,
+          "predicted_discharge_m3_s": 5.4380683448791505,
+          "lstm_discharge_m3_s": 5.4008941650390625,
           "persistence_baseline_discharge_m3_s": 5.454
         },
         {
           "date": "2026-11-27",
-          "predicted_discharge_m3_s": 5.353334262657166,
-          "lstm_discharge_m3_s": 5.118447303771973,
+          "predicted_discharge_m3_s": 5.353334739494324,
+          "lstm_discharge_m3_s": 5.118448734283447,
           "persistence_baseline_discharge_m3_s": 5.454
         }
       ]
@@ -1185,7 +1185,7 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 2.811,
-      "predicted_peak_discharge_m3_s": 3.1747910930633543,
+      "predicted_peak_discharge_m3_s": 3.1747913314819334,
       "peak_discharge_percentile_all_available_history": 77.79712668698302,
       "history_discharge_sample_count": 2297,
       "forecast": [
@@ -1203,8 +1203,8 @@
         },
         {
           "date": "2026-11-23",
-          "predicted_discharge_m3_s": 3.060774798583984,
-          "lstm_discharge_m3_s": 3.643582344055176,
+          "predicted_discharge_m3_s": 3.060774560165405,
+          "lstm_discharge_m3_s": 3.6435816287994385,
           "persistence_baseline_discharge_m3_s": 2.811
         },
         {
@@ -1221,14 +1221,14 @@
         },
         {
           "date": "2026-11-26",
-          "predicted_discharge_m3_s": 3.1747910930633543,
-          "lstm_discharge_m3_s": 4.023636817932129,
+          "predicted_discharge_m3_s": 3.1747913314819334,
+          "lstm_discharge_m3_s": 4.023637771606445,
           "persistence_baseline_discharge_m3_s": 2.811
         },
         {
           "date": "2026-11-27",
-          "predicted_discharge_m3_s": 3.1044005109786985,
-          "lstm_discharge_m3_s": 3.789001703262329,
+          "predicted_discharge_m3_s": 3.1044007493972776,
+          "lstm_discharge_m3_s": 3.7890021800994873,
           "persistence_baseline_discharge_m3_s": 2.811
         }
       ]
@@ -1250,14 +1250,14 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 34.3,
-      "predicted_peak_discharge_m3_s": 34.24310375213623,
+      "predicted_peak_discharge_m3_s": 34.24310565948486,
       "peak_discharge_percentile_all_available_history": 13.975062344139651,
       "history_discharge_sample_count": 20050,
       "forecast": [
         {
           "date": "2026-11-21",
-          "predicted_discharge_m3_s": 34.24310375213623,
-          "lstm_discharge_m3_s": 34.11034393310547,
+          "predicted_discharge_m3_s": 34.24310565948486,
+          "lstm_discharge_m3_s": 34.1103515625,
           "persistence_baseline_discharge_m3_s": 34.3
         },
         {
@@ -1268,8 +1268,8 @@
         },
         {
           "date": "2026-11-23",
-          "predicted_discharge_m3_s": 33.63569141387939,
-          "lstm_discharge_m3_s": 32.085636138916016,
+          "predicted_discharge_m3_s": 33.635696182250975,
+          "lstm_discharge_m3_s": 32.08565139770508,
           "persistence_baseline_discharge_m3_s": 34.3
         },
         {
@@ -1333,14 +1333,14 @@
         },
         {
           "date": "2026-11-23",
-          "predicted_discharge_m3_s": 5.22090903892517,
-          "lstm_discharge_m3_s": 4.156696796417236,
+          "predicted_discharge_m3_s": 5.220908681297302,
+          "lstm_discharge_m3_s": 4.156695365905762,
           "persistence_baseline_discharge_m3_s": 5.677
         },
         {
           "date": "2026-11-24",
-          "predicted_discharge_m3_s": 5.238547722244262,
-          "lstm_discharge_m3_s": 4.215492248535156,
+          "predicted_discharge_m3_s": 5.23854819908142,
+          "lstm_discharge_m3_s": 4.215493679046631,
           "persistence_baseline_discharge_m3_s": 5.677
         },
         {
@@ -1380,26 +1380,26 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 1.85,
-      "predicted_peak_discharge_m3_s": 2.0695009064674377,
+      "predicted_peak_discharge_m3_s": 2.0695006680488586,
       "peak_discharge_percentile_all_available_history": 62.48101265822785,
       "history_discharge_sample_count": 1975,
       "forecast": [
         {
           "date": "2026-11-21",
-          "predicted_discharge_m3_s": 1.9689970445632934,
-          "lstm_discharge_m3_s": 2.246656656265259,
+          "predicted_discharge_m3_s": 1.9689969253540038,
+          "lstm_discharge_m3_s": 2.2466564178466797,
           "persistence_baseline_discharge_m3_s": 1.85
         },
         {
           "date": "2026-11-22",
-          "predicted_discharge_m3_s": 2.037827236652374,
-          "lstm_discharge_m3_s": 2.476090669631958,
+          "predicted_discharge_m3_s": 2.03782705783844,
+          "lstm_discharge_m3_s": 2.4760901927948,
           "persistence_baseline_discharge_m3_s": 1.85
         },
         {
           "date": "2026-11-23",
-          "predicted_discharge_m3_s": 2.0003102254867553,
-          "lstm_discharge_m3_s": 2.351033926010132,
+          "predicted_discharge_m3_s": 2.000309987068176,
+          "lstm_discharge_m3_s": 2.3510332107543945,
           "persistence_baseline_discharge_m3_s": 1.85
         },
         {
@@ -1410,20 +1410,20 @@
         },
         {
           "date": "2026-11-25",
-          "predicted_discharge_m3_s": 2.0014985036849975,
-          "lstm_discharge_m3_s": 2.354995012283325,
+          "predicted_discharge_m3_s": 2.001498384475708,
+          "lstm_discharge_m3_s": 2.354994535446167,
           "persistence_baseline_discharge_m3_s": 1.85
         },
         {
           "date": "2026-11-26",
-          "predicted_discharge_m3_s": 2.0695009064674377,
-          "lstm_discharge_m3_s": 2.581669569015503,
+          "predicted_discharge_m3_s": 2.0695006680488586,
+          "lstm_discharge_m3_s": 2.5816688537597656,
           "persistence_baseline_discharge_m3_s": 1.85
         },
         {
           "date": "2026-11-27",
-          "predicted_discharge_m3_s": 2.0220931005477905,
-          "lstm_discharge_m3_s": 2.4236435890197754,
+          "predicted_discharge_m3_s": 2.0220926237106323,
+          "lstm_discharge_m3_s": 2.4236419200897217,
           "persistence_baseline_discharge_m3_s": 1.85
         }
       ]
@@ -1445,14 +1445,14 @@
       "valid_history_days": 86,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 8.105693,
-      "predicted_peak_discharge_m3_s": 8.700330114572143,
+      "predicted_peak_discharge_m3_s": 8.700329160897827,
       "peak_discharge_percentile_all_available_history": 49.51985933907398,
       "history_discharge_sample_count": 22181,
       "forecast": [
         {
           "date": "2026-11-21",
-          "predicted_discharge_m3_s": 8.553544378488159,
-          "lstm_discharge_m3_s": 9.598530769348145,
+          "predicted_discharge_m3_s": 8.553545332162475,
+          "lstm_discharge_m3_s": 9.598533630371094,
           "persistence_baseline_discharge_m3_s": 8.105693
         },
         {
@@ -1463,8 +1463,8 @@
         },
         {
           "date": "2026-11-23",
-          "predicted_discharge_m3_s": 8.455072260110473,
-          "lstm_discharge_m3_s": 9.27029037475586,
+          "predicted_discharge_m3_s": 8.455071783273315,
+          "lstm_discharge_m3_s": 9.270288467407227,
           "persistence_baseline_discharge_m3_s": 8.105693
         },
         {
@@ -1475,20 +1475,20 @@
         },
         {
           "date": "2026-11-25",
-          "predicted_discharge_m3_s": 8.350826359002685,
-          "lstm_discharge_m3_s": 8.92280387878418,
+          "predicted_discharge_m3_s": 8.350825882165527,
+          "lstm_discharge_m3_s": 8.922801971435547,
           "persistence_baseline_discharge_m3_s": 8.105693
         },
         {
           "date": "2026-11-26",
-          "predicted_discharge_m3_s": 8.700330114572143,
-          "lstm_discharge_m3_s": 10.08781623840332,
+          "predicted_discharge_m3_s": 8.700329160897827,
+          "lstm_discharge_m3_s": 10.087813377380371,
           "persistence_baseline_discharge_m3_s": 8.105693
         },
         {
           "date": "2026-11-27",
-          "predicted_discharge_m3_s": 8.559932327478027,
-          "lstm_discharge_m3_s": 9.619823455810547,
+          "predicted_discharge_m3_s": 8.559930896966552,
+          "lstm_discharge_m3_s": 9.619818687438965,
           "persistence_baseline_discharge_m3_s": 8.105693
         }
       ]
@@ -1528,20 +1528,20 @@
         },
         {
           "date": "2026-11-23",
-          "predicted_discharge_m3_s": 1.218736095940094,
-          "lstm_discharge_m3_s": 1.9730727672576904,
+          "predicted_discharge_m3_s": 1.2187357383122253,
+          "lstm_discharge_m3_s": 1.9730716943740845,
           "persistence_baseline_discharge_m3_s": 0.8954489
         },
         {
           "date": "2026-11-24",
-          "predicted_discharge_m3_s": 1.1992916303028869,
-          "lstm_discharge_m3_s": 1.9082578420639038,
+          "predicted_discharge_m3_s": 1.1992916899075317,
+          "lstm_discharge_m3_s": 1.9082581996917725,
           "persistence_baseline_discharge_m3_s": 0.8954489
         },
         {
           "date": "2026-11-25",
-          "predicted_discharge_m3_s": 1.2356222110142516,
-          "lstm_discharge_m3_s": 2.029359817504883,
+          "predicted_discharge_m3_s": 1.2356221514096069,
+          "lstm_discharge_m3_s": 2.0293595790863037,
           "persistence_baseline_discharge_m3_s": 0.8954489
         },
         {
@@ -1552,8 +1552,8 @@
         },
         {
           "date": "2026-11-27",
-          "predicted_discharge_m3_s": 1.226996524845581,
-          "lstm_discharge_m3_s": 2.000607490539551,
+          "predicted_discharge_m3_s": 1.2269963460316466,
+          "lstm_discharge_m3_s": 2.0006070137023926,
           "persistence_baseline_discharge_m3_s": 0.8954489
         }
       ]
@@ -1575,26 +1575,26 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.25087228417396545,
+      "predicted_peak_discharge_m3_s": 0.2508721649646759,
       "peak_discharge_percentile_all_available_history": 30.39515042658285,
       "history_discharge_sample_count": 22270,
       "forecast": [
         {
           "date": "2026-11-19",
-          "predicted_discharge_m3_s": 0.1440611183643341,
-          "lstm_discharge_m3_s": 0.4802037179470062,
+          "predicted_discharge_m3_s": 0.14406101405620575,
+          "lstm_discharge_m3_s": 0.4802033603191376,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-20",
-          "predicted_discharge_m3_s": 0.18308603763580322,
-          "lstm_discharge_m3_s": 0.6102867722511292,
+          "predicted_discharge_m3_s": 0.18308593332767487,
+          "lstm_discharge_m3_s": 0.6102864146232605,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-21",
-          "predicted_discharge_m3_s": 0.18531569838523865,
-          "lstm_discharge_m3_s": 0.6177189946174622,
+          "predicted_discharge_m3_s": 0.1853155791759491,
+          "lstm_discharge_m3_s": 0.6177185773849487,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -1605,14 +1605,14 @@
         },
         {
           "date": "2026-11-23",
-          "predicted_discharge_m3_s": 0.25087228417396545,
-          "lstm_discharge_m3_s": 0.8362408876419067,
+          "predicted_discharge_m3_s": 0.2508721649646759,
+          "lstm_discharge_m3_s": 0.8362404704093933,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-24",
-          "predicted_discharge_m3_s": 0.21128025650978088,
-          "lstm_discharge_m3_s": 0.7042675018310547,
+          "predicted_discharge_m3_s": 0.21128007769584656,
+          "lstm_discharge_m3_s": 0.7042669057846069,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -1640,7 +1640,7 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.2512732148170471,
+      "predicted_peak_discharge_m3_s": 0.2512732744216919,
       "peak_discharge_percentile_all_available_history": 14.408973252804142,
       "history_discharge_sample_count": 12749,
       "forecast": [
@@ -1652,38 +1652,38 @@
         },
         {
           "date": "2026-11-20",
-          "predicted_discharge_m3_s": 0.18357786536216736,
-          "lstm_discharge_m3_s": 0.6119261980056763,
+          "predicted_discharge_m3_s": 0.1835779845714569,
+          "lstm_discharge_m3_s": 0.6119266152381897,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-21",
-          "predicted_discharge_m3_s": 0.18523633480072021,
-          "lstm_discharge_m3_s": 0.6174544095993042,
+          "predicted_discharge_m3_s": 0.18523643910884857,
+          "lstm_discharge_m3_s": 0.6174547672271729,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-22",
-          "predicted_discharge_m3_s": 0.16716496646404266,
-          "lstm_discharge_m3_s": 0.5572165250778198,
+          "predicted_discharge_m3_s": 0.16716507077217102,
+          "lstm_discharge_m3_s": 0.5572168827056885,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-23",
-          "predicted_discharge_m3_s": 0.2512732148170471,
-          "lstm_discharge_m3_s": 0.8375773429870605,
+          "predicted_discharge_m3_s": 0.2512732744216919,
+          "lstm_discharge_m3_s": 0.8375775218009949,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-24",
-          "predicted_discharge_m3_s": 0.21182610094547272,
-          "lstm_discharge_m3_s": 0.7060869932174683,
+          "predicted_discharge_m3_s": 0.21182599663734436,
+          "lstm_discharge_m3_s": 0.7060866355895996,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-25",
-          "predicted_discharge_m3_s": 0.18880696594715118,
-          "lstm_discharge_m3_s": 0.6293565034866333,
+          "predicted_discharge_m3_s": 0.18880708515644073,
+          "lstm_discharge_m3_s": 0.6293569207191467,
           "persistence_baseline_discharge_m3_s": 0.0
         }
       ]
@@ -1717,14 +1717,14 @@
         },
         {
           "date": "2026-11-19",
-          "predicted_discharge_m3_s": 26.996040115356443,
-          "lstm_discharge_m3_s": 33.286800384521484,
+          "predicted_discharge_m3_s": 26.996042976379393,
+          "lstm_discharge_m3_s": 33.286808013916016,
           "persistence_baseline_discharge_m3_s": 24.3
         },
         {
           "date": "2026-11-20",
-          "predicted_discharge_m3_s": 27.06751037597656,
-          "lstm_discharge_m3_s": 33.52503204345703,
+          "predicted_discharge_m3_s": 27.067512283325193,
+          "lstm_discharge_m3_s": 33.52503967285156,
           "persistence_baseline_discharge_m3_s": 24.3
         },
         {
@@ -1735,8 +1735,8 @@
         },
         {
           "date": "2026-11-22",
-          "predicted_discharge_m3_s": 26.584120521545408,
-          "lstm_discharge_m3_s": 31.913734436035156,
+          "predicted_discharge_m3_s": 26.584118614196775,
+          "lstm_discharge_m3_s": 31.913726806640625,
           "persistence_baseline_discharge_m3_s": 24.3
         },
         {
@@ -1747,8 +1747,8 @@
         },
         {
           "date": "2026-11-24",
-          "predicted_discharge_m3_s": 27.18928886413574,
-          "lstm_discharge_m3_s": 33.93096160888672,
+          "predicted_discharge_m3_s": 27.189286956787107,
+          "lstm_discharge_m3_s": 33.93095397949219,
           "persistence_baseline_discharge_m3_s": 24.3
         }
       ]
@@ -1770,14 +1770,14 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 35.277,
-      "predicted_peak_discharge_m3_s": 35.735461126708984,
+      "predicted_peak_discharge_m3_s": 35.73546494140625,
       "peak_discharge_percentile_all_available_history": 39.691527800248075,
       "history_discharge_sample_count": 18543,
       "forecast": [
         {
           "date": "2026-11-17",
-          "predicted_discharge_m3_s": 35.735461126708984,
-          "lstm_discharge_m3_s": 36.80520248413086,
+          "predicted_discharge_m3_s": 35.73546494140625,
+          "lstm_discharge_m3_s": 36.805213928222656,
           "persistence_baseline_discharge_m3_s": 35.277
         },
         {
@@ -1800,14 +1800,14 @@
         },
         {
           "date": "2026-11-21",
-          "predicted_discharge_m3_s": 34.5810488571167,
-          "lstm_discharge_m3_s": 32.95716094970703,
+          "predicted_discharge_m3_s": 34.58105362548828,
+          "lstm_discharge_m3_s": 32.957176208496094,
           "persistence_baseline_discharge_m3_s": 35.277
         },
         {
           "date": "2026-11-22",
-          "predicted_discharge_m3_s": 35.47611607208252,
-          "lstm_discharge_m3_s": 35.94071960449219,
+          "predicted_discharge_m3_s": 35.4761208404541,
+          "lstm_discharge_m3_s": 35.94073486328125,
           "persistence_baseline_discharge_m3_s": 35.277
         },
         {
@@ -1835,14 +1835,14 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.2603897452354431,
+      "predicted_peak_discharge_m3_s": 0.2603895664215088,
       "peak_discharge_percentile_all_available_history": 71.53141361256544,
       "history_discharge_sample_count": 3056,
       "forecast": [
         {
           "date": "2026-11-16",
           "predicted_discharge_m3_s": 0.14830826222896576,
-          "lstm_discharge_m3_s": 0.4943608343601227,
+          "lstm_discharge_m3_s": 0.49436086416244507,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -1859,20 +1859,20 @@
         },
         {
           "date": "2026-11-19",
-          "predicted_discharge_m3_s": 0.17257529497146606,
-          "lstm_discharge_m3_s": 0.5752509832382202,
+          "predicted_discharge_m3_s": 0.17257541418075562,
+          "lstm_discharge_m3_s": 0.5752513408660889,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-20",
-          "predicted_discharge_m3_s": 0.2603897452354431,
-          "lstm_discharge_m3_s": 0.867965817451477,
+          "predicted_discharge_m3_s": 0.2603895664215088,
+          "lstm_discharge_m3_s": 0.8679651618003845,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-21",
-          "predicted_discharge_m3_s": 0.22030240297317505,
-          "lstm_discharge_m3_s": 0.7343413233757019,
+          "predicted_discharge_m3_s": 0.2203022837638855,
+          "lstm_discharge_m3_s": 0.7343409061431885,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -1912,14 +1912,14 @@
         },
         {
           "date": "2026-11-15",
-          "predicted_discharge_m3_s": 37.23466080253906,
-          "lstm_discharge_m3_s": 33.98930740356445,
+          "predicted_discharge_m3_s": 37.234662709887694,
+          "lstm_discharge_m3_s": 33.989315032958984,
           "persistence_baseline_discharge_m3_s": 38.625526
         },
         {
           "date": "2026-11-16",
-          "predicted_discharge_m3_s": 37.02239388054199,
-          "lstm_discharge_m3_s": 33.2817497253418,
+          "predicted_discharge_m3_s": 37.02239578789062,
+          "lstm_discharge_m3_s": 33.28175735473633,
           "persistence_baseline_discharge_m3_s": 38.625526
         },
         {
@@ -1930,20 +1930,20 @@
         },
         {
           "date": "2026-11-18",
-          "predicted_discharge_m3_s": 36.71372669761963,
-          "lstm_discharge_m3_s": 32.25286102294922,
+          "predicted_discharge_m3_s": 36.71372955864258,
+          "lstm_discharge_m3_s": 32.25286865234375,
           "persistence_baseline_discharge_m3_s": 38.625526
         },
         {
           "date": "2026-11-19",
-          "predicted_discharge_m3_s": 37.6211783272583,
-          "lstm_discharge_m3_s": 35.2776985168457,
+          "predicted_discharge_m3_s": 37.62118118828125,
+          "lstm_discharge_m3_s": 35.2777099609375,
           "persistence_baseline_discharge_m3_s": 38.625526
         },
         {
           "date": "2026-11-20",
-          "predicted_discharge_m3_s": 37.36326950615234,
-          "lstm_discharge_m3_s": 34.41800308227539,
+          "predicted_discharge_m3_s": 37.363274274523924,
+          "lstm_discharge_m3_s": 34.41801834106445,
           "persistence_baseline_discharge_m3_s": 38.625526
         }
       ]
@@ -1965,7 +1965,7 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.7671635746955872,
+      "predicted_peak_discharge_m3_s": 0.7671633362770081,
       "peak_discharge_percentile_all_available_history": 78.8704692329306,
       "history_discharge_sample_count": 3559,
       "forecast": [
@@ -1977,38 +1977,38 @@
         },
         {
           "date": "2026-11-12",
-          "predicted_discharge_m3_s": 0.7557493448257446,
-          "lstm_discharge_m3_s": 2.5191643238067627,
+          "predicted_discharge_m3_s": 0.7557490468025208,
+          "lstm_discharge_m3_s": 2.5191633701324463,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-13",
-          "predicted_discharge_m3_s": 0.6604728698730469,
-          "lstm_discharge_m3_s": 2.2015762329101562,
+          "predicted_discharge_m3_s": 0.6604725122451782,
+          "lstm_discharge_m3_s": 2.2015750408172607,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-14",
-          "predicted_discharge_m3_s": 0.6639392375946045,
-          "lstm_discharge_m3_s": 2.2131307125091553,
+          "predicted_discharge_m3_s": 0.6639391183853149,
+          "lstm_discharge_m3_s": 2.213130235671997,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-15",
-          "predicted_discharge_m3_s": 0.7582169771194458,
-          "lstm_discharge_m3_s": 2.5273897647857666,
+          "predicted_discharge_m3_s": 0.7582166790962219,
+          "lstm_discharge_m3_s": 2.52738881111145,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-16",
-          "predicted_discharge_m3_s": 0.7671635746955872,
-          "lstm_discharge_m3_s": 2.5572118759155273,
+          "predicted_discharge_m3_s": 0.7671633362770081,
+          "lstm_discharge_m3_s": 2.557210922241211,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-17",
-          "predicted_discharge_m3_s": 0.7027380466461182,
-          "lstm_discharge_m3_s": 2.3424601554870605,
+          "predicted_discharge_m3_s": 0.7027376890182495,
+          "lstm_discharge_m3_s": 2.342458963394165,
           "persistence_baseline_discharge_m3_s": 0.0
         }
       ]
@@ -2036,14 +2036,14 @@
       "forecast": [
         {
           "date": "2026-11-11",
-          "predicted_discharge_m3_s": 3.34849422884613,
-          "lstm_discharge_m3_s": 3.784444570541382,
+          "predicted_discharge_m3_s": 3.3484944672647092,
+          "lstm_discharge_m3_s": 3.784445285797119,
           "persistence_baseline_discharge_m3_s": 3.1616583
         },
         {
           "date": "2026-11-12",
-          "predicted_discharge_m3_s": 3.464563545710144,
-          "lstm_discharge_m3_s": 4.171342372894287,
+          "predicted_discharge_m3_s": 3.4645639033380125,
+          "lstm_discharge_m3_s": 4.1713433265686035,
           "persistence_baseline_discharge_m3_s": 3.1616583
         },
         {
@@ -2072,8 +2072,8 @@
         },
         {
           "date": "2026-11-17",
-          "predicted_discharge_m3_s": 3.461125072962341,
-          "lstm_discharge_m3_s": 4.159880638122559,
+          "predicted_discharge_m3_s": 3.4611254305902097,
+          "lstm_discharge_m3_s": 4.159882068634033,
           "persistence_baseline_discharge_m3_s": 3.1616583
         }
       ]
@@ -2101,20 +2101,20 @@
       "forecast": [
         {
           "date": "2026-11-11",
-          "predicted_discharge_m3_s": 25.844799960461426,
-          "lstm_discharge_m3_s": 22.772104263305664,
+          "predicted_discharge_m3_s": 25.844798053112793,
+          "lstm_discharge_m3_s": 22.772098541259766,
           "persistence_baseline_discharge_m3_s": 27.161669
         },
         {
           "date": "2026-11-12",
-          "predicted_discharge_m3_s": 25.782215560284424,
-          "lstm_discharge_m3_s": 22.56348991394043,
+          "predicted_discharge_m3_s": 25.78221365293579,
+          "lstm_discharge_m3_s": 22.56348419189453,
           "persistence_baseline_discharge_m3_s": 27.161669
         },
         {
           "date": "2026-11-13",
-          "predicted_discharge_m3_s": 25.759269202557373,
-          "lstm_discharge_m3_s": 22.487001419067383,
+          "predicted_discharge_m3_s": 25.7592677720459,
+          "lstm_discharge_m3_s": 22.486997604370117,
           "persistence_baseline_discharge_m3_s": 27.161669
         },
         {
@@ -2160,50 +2160,50 @@
       "valid_history_days": 74,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 11.02375,
-      "predicted_peak_discharge_m3_s": 11.059949422836304,
+      "predicted_peak_discharge_m3_s": 11.059948469161988,
       "peak_discharge_percentile_all_available_history": 46.8025880228709,
       "history_discharge_sample_count": 13292,
       "forecast": [
         {
           "date": "2026-11-11",
-          "predicted_discharge_m3_s": 10.783240104675293,
-          "lstm_discharge_m3_s": 10.222049713134766,
+          "predicted_discharge_m3_s": 10.783239151000977,
+          "lstm_discharge_m3_s": 10.222046852111816,
           "persistence_baseline_discharge_m3_s": 11.02375
         },
         {
           "date": "2026-11-12",
-          "predicted_discharge_m3_s": 10.87865212059021,
-          "lstm_discharge_m3_s": 10.54008960723877,
+          "predicted_discharge_m3_s": 10.878651166915894,
+          "lstm_discharge_m3_s": 10.54008674621582,
           "persistence_baseline_discharge_m3_s": 11.02375
         },
         {
           "date": "2026-11-13",
-          "predicted_discharge_m3_s": 10.815654779434205,
-          "lstm_discharge_m3_s": 10.330099105834961,
+          "predicted_discharge_m3_s": 10.815654064178467,
+          "lstm_discharge_m3_s": 10.330096244812012,
           "persistence_baseline_discharge_m3_s": 11.02375
         },
         {
           "date": "2026-11-14",
-          "predicted_discharge_m3_s": 10.947889591217042,
-          "lstm_discharge_m3_s": 10.770881652832031,
+          "predicted_discharge_m3_s": 10.947889114379883,
+          "lstm_discharge_m3_s": 10.770879745483398,
           "persistence_baseline_discharge_m3_s": 11.02375
         },
         {
           "date": "2026-11-15",
-          "predicted_discharge_m3_s": 10.727271104812623,
-          "lstm_discharge_m3_s": 10.035486221313477,
+          "predicted_discharge_m3_s": 10.727270389556885,
+          "lstm_discharge_m3_s": 10.035484313964844,
           "persistence_baseline_discharge_m3_s": 11.02375
         },
         {
           "date": "2026-11-16",
-          "predicted_discharge_m3_s": 11.059949422836304,
-          "lstm_discharge_m3_s": 11.144413948059082,
+          "predicted_discharge_m3_s": 11.059948469161988,
+          "lstm_discharge_m3_s": 11.144411087036133,
           "persistence_baseline_discharge_m3_s": 11.02375
         },
         {
           "date": "2026-11-17",
-          "predicted_discharge_m3_s": 10.89073731994629,
-          "lstm_discharge_m3_s": 10.580373764038086,
+          "predicted_discharge_m3_s": 10.890736366271973,
+          "lstm_discharge_m3_s": 10.580370903015137,
           "persistence_baseline_discharge_m3_s": 11.02375
         }
       ]
@@ -2231,32 +2231,32 @@
       "forecast": [
         {
           "date": "2026-11-10",
-          "predicted_discharge_m3_s": 7.983811030525513,
-          "lstm_discharge_m3_s": 8.45153522491455,
+          "predicted_discharge_m3_s": 7.983810315269776,
+          "lstm_discharge_m3_s": 8.451533317565918,
           "persistence_baseline_discharge_m3_s": 7.7833576
         },
         {
           "date": "2026-11-11",
-          "predicted_discharge_m3_s": 8.099633107322997,
-          "lstm_discharge_m3_s": 8.83760929107666,
+          "predicted_discharge_m3_s": 8.09963239206726,
+          "lstm_discharge_m3_s": 8.837606430053711,
           "persistence_baseline_discharge_m3_s": 7.7833576
         },
         {
           "date": "2026-11-12",
-          "predicted_discharge_m3_s": 8.13412512316162,
-          "lstm_discharge_m3_s": 8.952582359313965,
+          "predicted_discharge_m3_s": 8.134124169487304,
+          "lstm_discharge_m3_s": 8.952579498291016,
           "persistence_baseline_discharge_m3_s": 7.7833576
         },
         {
           "date": "2026-11-13",
-          "predicted_discharge_m3_s": 8.109760413307495,
-          "lstm_discharge_m3_s": 8.871366500854492,
+          "predicted_discharge_m3_s": 8.109759459633178,
+          "lstm_discharge_m3_s": 8.871363639831543,
           "persistence_baseline_discharge_m3_s": 7.7833576
         },
         {
           "date": "2026-11-14",
-          "predicted_discharge_m3_s": 8.016795525688476,
-          "lstm_discharge_m3_s": 8.561483383178711,
+          "predicted_discharge_m3_s": 8.016794810432739,
+          "lstm_discharge_m3_s": 8.561481475830078,
           "persistence_baseline_discharge_m3_s": 7.7833576
         },
         {
@@ -2267,8 +2267,8 @@
         },
         {
           "date": "2026-11-16",
-          "predicted_discharge_m3_s": 8.21742785944397,
-          "lstm_discharge_m3_s": 9.230257987976074,
+          "predicted_discharge_m3_s": 8.217427144188232,
+          "lstm_discharge_m3_s": 9.230256080627441,
           "persistence_baseline_discharge_m3_s": 7.7833576
         }
       ]
@@ -2290,7 +2290,7 @@
       "valid_history_days": 77,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 2.9000783,
-      "predicted_peak_discharge_m3_s": 3.627045156908569,
+      "predicted_peak_discharge_m3_s": 3.6270455145364378,
       "peak_discharge_percentile_all_available_history": 52.726017943409246,
       "history_discharge_sample_count": 2898,
       "forecast": [
@@ -2302,14 +2302,14 @@
         },
         {
           "date": "2026-11-11",
-          "predicted_discharge_m3_s": 3.550118567896423,
-          "lstm_discharge_m3_s": 5.066878795623779,
+          "predicted_discharge_m3_s": 3.550118806315002,
+          "lstm_discharge_m3_s": 5.066879749298096,
           "persistence_baseline_discharge_m3_s": 2.9000783
         },
         {
           "date": "2026-11-12",
-          "predicted_discharge_m3_s": 3.5789817595010374,
-          "lstm_discharge_m3_s": 5.163089752197266,
+          "predicted_discharge_m3_s": 3.578982117128906,
+          "lstm_discharge_m3_s": 5.163090705871582,
           "persistence_baseline_discharge_m3_s": 2.9000783
         },
         {
@@ -2320,14 +2320,14 @@
         },
         {
           "date": "2026-11-14",
-          "predicted_discharge_m3_s": 3.537987234545288,
-          "lstm_discharge_m3_s": 5.0264410972595215,
+          "predicted_discharge_m3_s": 3.5379867577081296,
+          "lstm_discharge_m3_s": 5.026439666748047,
           "persistence_baseline_discharge_m3_s": 2.9000783
         },
         {
           "date": "2026-11-15",
-          "predicted_discharge_m3_s": 3.627045156908569,
-          "lstm_discharge_m3_s": 5.323300838470459,
+          "predicted_discharge_m3_s": 3.6270455145364378,
+          "lstm_discharge_m3_s": 5.323302268981934,
           "persistence_baseline_discharge_m3_s": 2.9000783
         },
         {
@@ -2355,26 +2355,26 @@
       "valid_history_days": 79,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.29947781562805176,
+      "predicted_peak_discharge_m3_s": 0.2994779050350189,
       "peak_discharge_percentile_all_available_history": 63.6094674556213,
       "history_discharge_sample_count": 1352,
       "forecast": [
         {
           "date": "2026-11-02",
-          "predicted_discharge_m3_s": 0.16556671261787415,
-          "lstm_discharge_m3_s": 0.5518890023231506,
+          "predicted_discharge_m3_s": 0.1655668318271637,
+          "lstm_discharge_m3_s": 0.5518894195556641,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-03",
-          "predicted_discharge_m3_s": 0.21718522906303406,
-          "lstm_discharge_m3_s": 0.7239507436752319,
+          "predicted_discharge_m3_s": 0.2171853631734848,
+          "lstm_discharge_m3_s": 0.7239511609077454,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-04",
-          "predicted_discharge_m3_s": 0.21620582044124603,
-          "lstm_discharge_m3_s": 0.7206860184669495,
+          "predicted_discharge_m3_s": 0.21620576083660126,
+          "lstm_discharge_m3_s": 0.7206858396530151,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -2385,8 +2385,8 @@
         },
         {
           "date": "2026-11-06",
-          "predicted_discharge_m3_s": 0.29947781562805176,
-          "lstm_discharge_m3_s": 0.9982593655586243,
+          "predicted_discharge_m3_s": 0.2994779050350189,
+          "lstm_discharge_m3_s": 0.9982596039772034,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -2397,8 +2397,8 @@
         },
         {
           "date": "2026-11-08",
-          "predicted_discharge_m3_s": 0.2395486831665039,
-          "lstm_discharge_m3_s": 0.7984955906867981,
+          "predicted_discharge_m3_s": 0.23954887688159943,
+          "lstm_discharge_m3_s": 0.7984962463378906,
           "persistence_baseline_discharge_m3_s": 0.0
         }
       ]
@@ -2438,8 +2438,8 @@
         },
         {
           "date": "2026-11-03",
-          "predicted_discharge_m3_s": 6.531215667724609,
-          "lstm_discharge_m3_s": 7.187385559082031,
+          "predicted_discharge_m3_s": 6.531215190887451,
+          "lstm_discharge_m3_s": 7.187383651733398,
           "persistence_baseline_discharge_m3_s": 6.25
         },
         {
@@ -2485,7 +2485,7 @@
       "valid_history_days": 82,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 39.41143,
-      "predicted_peak_discharge_m3_s": 39.48908113153077,
+      "predicted_peak_discharge_m3_s": 39.48908399255372,
       "peak_discharge_percentile_all_available_history": 58.7893864013267,
       "history_discharge_sample_count": 2412,
       "forecast": [
@@ -2497,26 +2497,26 @@
         },
         {
           "date": "2026-11-02",
-          "predicted_discharge_m3_s": 38.72296689660645,
-          "lstm_discharge_m3_s": 37.11655044555664,
+          "predicted_discharge_m3_s": 38.7229640355835,
+          "lstm_discharge_m3_s": 37.11654281616211,
           "persistence_baseline_discharge_m3_s": 39.41143
         },
         {
           "date": "2026-11-03",
-          "predicted_discharge_m3_s": 38.586684929443365,
-          "lstm_discharge_m3_s": 36.66227722167969,
+          "predicted_discharge_m3_s": 38.586682068420416,
+          "lstm_discharge_m3_s": 36.662269592285156,
           "persistence_baseline_discharge_m3_s": 39.41143
         },
         {
           "date": "2026-11-04",
-          "predicted_discharge_m3_s": 39.48908113153077,
-          "lstm_discharge_m3_s": 39.670265197753906,
+          "predicted_discharge_m3_s": 39.48908399255372,
+          "lstm_discharge_m3_s": 39.6702766418457,
           "persistence_baseline_discharge_m3_s": 39.41143
         },
         {
           "date": "2026-11-05",
-          "predicted_discharge_m3_s": 38.46127008111573,
-          "lstm_discharge_m3_s": 36.24422836303711,
+          "predicted_discharge_m3_s": 38.46126626641846,
+          "lstm_discharge_m3_s": 36.24421691894531,
           "persistence_baseline_discharge_m3_s": 39.41143
         },
         {
@@ -2562,20 +2562,20 @@
         },
         {
           "date": "2026-11-02",
-          "predicted_discharge_m3_s": 0.38417813181877136,
-          "lstm_discharge_m3_s": 1.280593752861023,
+          "predicted_discharge_m3_s": 0.3841782212257385,
+          "lstm_discharge_m3_s": 1.280593991279602,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-03",
-          "predicted_discharge_m3_s": 0.3492899239063263,
-          "lstm_discharge_m3_s": 1.164299726486206,
+          "predicted_discharge_m3_s": 0.3492898643016815,
+          "lstm_discharge_m3_s": 1.164299488067627,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-11-04",
-          "predicted_discharge_m3_s": 0.33930274844169617,
-          "lstm_discharge_m3_s": 1.1310091018676758,
+          "predicted_discharge_m3_s": 0.3393028974533081,
+          "lstm_discharge_m3_s": 1.131009578704834,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -2615,7 +2615,7 @@
       "valid_history_days": 76,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 10.02,
-      "predicted_peak_discharge_m3_s": 11.048736156463622,
+      "predicted_peak_discharge_m3_s": 11.048735202789306,
       "peak_discharge_percentile_all_available_history": 38.297013720742534,
       "history_discharge_sample_count": 2478,
       "forecast": [
@@ -2627,8 +2627,8 @@
         },
         {
           "date": "2026-11-02",
-          "predicted_discharge_m3_s": 10.734553874969482,
-          "lstm_discharge_m3_s": 12.401845932006836,
+          "predicted_discharge_m3_s": 10.734553159713744,
+          "lstm_discharge_m3_s": 12.401843070983887,
           "persistence_baseline_discharge_m3_s": 10.02
         },
         {
@@ -2639,8 +2639,8 @@
         },
         {
           "date": "2026-11-04",
-          "predicted_discharge_m3_s": 10.82503229522705,
-          "lstm_discharge_m3_s": 12.70344066619873,
+          "predicted_discharge_m3_s": 10.825031103134155,
+          "lstm_discharge_m3_s": 12.703436851501465,
           "persistence_baseline_discharge_m3_s": 10.02
         },
         {
@@ -2651,8 +2651,8 @@
         },
         {
           "date": "2026-11-06",
-          "predicted_discharge_m3_s": 11.048736156463622,
-          "lstm_discharge_m3_s": 13.44912052154541,
+          "predicted_discharge_m3_s": 11.048735202789306,
+          "lstm_discharge_m3_s": 13.449116706848145,
           "persistence_baseline_discharge_m3_s": 10.02
         },
         {
@@ -2686,8 +2686,8 @@
       "forecast": [
         {
           "date": "2026-11-01",
-          "predicted_discharge_m3_s": 8.358531493377686,
-          "lstm_discharge_m3_s": 11.80610466003418,
+          "predicted_discharge_m3_s": 8.358532447052003,
+          "lstm_discharge_m3_s": 11.806107521057129,
           "persistence_baseline_discharge_m3_s": 6.881
         },
         {
@@ -2722,8 +2722,8 @@
         },
         {
           "date": "2026-11-07",
-          "predicted_discharge_m3_s": 8.483470935058595,
-          "lstm_discharge_m3_s": 12.222569465637207,
+          "predicted_discharge_m3_s": 8.4834697429657,
+          "lstm_discharge_m3_s": 12.222565650939941,
           "persistence_baseline_discharge_m3_s": 6.881
         }
       ]
@@ -2745,7 +2745,7 @@
       "valid_history_days": 72,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 16.114,
-      "predicted_peak_discharge_m3_s": 17.596255841064455,
+      "predicted_peak_discharge_m3_s": 17.59625679473877,
       "peak_discharge_percentile_all_available_history": 76.69902912621359,
       "history_discharge_sample_count": 2575,
       "forecast": [
@@ -2763,32 +2763,32 @@
         },
         {
           "date": "2026-11-03",
-          "predicted_discharge_m3_s": 16.949232640075685,
-          "lstm_discharge_m3_s": 18.898107528686523,
+          "predicted_discharge_m3_s": 16.94923407058716,
+          "lstm_discharge_m3_s": 18.898113250732422,
           "persistence_baseline_discharge_m3_s": 16.114
         },
         {
           "date": "2026-11-04",
-          "predicted_discharge_m3_s": 17.34885746459961,
-          "lstm_discharge_m3_s": 20.23019027709961,
+          "predicted_discharge_m3_s": 17.348858418273927,
+          "lstm_discharge_m3_s": 20.230194091796875,
           "persistence_baseline_discharge_m3_s": 16.114
         },
         {
           "date": "2026-11-05",
-          "predicted_discharge_m3_s": 16.875433029937746,
-          "lstm_discharge_m3_s": 18.652109146118164,
+          "predicted_discharge_m3_s": 16.87543446044922,
+          "lstm_discharge_m3_s": 18.652114868164062,
           "persistence_baseline_discharge_m3_s": 16.114
         },
         {
           "date": "2026-11-06",
-          "predicted_discharge_m3_s": 17.596255841064455,
-          "lstm_discharge_m3_s": 21.054851531982422,
+          "predicted_discharge_m3_s": 17.59625679473877,
+          "lstm_discharge_m3_s": 21.054855346679688,
           "persistence_baseline_discharge_m3_s": 16.114
         },
         {
           "date": "2026-11-07",
-          "predicted_discharge_m3_s": 17.19899279098511,
-          "lstm_discharge_m3_s": 19.730642318725586,
+          "predicted_discharge_m3_s": 17.198994221496584,
+          "lstm_discharge_m3_s": 19.73064613342285,
           "persistence_baseline_discharge_m3_s": 16.114
         }
       ]
@@ -2816,32 +2816,32 @@
       "forecast": [
         {
           "date": "2026-11-01",
-          "predicted_discharge_m3_s": 14.752101631640624,
-          "lstm_discharge_m3_s": 16.021015167236328,
+          "predicted_discharge_m3_s": 14.75210020112915,
+          "lstm_discharge_m3_s": 16.021011352539062,
           "persistence_baseline_discharge_m3_s": 14.208281
         },
         {
           "date": "2026-11-02",
-          "predicted_discharge_m3_s": 14.779942245959472,
-          "lstm_discharge_m3_s": 16.11381721496582,
+          "predicted_discharge_m3_s": 14.779940815447997,
+          "lstm_discharge_m3_s": 16.113813400268555,
           "persistence_baseline_discharge_m3_s": 14.208281
         },
         {
           "date": "2026-11-03",
-          "predicted_discharge_m3_s": 14.619458408831786,
-          "lstm_discharge_m3_s": 15.578871726989746,
+          "predicted_discharge_m3_s": 14.619456978320311,
+          "lstm_discharge_m3_s": 15.578866958618164,
           "persistence_baseline_discharge_m3_s": 14.208281
         },
         {
           "date": "2026-11-04",
-          "predicted_discharge_m3_s": 14.951253147601317,
-          "lstm_discharge_m3_s": 16.68485450744629,
+          "predicted_discharge_m3_s": 14.951251717089843,
+          "lstm_discharge_m3_s": 16.68484878540039,
           "persistence_baseline_discharge_m3_s": 14.208281
         },
         {
           "date": "2026-11-05",
-          "predicted_discharge_m3_s": 14.57070896196289,
-          "lstm_discharge_m3_s": 15.416374206542969,
+          "predicted_discharge_m3_s": 14.570708008288573,
+          "lstm_discharge_m3_s": 15.416370391845703,
           "persistence_baseline_discharge_m3_s": 14.208281
         },
         {
@@ -2852,8 +2852,8 @@
         },
         {
           "date": "2026-11-07",
-          "predicted_discharge_m3_s": 14.841492386340331,
-          "lstm_discharge_m3_s": 16.318984985351562,
+          "predicted_discharge_m3_s": 14.841491432666015,
+          "lstm_discharge_m3_s": 16.318981170654297,
           "persistence_baseline_discharge_m3_s": 14.208281
         }
       ]
@@ -2875,7 +2875,7 @@
       "valid_history_days": 72,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 28.744337,
-      "predicted_peak_discharge_m3_s": 31.02047380435791,
+      "predicted_peak_discharge_m3_s": 31.02047666538086,
       "peak_discharge_percentile_all_available_history": 52.207750952986025,
       "history_discharge_sample_count": 6296,
       "forecast": [
@@ -2887,14 +2887,14 @@
         },
         {
           "date": "2026-11-02",
-          "predicted_discharge_m3_s": 30.320243205908202,
-          "lstm_discharge_m3_s": 33.99735641479492,
+          "predicted_discharge_m3_s": 30.32024129855957,
+          "lstm_discharge_m3_s": 33.99734878540039,
           "persistence_baseline_discharge_m3_s": 28.744337
         },
         {
           "date": "2026-11-03",
-          "predicted_discharge_m3_s": 30.105605449560546,
-          "lstm_discharge_m3_s": 33.281898498535156,
+          "predicted_discharge_m3_s": 30.105602588537597,
+          "lstm_discharge_m3_s": 33.28188705444336,
           "persistence_baseline_discharge_m3_s": 28.744337
         },
         {
@@ -2905,20 +2905,20 @@
         },
         {
           "date": "2026-11-05",
-          "predicted_discharge_m3_s": 30.087248172644042,
-          "lstm_discharge_m3_s": 33.220706939697266,
+          "predicted_discharge_m3_s": 30.08724626529541,
+          "lstm_discharge_m3_s": 33.220699310302734,
           "persistence_baseline_discharge_m3_s": 28.744337
         },
         {
           "date": "2026-11-06",
-          "predicted_discharge_m3_s": 31.02047380435791,
-          "lstm_discharge_m3_s": 36.331459045410156,
+          "predicted_discharge_m3_s": 31.02047666538086,
+          "lstm_discharge_m3_s": 36.33146667480469,
           "persistence_baseline_discharge_m3_s": 28.744337
         },
         {
           "date": "2026-11-07",
-          "predicted_discharge_m3_s": 30.51673158634033,
-          "lstm_discharge_m3_s": 34.65231704711914,
+          "predicted_discharge_m3_s": 30.516728725317382,
+          "lstm_discharge_m3_s": 34.65230941772461,
           "persistence_baseline_discharge_m3_s": 28.744337
         }
       ]
@@ -2940,7 +2940,7 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 7.091,
-      "predicted_peak_discharge_m3_s": 7.909786883544922,
+      "predicted_peak_discharge_m3_s": 7.909786168289185,
       "peak_discharge_percentile_all_available_history": 58.63755163982801,
       "history_discharge_sample_count": 11861,
       "forecast": [
@@ -2952,38 +2952,38 @@
         },
         {
           "date": "2026-10-12",
-          "predicted_discharge_m3_s": 7.5894517337799074,
-          "lstm_discharge_m3_s": 8.7525053024292,
+          "predicted_discharge_m3_s": 7.58945101852417,
+          "lstm_discharge_m3_s": 8.752503395080566,
           "persistence_baseline_discharge_m3_s": 7.091
         },
         {
           "date": "2026-10-13",
-          "predicted_discharge_m3_s": 7.481024447631836,
-          "lstm_discharge_m3_s": 8.391080856323242,
+          "predicted_discharge_m3_s": 7.481023732376099,
+          "lstm_discharge_m3_s": 8.39107894897461,
           "persistence_baseline_discharge_m3_s": 7.091
         },
         {
           "date": "2026-10-14",
-          "predicted_discharge_m3_s": 7.7012705242156985,
-          "lstm_discharge_m3_s": 9.125234603881836,
+          "predicted_discharge_m3_s": 7.701269808959961,
+          "lstm_discharge_m3_s": 9.125232696533203,
           "persistence_baseline_discharge_m3_s": 7.091
         },
         {
           "date": "2026-10-15",
-          "predicted_discharge_m3_s": 7.609493676376343,
-          "lstm_discharge_m3_s": 8.81931209564209,
+          "predicted_discharge_m3_s": 7.609493199539185,
+          "lstm_discharge_m3_s": 8.819310188293457,
           "persistence_baseline_discharge_m3_s": 7.091
         },
         {
           "date": "2026-10-16",
-          "predicted_discharge_m3_s": 7.909786883544922,
-          "lstm_discharge_m3_s": 9.820289611816406,
+          "predicted_discharge_m3_s": 7.909786168289185,
+          "lstm_discharge_m3_s": 9.820286750793457,
           "persistence_baseline_discharge_m3_s": 7.091
         },
         {
           "date": "2026-10-17",
-          "predicted_discharge_m3_s": 7.78650969619751,
-          "lstm_discharge_m3_s": 9.4093656539917,
+          "predicted_discharge_m3_s": 7.786509219360352,
+          "lstm_discharge_m3_s": 9.409363746643066,
           "persistence_baseline_discharge_m3_s": 7.091
         }
       ]
@@ -3029,20 +3029,20 @@
         },
         {
           "date": "2026-10-04",
-          "predicted_discharge_m3_s": 271.09755108642577,
-          "lstm_discharge_m3_s": 321.9818115234375,
+          "predicted_discharge_m3_s": 271.0975053100586,
+          "lstm_discharge_m3_s": 321.9816589355469,
           "persistence_baseline_discharge_m3_s": 249.29
         },
         {
           "date": "2026-10-05",
-          "predicted_discharge_m3_s": 271.4707047729492,
-          "lstm_discharge_m3_s": 323.2256774902344,
+          "predicted_discharge_m3_s": 271.4707505493164,
+          "lstm_discharge_m3_s": 323.225830078125,
           "persistence_baseline_discharge_m3_s": 249.29
         },
         {
           "date": "2026-10-06",
-          "predicted_discharge_m3_s": 269.88816998291014,
-          "lstm_discharge_m3_s": 317.9505615234375,
+          "predicted_discharge_m3_s": 269.88821575927733,
+          "lstm_discharge_m3_s": 317.9507141113281,
           "persistence_baseline_discharge_m3_s": 249.29
         },
         {
@@ -3070,7 +3070,7 @@
       "valid_history_days": 72,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 12.012975,
-      "predicted_peak_discharge_m3_s": 12.716701594848633,
+      "predicted_peak_discharge_m3_s": 12.71670254852295,
       "peak_discharge_percentile_all_available_history": 78.77710629221471,
       "history_discharge_sample_count": 2813,
       "forecast": [
@@ -3088,8 +3088,8 @@
         },
         {
           "date": "2026-10-03",
-          "predicted_discharge_m3_s": 12.08279666091919,
-          "lstm_discharge_m3_s": 12.245713233947754,
+          "predicted_discharge_m3_s": 12.082797376174927,
+          "lstm_discharge_m3_s": 12.245716094970703,
           "persistence_baseline_discharge_m3_s": 12.012975
         },
         {
@@ -3100,14 +3100,14 @@
         },
         {
           "date": "2026-10-05",
-          "predicted_discharge_m3_s": 12.211794940490723,
-          "lstm_discharge_m3_s": 12.675707817077637,
+          "predicted_discharge_m3_s": 12.21179589416504,
+          "lstm_discharge_m3_s": 12.675710678100586,
           "persistence_baseline_discharge_m3_s": 12.012975
         },
         {
           "date": "2026-10-06",
-          "predicted_discharge_m3_s": 12.716701594848633,
-          "lstm_discharge_m3_s": 14.358729362487793,
+          "predicted_discharge_m3_s": 12.71670254852295,
+          "lstm_discharge_m3_s": 14.358732223510742,
           "persistence_baseline_discharge_m3_s": 12.012975
         },
         {
@@ -3135,7 +3135,7 @@
       "valid_history_days": 80,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 255.63907,
-      "predicted_peak_discharge_m3_s": 203.1028017282715,
+      "predicted_peak_discharge_m3_s": 203.10281317236328,
       "peak_discharge_percentile_all_available_history": 91.29757400400624,
       "history_discharge_sample_count": 4493,
       "forecast": [
@@ -3153,14 +3153,14 @@
         },
         {
           "date": "2026-09-13",
-          "predicted_discharge_m3_s": 202.6093191385498,
-          "lstm_discharge_m3_s": 78.87322998046875,
+          "predicted_discharge_m3_s": 202.6093305826416,
+          "lstm_discharge_m3_s": 78.8732681274414,
           "persistence_baseline_discharge_m3_s": 255.63907
         },
         {
           "date": "2026-09-14",
-          "predicted_discharge_m3_s": 203.1028017282715,
-          "lstm_discharge_m3_s": 80.51817321777344,
+          "predicted_discharge_m3_s": 203.10281317236328,
+          "lstm_discharge_m3_s": 80.5182113647461,
           "persistence_baseline_discharge_m3_s": 255.63907
         },
         {
@@ -3177,8 +3177,8 @@
         },
         {
           "date": "2026-09-17",
-          "predicted_discharge_m3_s": 200.39460127355957,
-          "lstm_discharge_m3_s": 71.49083709716797,
+          "predicted_discharge_m3_s": 200.39461081030274,
+          "lstm_discharge_m3_s": 71.4908676147461,
           "persistence_baseline_discharge_m3_s": 255.63907
         }
       ]
@@ -3200,14 +3200,14 @@
       "valid_history_days": 81,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.7865878,
-      "predicted_peak_discharge_m3_s": 1.422252619057617,
+      "predicted_peak_discharge_m3_s": 1.4222527382669066,
       "peak_discharge_percentile_all_available_history": 62.384487198909255,
       "history_discharge_sample_count": 6601,
       "forecast": [
         {
           "date": "2026-09-06",
-          "predicted_discharge_m3_s": 1.1290695307550047,
-          "lstm_discharge_m3_s": 1.92819344997406,
+          "predicted_discharge_m3_s": 1.1290695903596495,
+          "lstm_discharge_m3_s": 1.9281936883926392,
           "persistence_baseline_discharge_m3_s": 0.7865878
         },
         {
@@ -3242,8 +3242,8 @@
         },
         {
           "date": "2026-09-12",
-          "predicted_discharge_m3_s": 1.422252619057617,
-          "lstm_discharge_m3_s": 2.905470371246338,
+          "predicted_discharge_m3_s": 1.4222527382669066,
+          "lstm_discharge_m3_s": 2.905470848083496,
           "persistence_baseline_discharge_m3_s": 0.7865878
         }
       ]
@@ -3271,8 +3271,8 @@
       "forecast": [
         {
           "date": "2026-09-02",
-          "predicted_discharge_m3_s": 3641.9125366210938,
-          "lstm_discharge_m3_s": 2013.0416259765625,
+          "predicted_discharge_m3_s": 3641.9119262695312,
+          "lstm_discharge_m3_s": 2013.0396728515625,
           "persistence_baseline_discharge_m3_s": 4340.0
         },
         {
@@ -3289,8 +3289,8 @@
         },
         {
           "date": "2026-09-05",
-          "predicted_discharge_m3_s": 3424.8439331054688,
-          "lstm_discharge_m3_s": 1289.479736328125,
+          "predicted_discharge_m3_s": 3424.8435668945312,
+          "lstm_discharge_m3_s": 1289.478515625,
           "persistence_baseline_discharge_m3_s": 4340.0
         },
         {
@@ -3336,20 +3336,20 @@
       "forecast": [
         {
           "date": "2026-09-01",
-          "predicted_discharge_m3_s": 53.34616641998291,
-          "lstm_discharge_m3_s": 51.820552825927734,
+          "predicted_discharge_m3_s": 53.34617023468017,
+          "lstm_discharge_m3_s": 51.82056427001953,
           "persistence_baseline_discharge_m3_s": 54.0
         },
         {
           "date": "2026-09-02",
-          "predicted_discharge_m3_s": 52.0033052444458,
-          "lstm_discharge_m3_s": 47.3443489074707,
+          "predicted_discharge_m3_s": 52.003309059143064,
+          "lstm_discharge_m3_s": 47.3443603515625,
           "persistence_baseline_discharge_m3_s": 54.0
         },
         {
           "date": "2026-09-03",
-          "predicted_discharge_m3_s": 53.354215431213376,
-          "lstm_discharge_m3_s": 51.847381591796875,
+          "predicted_discharge_m3_s": 53.35422306060791,
+          "lstm_discharge_m3_s": 51.847408294677734,
           "persistence_baseline_discharge_m3_s": 54.0
         },
         {
@@ -3419,8 +3419,8 @@
         },
         {
           "date": "2026-09-04",
-          "predicted_discharge_m3_s": 323.7083728759766,
-          "lstm_discharge_m3_s": 325.9468994140625,
+          "predicted_discharge_m3_s": 323.7082813232422,
+          "lstm_discharge_m3_s": 325.94659423828125,
           "persistence_baseline_discharge_m3_s": 322.749
         },
         {
@@ -3431,14 +3431,14 @@
         },
         {
           "date": "2026-09-06",
-          "predicted_discharge_m3_s": 324.24498634033205,
-          "lstm_discharge_m3_s": 327.735595703125,
+          "predicted_discharge_m3_s": 324.2448947875977,
+          "lstm_discharge_m3_s": 327.73529052734375,
           "persistence_baseline_discharge_m3_s": 322.749
         },
         {
           "date": "2026-09-07",
-          "predicted_discharge_m3_s": 319.6467273681641,
-          "lstm_discharge_m3_s": 312.4080810546875,
+          "predicted_discharge_m3_s": 319.6466815917969,
+          "lstm_discharge_m3_s": 312.4079284667969,
           "persistence_baseline_discharge_m3_s": 322.749
         }
       ]
@@ -3525,14 +3525,14 @@
       "valid_history_days": 72,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 7.537,
-      "predicted_peak_discharge_m3_s": 7.099623912239075,
+      "predicted_peak_discharge_m3_s": 7.099623673820496,
       "peak_discharge_percentile_all_available_history": 74.20264317180617,
       "history_discharge_sample_count": 5675,
       "forecast": [
         {
           "date": "2026-09-01",
-          "predicted_discharge_m3_s": 6.618093722724915,
-          "lstm_discharge_m3_s": 4.4739789962768555,
+          "predicted_discharge_m3_s": 6.618093841934204,
+          "lstm_discharge_m3_s": 4.473979473114014,
           "persistence_baseline_discharge_m3_s": 7.537
         },
         {
@@ -3543,14 +3543,14 @@
         },
         {
           "date": "2026-09-03",
-          "predicted_discharge_m3_s": 6.636083835029602,
-          "lstm_discharge_m3_s": 4.5339460372924805,
+          "predicted_discharge_m3_s": 6.636084192657471,
+          "lstm_discharge_m3_s": 4.533946990966797,
           "persistence_baseline_discharge_m3_s": 7.537
         },
         {
           "date": "2026-09-04",
-          "predicted_discharge_m3_s": 6.809311264419556,
-          "lstm_discharge_m3_s": 5.11137056350708,
+          "predicted_discharge_m3_s": 6.809311502838135,
+          "lstm_discharge_m3_s": 5.1113715171813965,
           "persistence_baseline_discharge_m3_s": 7.537
         },
         {
@@ -3561,14 +3561,14 @@
         },
         {
           "date": "2026-09-06",
-          "predicted_discharge_m3_s": 7.099623912239075,
-          "lstm_discharge_m3_s": 6.079079627990723,
+          "predicted_discharge_m3_s": 7.099623673820496,
+          "lstm_discharge_m3_s": 6.079078674316406,
           "persistence_baseline_discharge_m3_s": 7.537
         },
         {
           "date": "2026-09-07",
-          "predicted_discharge_m3_s": 7.085064047241211,
-          "lstm_discharge_m3_s": 6.03054666519165,
+          "predicted_discharge_m3_s": 7.085063451194763,
+          "lstm_discharge_m3_s": 6.030544757843018,
           "persistence_baseline_discharge_m3_s": 7.537
         }
       ]
@@ -3596,14 +3596,14 @@
       "forecast": [
         {
           "date": "2026-08-11",
-          "predicted_discharge_m3_s": 0.6362314131281739,
-          "lstm_discharge_m3_s": 1.430474877357483,
+          "predicted_discharge_m3_s": 0.6362315919421082,
+          "lstm_discharge_m3_s": 1.4304754734039307,
           "persistence_baseline_discharge_m3_s": 0.29584134
         },
         {
           "date": "2026-08-12",
-          "predicted_discharge_m3_s": 0.6862200405619507,
-          "lstm_discharge_m3_s": 1.5971035957336426,
+          "predicted_discharge_m3_s": 0.6862202491782075,
+          "lstm_discharge_m3_s": 1.5971043109893799,
           "persistence_baseline_discharge_m3_s": 0.29584134
         },
         {
@@ -3614,14 +3614,14 @@
         },
         {
           "date": "2026-08-14",
-          "predicted_discharge_m3_s": 0.7285042908213502,
-          "lstm_discharge_m3_s": 1.7380510568618774,
+          "predicted_discharge_m3_s": 0.7285041716120606,
+          "lstm_discharge_m3_s": 1.7380506992340088,
           "persistence_baseline_discharge_m3_s": 0.29584134
         },
         {
           "date": "2026-08-15",
-          "predicted_discharge_m3_s": 0.8840706255457764,
-          "lstm_discharge_m3_s": 2.256605625152588,
+          "predicted_discharge_m3_s": 0.8840705063364869,
+          "lstm_discharge_m3_s": 2.2566051483154297,
           "persistence_baseline_discharge_m3_s": 0.29584134
         },
         {
@@ -3697,8 +3697,8 @@
         },
         {
           "date": "2026-08-07",
-          "predicted_discharge_m3_s": 287.29134995117187,
-          "lstm_discharge_m3_s": 265.9748229980469,
+          "predicted_discharge_m3_s": 287.2913118041992,
+          "lstm_discharge_m3_s": 265.9747009277344,
           "persistence_baseline_discharge_m3_s": 296.427
         }
       ]
@@ -3720,7 +3720,7 @@
       "valid_history_days": 83,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 24.174,
-      "predicted_peak_discharge_m3_s": 31.476253849792478,
+      "predicted_peak_discharge_m3_s": 31.476256710815427,
       "peak_discharge_percentile_all_available_history": 13.062132528205943,
       "history_discharge_sample_count": 18879,
       "forecast": [
@@ -3738,8 +3738,8 @@
         },
         {
           "date": "2026-08-03",
-          "predicted_discharge_m3_s": 28.487241131591794,
-          "lstm_discharge_m3_s": 38.55146789550781,
+          "predicted_discharge_m3_s": 28.48723731689453,
+          "lstm_discharge_m3_s": 38.551456451416016,
           "persistence_baseline_discharge_m3_s": 24.174
         },
         {
@@ -3756,14 +3756,14 @@
         },
         {
           "date": "2026-08-06",
-          "predicted_discharge_m3_s": 31.476253849792478,
-          "lstm_discharge_m3_s": 48.51484298706055,
+          "predicted_discharge_m3_s": 31.476256710815427,
+          "lstm_discharge_m3_s": 48.514854431152344,
           "persistence_baseline_discharge_m3_s": 24.174
         },
         {
           "date": "2026-08-07",
-          "predicted_discharge_m3_s": 30.68261562042236,
-          "lstm_discharge_m3_s": 45.869384765625,
+          "predicted_discharge_m3_s": 30.68261275939941,
+          "lstm_discharge_m3_s": 45.8693733215332,
           "persistence_baseline_discharge_m3_s": 24.174
         }
       ]
@@ -3785,7 +3785,7 @@
       "valid_history_days": 81,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 3.142,
-      "predicted_peak_discharge_m3_s": 4.241664461517334,
+      "predicted_peak_discharge_m3_s": 4.241663269424438,
       "peak_discharge_percentile_all_available_history": 28.55862584017924,
       "history_discharge_sample_count": 6695,
       "forecast": [
@@ -3803,20 +3803,20 @@
         },
         {
           "date": "2026-08-03",
-          "predicted_discharge_m3_s": 3.59180825176239,
-          "lstm_discharge_m3_s": 4.641360759735107,
+          "predicted_discharge_m3_s": 3.5918078941345213,
+          "lstm_discharge_m3_s": 4.641359329223633,
           "persistence_baseline_discharge_m3_s": 3.142
         },
         {
           "date": "2026-08-04",
-          "predicted_discharge_m3_s": 3.813558272743225,
-          "lstm_discharge_m3_s": 5.380527496337891,
+          "predicted_discharge_m3_s": 3.813558034324646,
+          "lstm_discharge_m3_s": 5.380526542663574,
           "persistence_baseline_discharge_m3_s": 3.142
         },
         {
           "date": "2026-08-05",
-          "predicted_discharge_m3_s": 3.837395600700378,
-          "lstm_discharge_m3_s": 5.459985256195068,
+          "predicted_discharge_m3_s": 3.8373952430725096,
+          "lstm_discharge_m3_s": 5.459983825683594,
           "persistence_baseline_discharge_m3_s": 3.142
         },
         {
@@ -3827,8 +3827,8 @@
         },
         {
           "date": "2026-08-07",
-          "predicted_discharge_m3_s": 4.241664461517334,
-          "lstm_discharge_m3_s": 6.807547569274902,
+          "predicted_discharge_m3_s": 4.241663269424438,
+          "lstm_discharge_m3_s": 6.807543754577637,
           "persistence_baseline_discharge_m3_s": 3.142
         }
       ]
@@ -3850,7 +3850,7 @@
       "valid_history_days": 81,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 128.267,
-      "predicted_peak_discharge_m3_s": 138.76113934936524,
+      "predicted_peak_discharge_m3_s": 138.76116223754883,
       "peak_discharge_percentile_all_available_history": 93.49562571319893,
       "history_discharge_sample_count": 7887,
       "forecast": [
@@ -3874,26 +3874,26 @@
         },
         {
           "date": "2026-08-04",
-          "predicted_discharge_m3_s": 136.63116879882813,
-          "lstm_discharge_m3_s": 156.14755249023438,
+          "predicted_discharge_m3_s": 136.63121457519532,
+          "lstm_discharge_m3_s": 156.147705078125,
           "persistence_baseline_discharge_m3_s": 128.267
         },
         {
           "date": "2026-08-05",
-          "predicted_discharge_m3_s": 130.80188413085938,
-          "lstm_discharge_m3_s": 136.71661376953125,
+          "predicted_discharge_m3_s": 130.80190701904297,
+          "lstm_discharge_m3_s": 136.71669006347656,
           "persistence_baseline_discharge_m3_s": 128.267
         },
         {
           "date": "2026-08-06",
-          "predicted_discharge_m3_s": 138.76113934936524,
-          "lstm_discharge_m3_s": 163.24745178222656,
+          "predicted_discharge_m3_s": 138.76116223754883,
+          "lstm_discharge_m3_s": 163.24752807617188,
           "persistence_baseline_discharge_m3_s": 128.267
         },
         {
           "date": "2026-08-07",
-          "predicted_discharge_m3_s": 135.89537091674805,
-          "lstm_discharge_m3_s": 153.6949005126953,
+          "predicted_discharge_m3_s": 135.89539380493164,
+          "lstm_discharge_m3_s": 153.69497680664062,
           "persistence_baseline_discharge_m3_s": 128.267
         }
       ]
@@ -3933,20 +3933,20 @@
         },
         {
           "date": "2026-08-03",
-          "predicted_discharge_m3_s": 3.8626499036788937,
-          "lstm_discharge_m3_s": 4.774166107177734,
+          "predicted_discharge_m3_s": 3.862649546051025,
+          "lstm_discharge_m3_s": 4.774165153503418,
           "persistence_baseline_discharge_m3_s": 3.472
         },
         {
           "date": "2026-08-04",
-          "predicted_discharge_m3_s": 4.088009105110168,
-          "lstm_discharge_m3_s": 5.525363445281982,
+          "predicted_discharge_m3_s": 4.08800862827301,
+          "lstm_discharge_m3_s": 5.525362014770508,
           "persistence_baseline_discharge_m3_s": 3.472
         },
         {
           "date": "2026-08-05",
-          "predicted_discharge_m3_s": 4.100423322105407,
-          "lstm_discharge_m3_s": 5.566744327545166,
+          "predicted_discharge_m3_s": 4.100423202896118,
+          "lstm_discharge_m3_s": 5.566743850708008,
           "persistence_baseline_discharge_m3_s": 3.472
         },
         {
@@ -3980,7 +3980,7 @@
       "valid_history_days": 78,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 140.255,
-      "predicted_peak_discharge_m3_s": 147.2501094970703,
+      "predicted_peak_discharge_m3_s": 147.2501323852539,
       "peak_discharge_percentile_all_available_history": 96.51898734177215,
       "history_discharge_sample_count": 2212,
       "forecast": [
@@ -4016,8 +4016,8 @@
         },
         {
           "date": "2026-08-06",
-          "predicted_discharge_m3_s": 147.2501094970703,
-          "lstm_discharge_m3_s": 163.572021484375,
+          "predicted_discharge_m3_s": 147.2501323852539,
+          "lstm_discharge_m3_s": 163.5720977783203,
           "persistence_baseline_discharge_m3_s": 140.255
         },
         {
@@ -4051,8 +4051,8 @@
       "forecast": [
         {
           "date": "2026-08-01",
-          "predicted_discharge_m3_s": 29.358180065917967,
-          "lstm_discharge_m3_s": 32.94960021972656,
+          "predicted_discharge_m3_s": 29.358178158569334,
+          "lstm_discharge_m3_s": 32.94959259033203,
           "persistence_baseline_discharge_m3_s": 27.819
         },
         {
@@ -4063,20 +4063,20 @@
         },
         {
           "date": "2026-08-03",
-          "predicted_discharge_m3_s": 30.22243215637207,
-          "lstm_discharge_m3_s": 35.830440521240234,
+          "predicted_discharge_m3_s": 30.222424526977537,
+          "lstm_discharge_m3_s": 35.830413818359375,
           "persistence_baseline_discharge_m3_s": 27.819
         },
         {
           "date": "2026-08-04",
-          "predicted_discharge_m3_s": 31.84077074127197,
-          "lstm_discharge_m3_s": 41.22489929199219,
+          "predicted_discharge_m3_s": 31.840766926574705,
+          "lstm_discharge_m3_s": 41.22488784790039,
           "persistence_baseline_discharge_m3_s": 27.819
         },
         {
           "date": "2026-08-05",
-          "predicted_discharge_m3_s": 30.172047634887694,
-          "lstm_discharge_m3_s": 35.66249084472656,
+          "predicted_discharge_m3_s": 30.172041912841795,
+          "lstm_discharge_m3_s": 35.662471771240234,
           "persistence_baseline_discharge_m3_s": 27.819
         },
         {
@@ -4087,8 +4087,8 @@
         },
         {
           "date": "2026-08-07",
-          "predicted_discharge_m3_s": 32.54325105743408,
-          "lstm_discharge_m3_s": 43.56650161743164,
+          "predicted_discharge_m3_s": 32.543249150085444,
+          "lstm_discharge_m3_s": 43.56649398803711,
           "persistence_baseline_discharge_m3_s": 27.819
         }
       ]
@@ -4116,8 +4116,8 @@
       "forecast": [
         {
           "date": "2026-07-30",
-          "predicted_discharge_m3_s": 203.0741195800781,
-          "lstm_discharge_m3_s": 189.82106018066406,
+          "predicted_discharge_m3_s": 203.07409287719724,
+          "lstm_discharge_m3_s": 189.8209686279297,
           "persistence_baseline_discharge_m3_s": 208.754
         },
         {
@@ -4140,8 +4140,8 @@
         },
         {
           "date": "2026-08-03",
-          "predicted_discharge_m3_s": 205.015193951416,
-          "lstm_discharge_m3_s": 196.2913055419922,
+          "predicted_discharge_m3_s": 205.01513291625974,
+          "lstm_discharge_m3_s": 196.29110717773438,
           "persistence_baseline_discharge_m3_s": 208.754
         },
         {
@@ -4152,8 +4152,8 @@
         },
         {
           "date": "2026-08-05",
-          "predicted_discharge_m3_s": 209.7986946228027,
-          "lstm_discharge_m3_s": 212.23631286621094,
+          "predicted_discharge_m3_s": 209.7986641052246,
+          "lstm_discharge_m3_s": 212.2362060546875,
           "persistence_baseline_discharge_m3_s": 208.754
         }
       ]
@@ -4175,7 +4175,7 @@
       "valid_history_days": 84,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.143,
-      "predicted_peak_discharge_m3_s": 0.596978445148468,
+      "predicted_peak_discharge_m3_s": 0.5969783557415008,
       "peak_discharge_percentile_all_available_history": 26.482873851294904,
       "history_discharge_sample_count": 1197,
       "forecast": [
@@ -4187,26 +4187,26 @@
         },
         {
           "date": "2026-07-04",
-          "predicted_discharge_m3_s": 0.3573485208511352,
-          "lstm_discharge_m3_s": 0.8574950695037842,
+          "predicted_discharge_m3_s": 0.35734846124649045,
+          "lstm_discharge_m3_s": 0.8574948310852051,
           "persistence_baseline_discharge_m3_s": 0.143
         },
         {
           "date": "2026-07-05",
-          "predicted_discharge_m3_s": 0.36518441567420956,
-          "lstm_discharge_m3_s": 0.883614718914032,
+          "predicted_discharge_m3_s": 0.3651845050811767,
+          "lstm_discharge_m3_s": 0.8836149573326111,
           "persistence_baseline_discharge_m3_s": 0.143
         },
         {
           "date": "2026-07-06",
-          "predicted_discharge_m3_s": 0.4317845297813415,
-          "lstm_discharge_m3_s": 1.1056150197982788,
+          "predicted_discharge_m3_s": 0.43178464899063107,
+          "lstm_discharge_m3_s": 1.105615496635437,
           "persistence_baseline_discharge_m3_s": 0.143
         },
         {
           "date": "2026-07-07",
-          "predicted_discharge_m3_s": 0.5484632743358612,
-          "lstm_discharge_m3_s": 1.4945441484451294,
+          "predicted_discharge_m3_s": 0.548463184928894,
+          "lstm_discharge_m3_s": 1.4945439100265503,
           "persistence_baseline_discharge_m3_s": 0.143
         },
         {
@@ -4217,8 +4217,8 @@
         },
         {
           "date": "2026-07-09",
-          "predicted_discharge_m3_s": 0.596978445148468,
-          "lstm_discharge_m3_s": 1.6562614440917969,
+          "predicted_discharge_m3_s": 0.5969783557415008,
+          "lstm_discharge_m3_s": 1.6562610864639282,
           "persistence_baseline_discharge_m3_s": 0.143
         }
       ]
@@ -4258,14 +4258,14 @@
         },
         {
           "date": "2026-06-09",
-          "predicted_discharge_m3_s": 14.102508778381347,
-          "lstm_discharge_m3_s": 16.93402862548828,
+          "predicted_discharge_m3_s": 14.102509732055664,
+          "lstm_discharge_m3_s": 16.934032440185547,
           "persistence_baseline_discharge_m3_s": 12.889
         },
         {
           "date": "2026-06-10",
-          "predicted_discharge_m3_s": 15.246812577056884,
-          "lstm_discharge_m3_s": 20.748374938964844,
+          "predicted_discharge_m3_s": 15.246814484405517,
+          "lstm_discharge_m3_s": 20.748380661010742,
           "persistence_baseline_discharge_m3_s": 12.889
         },
         {
@@ -4282,8 +4282,8 @@
         },
         {
           "date": "2026-06-13",
-          "predicted_discharge_m3_s": 15.91212629776001,
-          "lstm_discharge_m3_s": 22.966087341308594,
+          "predicted_discharge_m3_s": 15.912128205108642,
+          "lstm_discharge_m3_s": 22.966093063354492,
           "persistence_baseline_discharge_m3_s": 12.889
         }
       ]
@@ -4305,50 +4305,50 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.20936208963394165,
+      "predicted_peak_discharge_m3_s": 0.2093619555234909,
       "peak_discharge_percentile_all_available_history": 21.61825726141079,
       "history_discharge_sample_count": 2410,
       "forecast": [
         {
           "date": "2026-06-01",
-          "predicted_discharge_m3_s": 0.05025654286146164,
-          "lstm_discharge_m3_s": 0.16752180457115173,
+          "predicted_discharge_m3_s": 0.05025629326701164,
+          "lstm_discharge_m3_s": 0.16752097010612488,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-06-02",
-          "predicted_discharge_m3_s": 0.09290014207363129,
-          "lstm_discharge_m3_s": 0.3096671402454376,
+          "predicted_discharge_m3_s": 0.09290004521608353,
+          "lstm_discharge_m3_s": 0.30966681241989136,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-06-03",
-          "predicted_discharge_m3_s": 0.06807421147823334,
-          "lstm_discharge_m3_s": 0.22691403329372406,
+          "predicted_discharge_m3_s": 0.06807395070791245,
+          "lstm_discharge_m3_s": 0.22691316902637482,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-06-04",
-          "predicted_discharge_m3_s": 0.12556049227714539,
-          "lstm_discharge_m3_s": 0.4185349643230438,
+          "predicted_discharge_m3_s": 0.12556029856204987,
+          "lstm_discharge_m3_s": 0.4185343086719513,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-06-05",
-          "predicted_discharge_m3_s": 0.19920682907104492,
-          "lstm_discharge_m3_s": 0.6640227437019348,
+          "predicted_discharge_m3_s": 0.19920653104782104,
+          "lstm_discharge_m3_s": 0.6640217304229736,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-06-06",
-          "predicted_discharge_m3_s": 0.16230008006095886,
-          "lstm_discharge_m3_s": 0.541000247001648,
+          "predicted_discharge_m3_s": 0.1622999608516693,
+          "lstm_discharge_m3_s": 0.5409998297691345,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-06-07",
-          "predicted_discharge_m3_s": 0.20936208963394165,
-          "lstm_discharge_m3_s": 0.697873592376709,
+          "predicted_discharge_m3_s": 0.2093619555234909,
+          "lstm_discharge_m3_s": 0.6978731751441956,
           "persistence_baseline_discharge_m3_s": 0.0
         }
       ]
@@ -4382,8 +4382,8 @@
         },
         {
           "date": "2026-06-02",
-          "predicted_discharge_m3_s": 331.5174127075195,
-          "lstm_discharge_m3_s": 349.24237060546875,
+          "predicted_discharge_m3_s": 331.5173669311523,
+          "lstm_discharge_m3_s": 349.2422180175781,
           "persistence_baseline_discharge_m3_s": 323.921
         },
         {
@@ -4412,8 +4412,8 @@
         },
         {
           "date": "2026-06-07",
-          "predicted_discharge_m3_s": 352.0064950439453,
-          "lstm_discharge_m3_s": 417.539306640625,
+          "predicted_discharge_m3_s": 352.0066171142578,
+          "lstm_discharge_m3_s": 417.5397033691406,
           "persistence_baseline_discharge_m3_s": 323.921
         }
       ]
@@ -4435,7 +4435,7 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.165,
-      "predicted_peak_discharge_m3_s": 0.2243140085339546,
+      "predicted_peak_discharge_m3_s": 0.22431410539150237,
       "peak_discharge_percentile_all_available_history": 47.265810746552546,
       "history_discharge_sample_count": 2103,
       "forecast": [
@@ -4447,8 +4447,8 @@
         },
         {
           "date": "2026-04-07",
-          "predicted_discharge_m3_s": 0.19792549002170562,
-          "lstm_discharge_m3_s": 0.2747516334056854,
+          "predicted_discharge_m3_s": 0.19792557942867278,
+          "lstm_discharge_m3_s": 0.2747519314289093,
           "persistence_baseline_discharge_m3_s": 0.165
         },
         {
@@ -4465,20 +4465,20 @@
         },
         {
           "date": "2026-04-10",
-          "predicted_discharge_m3_s": 0.2243140085339546,
-          "lstm_discharge_m3_s": 0.3627133369445801,
+          "predicted_discharge_m3_s": 0.22431410539150237,
+          "lstm_discharge_m3_s": 0.36271366477012634,
           "persistence_baseline_discharge_m3_s": 0.165
         },
         {
           "date": "2026-04-11",
-          "predicted_discharge_m3_s": 0.19381710577011108,
-          "lstm_discharge_m3_s": 0.2610570192337036,
+          "predicted_discharge_m3_s": 0.19381721007823943,
+          "lstm_discharge_m3_s": 0.2610573470592499,
           "persistence_baseline_discharge_m3_s": 0.165
         },
         {
           "date": "2026-04-12",
-          "predicted_discharge_m3_s": 0.2120815559029579,
-          "lstm_discharge_m3_s": 0.32193851470947266,
+          "predicted_discharge_m3_s": 0.21208164530992507,
+          "lstm_discharge_m3_s": 0.32193881273269653,
           "persistence_baseline_discharge_m3_s": 0.165
         }
       ]
@@ -4500,7 +4500,7 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.161,
-      "predicted_peak_discharge_m3_s": 0.22304253239631652,
+      "predicted_peak_discharge_m3_s": 0.22304243553876876,
       "peak_discharge_percentile_all_available_history": 64.18528747175496,
       "history_discharge_sample_count": 7966,
       "forecast": [
@@ -4512,8 +4512,8 @@
         },
         {
           "date": "2026-04-06",
-          "predicted_discharge_m3_s": 0.19764707196950912,
-          "lstm_discharge_m3_s": 0.2831569015979767,
+          "predicted_discharge_m3_s": 0.19764698256254196,
+          "lstm_discharge_m3_s": 0.2831566035747528,
           "persistence_baseline_discharge_m3_s": 0.161
         },
         {
@@ -4530,20 +4530,20 @@
         },
         {
           "date": "2026-04-09",
-          "predicted_discharge_m3_s": 0.22304253239631652,
-          "lstm_discharge_m3_s": 0.36780843138694763,
+          "predicted_discharge_m3_s": 0.22304243553876876,
+          "lstm_discharge_m3_s": 0.36780810356140137,
           "persistence_baseline_discharge_m3_s": 0.161
         },
         {
           "date": "2026-04-10",
-          "predicted_discharge_m3_s": 0.1924971710562706,
-          "lstm_discharge_m3_s": 0.26599055528640747,
+          "predicted_discharge_m3_s": 0.19249708164930343,
+          "lstm_discharge_m3_s": 0.2659902572631836,
           "persistence_baseline_discharge_m3_s": 0.161
         },
         {
           "date": "2026-04-11",
-          "predicted_discharge_m3_s": 0.2109035994529724,
-          "lstm_discharge_m3_s": 0.3273453116416931,
+          "predicted_discharge_m3_s": 0.21090351004600524,
+          "lstm_discharge_m3_s": 0.32734501361846924,
           "persistence_baseline_discharge_m3_s": 0.161
         }
       ]
@@ -4565,14 +4565,14 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.06844630837440491,
+      "predicted_peak_discharge_m3_s": 0.06844613701105118,
       "peak_discharge_percentile_all_available_history": 49.808429118773944,
       "history_discharge_sample_count": 1044,
       "forecast": [
         {
           "date": "2026-04-01",
-          "predicted_discharge_m3_s": 0.021523529663681984,
-          "lstm_discharge_m3_s": 0.07174509763717651,
+          "predicted_discharge_m3_s": 0.021523453295230865,
+          "lstm_discharge_m3_s": 0.07174484431743622,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -4583,32 +4583,32 @@
         },
         {
           "date": "2026-04-03",
-          "predicted_discharge_m3_s": 0.004530466161668301,
-          "lstm_discharge_m3_s": 0.015101553872227669,
+          "predicted_discharge_m3_s": 0.004530248697847128,
+          "lstm_discharge_m3_s": 0.015100828371942043,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-04-04",
-          "predicted_discharge_m3_s": 0.036871351301670074,
-          "lstm_discharge_m3_s": 0.12290450185537338,
+          "predicted_discharge_m3_s": 0.03687119483947754,
+          "lstm_discharge_m3_s": 0.122903972864151,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-04-05",
-          "predicted_discharge_m3_s": 0.06844630837440491,
-          "lstm_discharge_m3_s": 0.22815436124801636,
+          "predicted_discharge_m3_s": 0.06844613701105118,
+          "lstm_discharge_m3_s": 0.2281537801027298,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-04-06",
-          "predicted_discharge_m3_s": 0.030111676082015038,
-          "lstm_discharge_m3_s": 0.10037224739789963,
+          "predicted_discharge_m3_s": 0.03011159785091877,
+          "lstm_discharge_m3_s": 0.10037198662757874,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-04-07",
-          "predicted_discharge_m3_s": 0.04589567333459854,
-          "lstm_discharge_m3_s": 0.1529855728149414,
+          "predicted_discharge_m3_s": 0.04589558765292168,
+          "lstm_discharge_m3_s": 0.15298528969287872,
           "persistence_baseline_discharge_m3_s": 0.0
         }
       ]
@@ -4642,8 +4642,8 @@
         },
         {
           "date": "2026-04-02",
-          "predicted_discharge_m3_s": 0.5819329080820084,
-          "lstm_discharge_m3_s": 0.488442987203598,
+          "predicted_discharge_m3_s": 0.5819327888727188,
+          "lstm_discharge_m3_s": 0.48844262957572937,
           "persistence_baseline_discharge_m3_s": 0.622
         },
         {
@@ -4666,8 +4666,8 @@
         },
         {
           "date": "2026-04-06",
-          "predicted_discharge_m3_s": 0.5807719586133957,
-          "lstm_discharge_m3_s": 0.4845731556415558,
+          "predicted_discharge_m3_s": 0.5807718394041061,
+          "lstm_discharge_m3_s": 0.48457279801368713,
           "persistence_baseline_discharge_m3_s": 0.622
         },
         {
@@ -4695,14 +4695,14 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.13606616854667664,
+      "predicted_peak_discharge_m3_s": 0.13606607913970947,
       "peak_discharge_percentile_all_available_history": 80.12863913337847,
       "history_discharge_sample_count": 2954,
       "forecast": [
         {
           "date": "2026-01-01",
-          "predicted_discharge_m3_s": 0.10011636465787888,
-          "lstm_discharge_m3_s": 0.33372119069099426,
+          "predicted_discharge_m3_s": 0.1001165583729744,
+          "lstm_discharge_m3_s": 0.3337218463420868,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -4713,8 +4713,8 @@
         },
         {
           "date": "2026-01-03",
-          "predicted_discharge_m3_s": 0.11814810335636139,
-          "lstm_discharge_m3_s": 0.39382699131965637,
+          "predicted_discharge_m3_s": 0.11814820021390915,
+          "lstm_discharge_m3_s": 0.39382731914520264,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -4725,14 +4725,14 @@
         },
         {
           "date": "2026-01-05",
-          "predicted_discharge_m3_s": 0.13606616854667664,
-          "lstm_discharge_m3_s": 0.4535538852214813,
+          "predicted_discharge_m3_s": 0.13606607913970947,
+          "lstm_discharge_m3_s": 0.45355355739593506,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-01-06",
-          "predicted_discharge_m3_s": 0.10539098083972931,
-          "lstm_discharge_m3_s": 0.35130324959754944,
+          "predicted_discharge_m3_s": 0.10539077967405319,
+          "lstm_discharge_m3_s": 0.3513025939464569,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -4790,8 +4790,8 @@
         },
         {
           "date": "2026-01-05",
-          "predicted_discharge_m3_s": 27.885240294647218,
-          "lstm_discharge_m3_s": 22.785133361816406,
+          "predicted_discharge_m3_s": 27.885238387298585,
+          "lstm_discharge_m3_s": 22.785127639770508,
           "persistence_baseline_discharge_m3_s": 30.071
         },
         {
@@ -4802,8 +4802,8 @@
         },
         {
           "date": "2026-01-07",
-          "predicted_discharge_m3_s": 29.142612673950197,
-          "lstm_discharge_m3_s": 26.97637367248535,
+          "predicted_discharge_m3_s": 29.14261458129883,
+          "lstm_discharge_m3_s": 26.97637939453125,
           "persistence_baseline_discharge_m3_s": 30.071
         }
       ]
@@ -4825,14 +4825,14 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.13758140802383423,
+      "predicted_peak_discharge_m3_s": 0.13758151233196259,
       "peak_discharge_percentile_all_available_history": 79.23590619661438,
       "history_discharge_sample_count": 12878,
       "forecast": [
         {
           "date": "2026-01-01",
-          "predicted_discharge_m3_s": 0.10190001875162125,
-          "lstm_discharge_m3_s": 0.3396667242050171,
+          "predicted_discharge_m3_s": 0.1019001230597496,
+          "lstm_discharge_m3_s": 0.33966705203056335,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -4855,20 +4855,20 @@
         },
         {
           "date": "2026-01-05",
-          "predicted_discharge_m3_s": 0.13758140802383423,
-          "lstm_discharge_m3_s": 0.4586046636104584,
+          "predicted_discharge_m3_s": 0.13758151233196259,
+          "lstm_discharge_m3_s": 0.458605021238327,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-01-06",
-          "predicted_discharge_m3_s": 0.10770883411169052,
-          "lstm_discharge_m3_s": 0.3590294420719147,
+          "predicted_discharge_m3_s": 0.10770893841981888,
+          "lstm_discharge_m3_s": 0.35902976989746094,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2026-01-07",
-          "predicted_discharge_m3_s": 0.09289349615573883,
-          "lstm_discharge_m3_s": 0.3096449673175812,
+          "predicted_discharge_m3_s": 0.092893585562706,
+          "lstm_discharge_m3_s": 0.30964526534080505,
           "persistence_baseline_discharge_m3_s": 0.0
         }
       ]
@@ -4890,44 +4890,44 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 10.359,
-      "predicted_peak_discharge_m3_s": 10.030442856597901,
+      "predicted_peak_discharge_m3_s": 10.030441902923585,
       "peak_discharge_percentile_all_available_history": 62.436439160638834,
       "history_discharge_sample_count": 13963,
       "forecast": [
         {
           "date": "2026-01-01",
-          "predicted_discharge_m3_s": 10.030442856597901,
-          "lstm_discharge_m3_s": 9.263809204101562,
+          "predicted_discharge_m3_s": 10.030441902923585,
+          "lstm_discharge_m3_s": 9.263806343078613,
           "persistence_baseline_discharge_m3_s": 10.359
         },
         {
           "date": "2026-01-02",
-          "predicted_discharge_m3_s": 9.851329468536377,
-          "lstm_discharge_m3_s": 8.666764259338379,
+          "predicted_discharge_m3_s": 9.85132875328064,
+          "lstm_discharge_m3_s": 8.666762351989746,
           "persistence_baseline_discharge_m3_s": 10.359
         },
         {
           "date": "2026-01-03",
-          "predicted_discharge_m3_s": 9.76573910598755,
-          "lstm_discharge_m3_s": 8.381463050842285,
+          "predicted_discharge_m3_s": 9.765738152313233,
+          "lstm_discharge_m3_s": 8.381460189819336,
           "persistence_baseline_discharge_m3_s": 10.359
         },
         {
           "date": "2026-01-04",
-          "predicted_discharge_m3_s": 9.849411391067505,
-          "lstm_discharge_m3_s": 8.660370826721191,
+          "predicted_discharge_m3_s": 9.849410675811768,
+          "lstm_discharge_m3_s": 8.660368919372559,
           "persistence_baseline_discharge_m3_s": 10.359
         },
         {
           "date": "2026-01-05",
-          "predicted_discharge_m3_s": 9.483379029083252,
-          "lstm_discharge_m3_s": 7.440263271331787,
+          "predicted_discharge_m3_s": 9.483378552246094,
+          "lstm_discharge_m3_s": 7.440261363983154,
           "persistence_baseline_discharge_m3_s": 10.359
         },
         {
           "date": "2026-01-06",
-          "predicted_discharge_m3_s": 9.88985528831482,
-          "lstm_discharge_m3_s": 8.795184135437012,
+          "predicted_discharge_m3_s": 9.889854811477662,
+          "lstm_discharge_m3_s": 8.795182228088379,
           "persistence_baseline_discharge_m3_s": 10.359
         },
         {
@@ -4955,7 +4955,7 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.21553582,
-      "predicted_peak_discharge_m3_s": 0.3287724826046219,
+      "predicted_peak_discharge_m3_s": 0.32877237829649353,
       "peak_discharge_percentile_all_available_history": 63.64335126825519,
       "history_discharge_sample_count": 1301,
       "forecast": [
@@ -4973,8 +4973,8 @@
         },
         {
           "date": "2026-01-03",
-          "predicted_discharge_m3_s": 0.326173884005188,
-          "lstm_discharge_m3_s": 0.58432936668396,
+          "predicted_discharge_m3_s": 0.32617377969705963,
+          "lstm_discharge_m3_s": 0.5843290090560913,
           "persistence_baseline_discharge_m3_s": 0.21553582
         },
         {
@@ -4985,8 +4985,8 @@
         },
         {
           "date": "2026-01-05",
-          "predicted_discharge_m3_s": 0.3287724826046219,
-          "lstm_discharge_m3_s": 0.5929913520812988,
+          "predicted_discharge_m3_s": 0.32877237829649353,
+          "lstm_discharge_m3_s": 0.5929909944534302,
           "persistence_baseline_discharge_m3_s": 0.21553582
         },
         {
@@ -5020,14 +5020,14 @@
       "valid_history_days": 89,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 1.1,
-      "predicted_peak_discharge_m3_s": 1.248668600320816,
+      "predicted_peak_discharge_m3_s": 1.2486683320999146,
       "peak_discharge_percentile_all_available_history": 44.35674822415154,
       "history_discharge_sample_count": 2534,
       "forecast": [
         {
           "date": "2026-01-01",
-          "predicted_discharge_m3_s": 1.248668600320816,
-          "lstm_discharge_m3_s": 1.5955619812011719,
+          "predicted_discharge_m3_s": 1.2486683320999146,
+          "lstm_discharge_m3_s": 1.5955610275268555,
           "persistence_baseline_discharge_m3_s": 1.1
         },
         {
@@ -5050,14 +5050,14 @@
         },
         {
           "date": "2026-01-05",
-          "predicted_discharge_m3_s": 1.1944575500488281,
-          "lstm_discharge_m3_s": 1.4148584604263306,
+          "predicted_discharge_m3_s": 1.1944573712348938,
+          "lstm_discharge_m3_s": 1.4148578643798828,
           "persistence_baseline_discharge_m3_s": 1.1
         },
         {
           "date": "2026-01-06",
-          "predicted_discharge_m3_s": 1.2417806577682495,
-          "lstm_discharge_m3_s": 1.5726021528244019,
+          "predicted_discharge_m3_s": 1.2417804789543152,
+          "lstm_discharge_m3_s": 1.572601556777954,
           "persistence_baseline_discharge_m3_s": 1.1
         },
         {
@@ -5091,14 +5091,14 @@
       "forecast": [
         {
           "date": "2026-01-01",
-          "predicted_discharge_m3_s": 0.7696882161799622,
-          "lstm_discharge_m3_s": 0.8892227411270142,
+          "predicted_discharge_m3_s": 0.769688275784607,
+          "lstm_discharge_m3_s": 0.8892229795455933,
           "persistence_baseline_discharge_m3_s": 0.7184591
         },
         {
           "date": "2026-01-02",
-          "predicted_discharge_m3_s": 0.765411284894104,
-          "lstm_discharge_m3_s": 0.8749663233757019,
+          "predicted_discharge_m3_s": 0.7654113444987488,
+          "lstm_discharge_m3_s": 0.874966561794281,
           "persistence_baseline_discharge_m3_s": 0.7184591
         },
         {
@@ -5127,8 +5127,8 @@
         },
         {
           "date": "2026-01-07",
-          "predicted_discharge_m3_s": 0.751724493831749,
-          "lstm_discharge_m3_s": 0.8293437361717224,
+          "predicted_discharge_m3_s": 0.7517246428433609,
+          "lstm_discharge_m3_s": 0.8293442130088806,
           "persistence_baseline_discharge_m3_s": 0.7184591
         }
       ]
@@ -5168,8 +5168,8 @@
         },
         {
           "date": "2026-01-03",
-          "predicted_discharge_m3_s": 3.5401757320404053,
-          "lstm_discharge_m3_s": 3.3725857734680176,
+          "predicted_discharge_m3_s": 3.5401759704589844,
+          "lstm_discharge_m3_s": 3.372586250305176,
           "persistence_baseline_discharge_m3_s": 3.612
         },
         {
@@ -5180,20 +5180,20 @@
         },
         {
           "date": "2026-01-05",
-          "predicted_discharge_m3_s": 3.405131216907501,
-          "lstm_discharge_m3_s": 2.9224371910095215,
+          "predicted_discharge_m3_s": 3.405131038093567,
+          "lstm_discharge_m3_s": 2.9224367141723633,
           "persistence_baseline_discharge_m3_s": 3.612
         },
         {
           "date": "2026-01-06",
-          "predicted_discharge_m3_s": 3.5685830673217773,
-          "lstm_discharge_m3_s": 3.4672765731811523,
+          "predicted_discharge_m3_s": 3.5685835441589355,
+          "lstm_discharge_m3_s": 3.467278242111206,
           "persistence_baseline_discharge_m3_s": 3.612
         },
         {
           "date": "2026-01-07",
-          "predicted_discharge_m3_s": 3.538148578071594,
-          "lstm_discharge_m3_s": 3.365828275680542,
+          "predicted_discharge_m3_s": 3.5381486972808838,
+          "lstm_discharge_m3_s": 3.3658287525177,
           "persistence_baseline_discharge_m3_s": 3.612
         }
       ]
@@ -5215,14 +5215,14 @@
       "valid_history_days": 86,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 17.0,
-      "predicted_peak_discharge_m3_s": 16.95707550048828,
+      "predicted_peak_discharge_m3_s": 16.957076930999754,
       "peak_discharge_percentile_all_available_history": 74.27304090685067,
       "history_discharge_sample_count": 2029,
       "forecast": [
         {
           "date": "2025-12-01",
-          "predicted_discharge_m3_s": 16.95707550048828,
-          "lstm_discharge_m3_s": 16.856918334960938,
+          "predicted_discharge_m3_s": 16.957076930999754,
+          "lstm_discharge_m3_s": 16.856922149658203,
           "persistence_baseline_discharge_m3_s": 17.0
         },
         {
@@ -5351,8 +5351,8 @@
       "forecast": [
         {
           "date": "2025-11-20",
-          "predicted_discharge_m3_s": 9.430022588000487,
-          "lstm_discharge_m3_s": 8.434591293334961,
+          "predicted_discharge_m3_s": 9.430023303256224,
+          "lstm_discharge_m3_s": 8.434593200683594,
           "persistence_baseline_discharge_m3_s": 9.856636
         },
         {
@@ -5369,26 +5369,26 @@
         },
         {
           "date": "2025-11-23",
-          "predicted_discharge_m3_s": 9.623692145571898,
-          "lstm_discharge_m3_s": 9.080156326293945,
+          "predicted_discharge_m3_s": 9.623693099246214,
+          "lstm_discharge_m3_s": 9.080159187316895,
           "persistence_baseline_discharge_m3_s": 9.856636
         },
         {
           "date": "2025-11-24",
-          "predicted_discharge_m3_s": 9.641557564959715,
-          "lstm_discharge_m3_s": 9.139707565307617,
+          "predicted_discharge_m3_s": 9.64155899547119,
+          "lstm_discharge_m3_s": 9.1397123336792,
           "persistence_baseline_discharge_m3_s": 9.856636
         },
         {
           "date": "2025-11-25",
-          "predicted_discharge_m3_s": 9.76608907245178,
-          "lstm_discharge_m3_s": 9.55481243133545,
+          "predicted_discharge_m3_s": 9.766089787707518,
+          "lstm_discharge_m3_s": 9.554815292358398,
           "persistence_baseline_discharge_m3_s": 9.856636
         },
         {
           "date": "2025-11-26",
-          "predicted_discharge_m3_s": 9.699823250994871,
-          "lstm_discharge_m3_s": 9.3339262008667,
+          "predicted_discharge_m3_s": 9.699823966250609,
+          "lstm_discharge_m3_s": 9.333929061889648,
           "persistence_baseline_discharge_m3_s": 9.856636
         }
       ]
@@ -5434,14 +5434,14 @@
         },
         {
           "date": "2025-11-04",
-          "predicted_discharge_m3_s": 897.0548101928711,
-          "lstm_discharge_m3_s": 405.5400085449219,
+          "predicted_discharge_m3_s": 897.0548635986328,
+          "lstm_discharge_m3_s": 405.5401916503906,
           "persistence_baseline_discharge_m3_s": 1107.704
         },
         {
           "date": "2025-11-05",
-          "predicted_discharge_m3_s": 910.6670919921875,
-          "lstm_discharge_m3_s": 450.9142761230469,
+          "predicted_discharge_m3_s": 910.6671530273437,
+          "lstm_discharge_m3_s": 450.91448974609375,
           "persistence_baseline_discharge_m3_s": 1107.704
         },
         {
@@ -5540,7 +5540,7 @@
       "valid_history_days": 73,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 95.428,
-      "predicted_peak_discharge_m3_s": 82.79436718902588,
+      "predicted_peak_discharge_m3_s": 82.79435860595703,
       "peak_discharge_percentile_all_available_history": 92.73858921161826,
       "history_discharge_sample_count": 1928,
       "forecast": [
@@ -5570,14 +5570,14 @@
         },
         {
           "date": "2025-07-05",
-          "predicted_discharge_m3_s": 79.00330864868164,
-          "lstm_discharge_m3_s": 40.67902755737305,
+          "predicted_discharge_m3_s": 79.00330960235596,
+          "lstm_discharge_m3_s": 40.67903137207031,
           "persistence_baseline_discharge_m3_s": 95.428
         },
         {
           "date": "2025-07-06",
-          "predicted_discharge_m3_s": 82.79436718902588,
-          "lstm_discharge_m3_s": 53.315887451171875,
+          "predicted_discharge_m3_s": 82.79435860595703,
+          "lstm_discharge_m3_s": 53.315860748291016,
           "persistence_baseline_discharge_m3_s": 95.428
         },
         {
@@ -5605,14 +5605,14 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.21424542367458344,
+      "predicted_peak_discharge_m3_s": 0.21424536406993866,
       "peak_discharge_percentile_all_available_history": 74.82853223593965,
       "history_discharge_sample_count": 1458,
       "forecast": [
         {
           "date": "2023-06-01",
-          "predicted_discharge_m3_s": 0.05588808283209801,
-          "lstm_discharge_m3_s": 0.1862936019897461,
+          "predicted_discharge_m3_s": 0.05588791146874428,
+          "lstm_discharge_m3_s": 0.18629303574562073,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -5629,8 +5629,8 @@
         },
         {
           "date": "2023-06-04",
-          "predicted_discharge_m3_s": 0.13018807768821716,
-          "lstm_discharge_m3_s": 0.4339602291584015,
+          "predicted_discharge_m3_s": 0.13018786907196045,
+          "lstm_discharge_m3_s": 0.4339595437049866,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -5647,8 +5647,8 @@
         },
         {
           "date": "2023-06-07",
-          "predicted_discharge_m3_s": 0.21424542367458344,
-          "lstm_discharge_m3_s": 0.7141513824462891,
+          "predicted_discharge_m3_s": 0.21424536406993866,
+          "lstm_discharge_m3_s": 0.7141512036323547,
           "persistence_baseline_discharge_m3_s": 0.0
         }
       ]
@@ -5670,32 +5670,32 @@
       "valid_history_days": 89,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 15.480214,
-      "predicted_peak_discharge_m3_s": 20.096628773388673,
+      "predicted_peak_discharge_m3_s": 20.096625912365724,
       "peak_discharge_percentile_all_available_history": 83.4934497816594,
       "history_discharge_sample_count": 1145,
       "forecast": [
         {
           "date": "2021-08-03",
-          "predicted_discharge_m3_s": 17.292745220837404,
-          "lstm_discharge_m3_s": 21.521984100341797,
+          "predicted_discharge_m3_s": 17.292744267163087,
+          "lstm_discharge_m3_s": 21.52198028564453,
           "persistence_baseline_discharge_m3_s": 15.480214
         },
         {
           "date": "2021-08-04",
-          "predicted_discharge_m3_s": 16.751877892193605,
-          "lstm_discharge_m3_s": 19.719093322753906,
+          "predicted_discharge_m3_s": 16.75187693851929,
+          "lstm_discharge_m3_s": 19.71908950805664,
           "persistence_baseline_discharge_m3_s": 15.480214
         },
         {
           "date": "2021-08-05",
-          "predicted_discharge_m3_s": 18.152568924603273,
-          "lstm_discharge_m3_s": 24.388063430786133,
+          "predicted_discharge_m3_s": 18.152567494091798,
+          "lstm_discharge_m3_s": 24.388057708740234,
           "persistence_baseline_discharge_m3_s": 15.480214
         },
         {
           "date": "2021-08-06",
-          "predicted_discharge_m3_s": 19.04873048084717,
-          "lstm_discharge_m3_s": 27.375267028808594,
+          "predicted_discharge_m3_s": 19.04872761982422,
+          "lstm_discharge_m3_s": 27.375259399414062,
           "persistence_baseline_discharge_m3_s": 15.480214
         },
         {
@@ -5706,14 +5706,14 @@
         },
         {
           "date": "2021-08-08",
-          "predicted_discharge_m3_s": 20.096628773388673,
-          "lstm_discharge_m3_s": 30.868261337280273,
+          "predicted_discharge_m3_s": 20.096625912365724,
+          "lstm_discharge_m3_s": 30.868253707885742,
           "persistence_baseline_discharge_m3_s": 15.480214
         },
         {
           "date": "2021-08-09",
-          "predicted_discharge_m3_s": 20.051024067578126,
-          "lstm_discharge_m3_s": 30.71624755859375,
+          "predicted_discharge_m3_s": 20.051022160229493,
+          "lstm_discharge_m3_s": 30.71623992919922,
           "persistence_baseline_discharge_m3_s": 15.480214
         }
       ]
@@ -5735,7 +5735,7 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.21959803998470306,
+      "predicted_peak_discharge_m3_s": 0.21959815919399261,
       "peak_discharge_percentile_all_available_history": 32.17391304347826,
       "history_discharge_sample_count": 345,
       "forecast": [
@@ -5747,26 +5747,26 @@
         },
         {
           "date": "2015-06-02",
-          "predicted_discharge_m3_s": 0.10660424083471298,
-          "lstm_discharge_m3_s": 0.3553474545478821,
+          "predicted_discharge_m3_s": 0.10660433024168015,
+          "lstm_discharge_m3_s": 0.35534775257110596,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2015-06-03",
-          "predicted_discharge_m3_s": 0.07232258468866348,
-          "lstm_discharge_m3_s": 0.24107526242733002,
+          "predicted_discharge_m3_s": 0.07232275605201721,
+          "lstm_discharge_m3_s": 0.24107584357261658,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2015-06-04",
-          "predicted_discharge_m3_s": 0.13566817343235016,
-          "lstm_discharge_m3_s": 0.4522272050380707,
+          "predicted_discharge_m3_s": 0.13566836714744568,
+          "lstm_discharge_m3_s": 0.4522278904914856,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
           "date": "2015-06-05",
-          "predicted_discharge_m3_s": 0.2073221355676651,
-          "lstm_discharge_m3_s": 0.6910737752914429,
+          "predicted_discharge_m3_s": 0.20732225477695465,
+          "lstm_discharge_m3_s": 0.6910741329193115,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -5777,8 +5777,8 @@
         },
         {
           "date": "2015-06-07",
-          "predicted_discharge_m3_s": 0.21959803998470306,
-          "lstm_discharge_m3_s": 0.7319934368133545,
+          "predicted_discharge_m3_s": 0.21959815919399261,
+          "lstm_discharge_m3_s": 0.7319938540458679,
           "persistence_baseline_discharge_m3_s": 0.0
         }
       ]
@@ -5800,7 +5800,7 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.21026834845542908,
+      "predicted_peak_discharge_m3_s": 0.21026840806007385,
       "peak_discharge_percentile_all_available_history": 32.49680986814121,
       "history_discharge_sample_count": 4702,
       "forecast": [
@@ -5812,8 +5812,8 @@
         },
         {
           "date": "2013-06-02",
-          "predicted_discharge_m3_s": 0.09403721243143082,
-          "lstm_discharge_m3_s": 0.3134573698043823,
+          "predicted_discharge_m3_s": 0.09403731673955917,
+          "lstm_discharge_m3_s": 0.3134576976299286,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -5830,8 +5830,8 @@
         },
         {
           "date": "2013-06-05",
-          "predicted_discharge_m3_s": 0.1997491866350174,
-          "lstm_discharge_m3_s": 0.6658306121826172,
+          "predicted_discharge_m3_s": 0.19974921643733978,
+          "lstm_discharge_m3_s": 0.665830671787262,
           "persistence_baseline_discharge_m3_s": 0.0
         },
         {
@@ -5842,8 +5842,8 @@
         },
         {
           "date": "2013-06-07",
-          "predicted_discharge_m3_s": 0.21026834845542908,
-          "lstm_discharge_m3_s": 0.7008944749832153,
+          "predicted_discharge_m3_s": 0.21026840806007385,
+          "lstm_discharge_m3_s": 0.7008946537971497,
           "persistence_baseline_discharge_m3_s": 0.0
         }
       ]
@@ -5865,7 +5865,7 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 0.0,
-      "predicted_peak_discharge_m3_s": 0.2157500833272934,
+      "predicted_peak_discharge_m3_s": 0.21574996411800385,
       "peak_discharge_percentile_all_available_history": 83.65640066909377,
       "history_discharge_sample_count": 10163,
       "forecast": [
@@ -5907,8 +5907,8 @@
         },
         {
           "date": "2007-06-07",
-          "predicted_discharge_m3_s": 0.2157500833272934,
-          "lstm_discharge_m3_s": 0.7191669344902039,
+          "predicted_discharge_m3_s": 0.21574996411800385,
+          "lstm_discharge_m3_s": 0.7191665172576904,
           "persistence_baseline_discharge_m3_s": 0.0
         }
       ]
@@ -5930,32 +5930,32 @@
       "valid_history_days": 84,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 230.19704,
-      "predicted_peak_discharge_m3_s": 246.22262953808593,
+      "predicted_peak_discharge_m3_s": 246.2226753144531,
       "peak_discharge_percentile_all_available_history": 16.816249409541804,
       "history_discharge_sample_count": 10585,
       "forecast": [
         {
           "date": "2006-06-03",
-          "predicted_discharge_m3_s": 230.57173537304686,
-          "lstm_discharge_m3_s": 231.44601440429688,
+          "predicted_discharge_m3_s": 230.57170485546874,
+          "lstm_discharge_m3_s": 231.44590759277344,
           "persistence_baseline_discharge_m3_s": 230.19704
         },
         {
           "date": "2006-06-04",
-          "predicted_discharge_m3_s": 222.2374572663574,
-          "lstm_discharge_m3_s": 203.6650848388672,
+          "predicted_discharge_m3_s": 222.23748396923827,
+          "lstm_discharge_m3_s": 203.66517639160156,
           "persistence_baseline_discharge_m3_s": 230.19704
         },
         {
           "date": "2006-06-05",
-          "predicted_discharge_m3_s": 243.6131477265625,
-          "lstm_discharge_m3_s": 274.9173889160156,
+          "predicted_discharge_m3_s": 243.61318587353514,
+          "lstm_discharge_m3_s": 274.9175109863281,
           "persistence_baseline_discharge_m3_s": 230.19704
         },
         {
           "date": "2006-06-06",
-          "predicted_discharge_m3_s": 246.22262953808593,
-          "lstm_discharge_m3_s": 283.61566162109375,
+          "predicted_discharge_m3_s": 246.2226753144531,
+          "lstm_discharge_m3_s": 283.6158142089844,
           "persistence_baseline_discharge_m3_s": 230.19704
         },
         {
@@ -5995,32 +5995,32 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 1.45,
-      "predicted_peak_discharge_m3_s": 2.1021717929840085,
+      "predicted_peak_discharge_m3_s": 2.10217143535614,
       "peak_discharge_percentile_all_available_history": 71.7910447761194,
       "history_discharge_sample_count": 10050,
       "forecast": [
         {
           "date": "2006-06-01",
-          "predicted_discharge_m3_s": 1.64210964679718,
-          "lstm_discharge_m3_s": 2.090365409851074,
+          "predicted_discharge_m3_s": 1.6421095275878905,
+          "lstm_discharge_m3_s": 2.090364933013916,
           "persistence_baseline_discharge_m3_s": 1.45
         },
         {
           "date": "2006-06-02",
-          "predicted_discharge_m3_s": 1.7231257104873656,
-          "lstm_discharge_m3_s": 2.3604190349578857,
+          "predicted_discharge_m3_s": 1.7231256508827208,
+          "lstm_discharge_m3_s": 2.3604187965393066,
           "persistence_baseline_discharge_m3_s": 1.45
         },
         {
           "date": "2006-06-03",
-          "predicted_discharge_m3_s": 1.6865413331985473,
-          "lstm_discharge_m3_s": 2.238471031188965,
+          "predicted_discharge_m3_s": 1.6865412139892577,
+          "lstm_discharge_m3_s": 2.2384705543518066,
           "persistence_baseline_discharge_m3_s": 1.45
         },
         {
           "date": "2006-06-04",
-          "predicted_discharge_m3_s": 1.9020539665222167,
-          "lstm_discharge_m3_s": 2.9568464756011963,
+          "predicted_discharge_m3_s": 1.902053906917572,
+          "lstm_discharge_m3_s": 2.956846237182617,
           "persistence_baseline_discharge_m3_s": 1.45
         },
         {
@@ -6031,14 +6031,14 @@
         },
         {
           "date": "2006-06-06",
-          "predicted_discharge_m3_s": 2.06406952381134,
-          "lstm_discharge_m3_s": 3.4968984127044678,
+          "predicted_discharge_m3_s": 2.0640698814392087,
+          "lstm_discharge_m3_s": 3.4968996047973633,
           "persistence_baseline_discharge_m3_s": 1.45
         },
         {
           "date": "2006-06-07",
-          "predicted_discharge_m3_s": 2.1021717929840085,
-          "lstm_discharge_m3_s": 3.623905658721924,
+          "predicted_discharge_m3_s": 2.10217143535614,
+          "lstm_discharge_m3_s": 3.6239047050476074,
           "persistence_baseline_discharge_m3_s": 1.45
         }
       ]
@@ -6060,20 +6060,20 @@
       "valid_history_days": 90,
       "history_days_required": 90,
       "last_observed_discharge_m3_s": 2.2470162,
-      "predicted_peak_discharge_m3_s": 2.1377775847929383,
+      "predicted_peak_discharge_m3_s": 2.137777704002228,
       "peak_discharge_percentile_all_available_history": 0.6157415670176691,
       "history_discharge_sample_count": 11206,
       "forecast": [
         {
           "date": "2003-03-16",
-          "predicted_discharge_m3_s": 2.102993446590271,
-          "lstm_discharge_m3_s": 1.7669403553009033,
+          "predicted_discharge_m3_s": 2.1029935657995606,
+          "lstm_discharge_m3_s": 1.766940712928772,
           "persistence_baseline_discharge_m3_s": 2.2470162
         },
         {
           "date": "2003-03-17",
-          "predicted_discharge_m3_s": 2.1117404878157044,
-          "lstm_discharge_m3_s": 1.7960971593856812,
+          "predicted_discharge_m3_s": 2.1117404282110597,
+          "lstm_discharge_m3_s": 1.796096920967102,
           "persistence_baseline_discharge_m3_s": 2.2470162
         },
         {
@@ -6084,8 +6084,8 @@
         },
         {
           "date": "2003-03-19",
-          "predicted_discharge_m3_s": 2.1377775847929383,
-          "lstm_discharge_m3_s": 1.882887363433838,
+          "predicted_discharge_m3_s": 2.137777704002228,
+          "lstm_discharge_m3_s": 1.8828877210617065,
           "persistence_baseline_discharge_m3_s": 2.2470162
         },
         {
@@ -6187,24 +6187,24 @@
       "samples": 58464
     },
     "raw_lstm_metrics": {
-      "mae_m3s": 53.79286497091466,
-      "rmse_m3s": 687.144299683594,
-      "nse": 0.3647398541503335,
+      "mae_m3s": 53.79286436593808,
+      "rmse_m3s": 687.1443028970634,
+      "nse": 0.3647398482086731,
       "samples": 58464
     },
     "selected_metrics": {
-      "mae_m3s": 48.979088036264784,
-      "rmse_m3s": 581.4183399765355,
-      "nse": 0.5451866881977532,
+      "mae_m3s": 48.979087916979154,
+      "rmse_m3s": 581.418344444923,
+      "nse": 0.5451866812069792,
       "samples": 58464
     },
-    "selected_rmse_m3s": 581.4183401123958,
+    "selected_rmse_m3s": 581.4183430798599,
     "test_set_used_for_selection": false
   },
   "status": "experimental_research_only",
   "operational_status": "not_validated_for_public_warnings",
-  "model_created_at_utc": "2026-11-27T08:40:33.705493+00:00",
-  "created_at_utc": "2026-11-27T08:41:18.115332+00:00",
+  "model_created_at_utc": "2026-11-27T21:22:08.369177+00:00",
+  "created_at_utc": "2026-11-27T21:22:40.238736+00:00",
   "warning": "This is a historical-discharge-only forecast. Source-history age is not proof of a live sensor feed. Station-relative discharge percentiles are not calibrated flood probabilities or official warnings.",
   "limitations": [
     "Uses historical discharge only; no future rainfall/weather forcing.",
